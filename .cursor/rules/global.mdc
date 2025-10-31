@@ -1,0 +1,202 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+# 工作指导手册
+
+你好，AI 助手！这份文档是你的核心工作指南。在你进行任何编码、重构或分析工作之前，**必须**完整阅读并理解本文档。你的首要任务是确保你的所有操作都与本文档中描述的架构和原则保持一致，并在你对项目架构做出任何修改后，**主动更新本文档本身 [global.mdc](mdc:.cursor/rules/global.mdc) **。
+
+## 1. 项目核心定位
+
+这是一个基于 **Cloudflare** 技术栈的、**生产级**、**类型安全**的 **Hono + React + D1** 全栈应用模板。
+
+- **核心价值**: 提供开箱即用的开发体验，整合最佳实践，实现从数据库到前端的端到端类型安全。
+- **目标用户**: 希望在 Cloudflare 生态中快速构建现代化 Web 应用的开发者。
+- **你的角色**: 维护并增强这个模板的工程化能力、易用性和健壮性。始终以"最佳实践"和"最低维护成本"为原则进行开发。
+
+## 2. 核心技术与架构
+
+### 2.1. 整体架构
+
+这是一个**混合渲染模式 (Hybrid Rendering)** 的单体应用，部署在 Cloudflare Pages & Workers 上。
+
+- **开发环境 (`pnpm dev`)**:
+  - Hono 后端 (Wrangler) 运行在 `localhost:8787`，作为**主入口**。
+  - Vite 前端服务器运行在 `localhost:5173`。
+  - **关键认知**: `index.ts` 中的开发逻辑会将所有非 API 的前端请求**代理**到 Vite 服务器 (`5173`)。这使得前端能享受 Vite 带来的**热更新 (HMR)**。**你绝不能假设开发时后端可以直接访问 `frontend/dist` 下的任何文件**。
+- **生产环境 (`pnpm deploy`)**:
+  - Vite 将前端代码构建为静态资源，输出到 `frontend/dist` 目录。
+  - Hono 后端 (`src/index.ts`) 会根据 `manifest.json` **服务器端渲染 (SSR)** 初始 HTML，并由 Cloudflare Pages 提供静态资源。
+  - **关键认知**: `index.ts` 中通过**动态 `import()`** 来加载生产构建产物 (`manifest.json` 和 `index.html`)，这是为了避免在开发环境中因找不到这些文件而导致构建失败。**这是本项目的核心架构设计，必须理解并维护**。
+
+### 2.2. 后端 (`src/`)
+
+- **入口: `src/index.ts`**:
+  - 这是应用的统一入口。
+  - 使用 `if (c.env.NODE_ENV === "development")` 来分离开发和生产逻辑。
+  - **OpenAPI 注册**: API 路由通过一个独立的 `OpenAPIHono` 实例 (`apiApp`) 进行注册，然后统一挂载到主 `app` 上。这是为了确保 Swagger UI 能正确发现所有端点。在添加新的 API 模块时，必须遵循这个模式。
+- **路由: `src/routes/`**:
+  - Hono 的路由模块。包含功能示例和认证路由。
+  - 使用 `@hono/zod-openapi` 的 `createRoute` 来创建类型安全且自动生成文档的路由。
+  - **认证路由** (`auth.ts`): 实现 GitHub OAuth 登录、用户信息获取、登出和 API Key 重新生成功能。
+- **中间件: `src/middleware/`**:
+  - **认证中间件** (`auth.ts`): 验证用户会话，注入用户信息到 context，保护需要认证的路由。
+- **数据校验: `src/validators/` 和 `common/validators/`**:
+  - 使用 Zod 定义所有 API 的请求/响应/路径参数的 Schema。这些 Schema 是类型安全和 API 文档的来源。
+  - **认证 Schema** (`common/validators/auth.schema.ts`): 定义认证相关的数据结构。
+- **数据库 ORM: `src/db/`**:
+  - `schema.ts` 文件使用 Drizzle ORM 定义数据库表结构。这是**唯一的数据源 (Single Source of Truth)**。
+  - 包含 `features`（功能开关）、`users`（用户）、`userSessions`（会话）表。
+- **工具函数: `src/utils/`**:
+  - **加密工具** (`encryption.ts`): 生成用户专属的 API Key。
+  - **HTML 模板**: 统一的 HTML 模板生成器，避免重复代码。
+- **集中化配置管理**:
+  - **SEO 配置**: `src/config/seo.ts` - 所有 SEO 相关配置的单一数据源
+  - **自动化脚本**: `scripts/generateHtml.ts` - 自动生成开发环境的 HTML 模板
+
+### 2.3. 前端 (`frontend/`)
+
+- **统一路由配置**:
+  - **核心改进**: `frontend/src/routes.tsx` - 唯一的路由定义文件，被客户端和服务端入口共享使用。
+  - **开发友好**: 添加新页面时，只需要在此文件中修改一次，避免了在多个入口文件中重复定义。
+- **入口文件**:
+  - `entry-client.tsx`: **客户端入口**。负责在浏览器中"激活"(hydrate) 由服务器渲染的 HTML。使用统一的路由配置。
+  - `entry-server.tsx`: **服务器端渲染入口**。负责在后端生成初始的 HTML 字符串。使用统一的路由配置。
+  - **关键优化**: 两个入口文件都使用 `AppRoutes` 组件，确保路由定义的一致性。
+- **主题系统**:
+  - **核心**:
+    - `frontend/src/context/ThemeContextProvider.tsx` 提供了一个全局的 `AppThemeProvider` 和 `useAppTheme` hook。
+    - `frontend/src/theme/` 目录是我们中心化的主题定义模块。
+  - **架构与规则**:
+    - **自定义主题**: 我们通过对 Material-UI 主题进行模块扩展 (module augmentation) 来添加自定义、类型安全的主题属性。类型定义位于 `frontend/src/theme/types.ts`。
+    - **中心化管理**: 所有与主题相关的样式（如特定页面的背景、自定义组件颜色等）都**必须**在 `frontend/src/theme/index.ts` 中的 `lightTheme` 和 `darkTheme` 对象里进行定义。
+    - **组件内使用**: 组件**禁止**通过 `theme.palette.mode === 'dark'` 这样的条件判断来硬编码样式。**必须**直接从主题对象中获取预先定义好的自定义属性 (例如 `theme.pageBackground`)。
+    - **状态切换**: 所有主题状态的读取和切换都**必须**通过 `useAppTheme` hook 进行。
+- **认证系统**:
+  - **useAuth Hook** (`hooks/useAuth.ts`): 统一的认证状态管理，提供 login/logout/refetch 方法。
+  - **Storage 工具** (`utils/storage.ts`): SSR 安全的 localStorage 封装，支持跨标签页状态同步。
+  - **认证回调页面** (`pages/AuthCallbackPage.tsx`): 处理 GitHub OAuth 回调。
+  - **Dashboard 页面** (`pages/DashboardPage.tsx`): 显示用户信息、API Key 管理（查看、复制、重新生成）。
+- **页面与布局**:
+  - `pages/`: 存放页面级组件。
+  - `App.tsx`: 应用内部的主布局，包含导航栏、用户头像菜单、登录按钮、页脚和主题切换。
+- **Vite 配置: `vite.config.mts`**:
+  - **关键认知**: 配置了 `resolve.alias` 来支持 `@/` 路径别名。如果未来有构建问题，应检查此处的配置。
+
+### 2.4. 数据库与迁移
+
+- **ORM**: Drizzle ORM。
+- **Schema**: `src/db/schema.ts`。
+- **迁移工作流**:
+  1.  修改 `src/db/schema.ts`。
+  2.  运行 `pnpm db:generate` 生成 SQL 迁移文件。
+  3.  运行 `pnpm db:migrate` (本地) 或 `pnpm db:migrate:prod` (生产) 应用迁移。
+
+### 2.5. 文档体系 (`docs/`)
+
+项目现已建立完整的**集中化文档体系**，遵循模块化和渐进式学习原则：
+
+- **主文档**: `README.md` - 精简的项目介绍和5分钟快速开始
+- **安装指南**: `docs/INSTALLATION.md` - 详细的环境搭建和配置
+- **认证指南**: `docs/AUTHENTICATION.md` - GitHub OAuth 登录集成和 API Key 管理
+- **开发指南**: `docs/DEVELOPMENT.md` - 日常开发工作流和最佳实践
+- **API 指南**: `docs/API_GUIDE.md` - 后端 API 开发完整流程（包含认证端点文档）
+- **主题指南**: `docs/THEMING.md` - 主题系统和UI定制
+- **部署指南**: `docs/DEPLOYMENT.md` - 生产环境部署流程
+- **故障排除**: `docs/TROUBLESHOOTING.md` - 常见问题解决方案
+- **项目架构**: `docs/ARCHITECTURE.md` - 技术栈和设计决策
+- **SEO 指南**: `docs/SEO_GUIDE.md` - 搜索引擎优化配置
+
+**文档维护原则**: 确保每个功能领域都有专门的文档，避免重复内容，便于团队协作和知识管理。
+
+## 3. 你的工作原则
+
+1.  **首要原则：维护本文档**: 如果你的任何操作（如添加新技术、修改架构）导致本文档过时，**你必须在提交最终代码前，先更新本文档** ([global.mdc](mdc:.cursor/rules/global.mdc))。
+2.  **遵循既定模式**:
+    - **API**: 创建新 API 时，必须在 `validators` 和 `routes` 目录下创建对应的 `*.schema.ts` 和 `*.ts` 文件，并遵循 `createRoute` 模式。
+    - **路由**: 添加新页面时，只需要在 `frontend/src/routes.tsx` 中修改，避免在多个入口文件中重复定义。
+    - **组件**: 创建新组件时，应考虑其在亮/暗模式下的显示效果，并优先使用主题系统提供的颜色 (`theme.palette`)。
+    - **状态管理**: 优先使用 React Query 进行服务器状态管理。对于全局客户端状态（如主题），使用 React Context。
+    - **配置管理**: 所有配置信息都应集中管理，如 SEO 配置在 `src/config/seo.ts` 中统一定义。
+3.  **禁止直接操作 DOM**: 遵循 React 的声明式范式，禁止使用 `document.getElementById` 等命令式 API（除非是在框架入口文件，如 `entry-client.tsx` 中）。
+
+4.  **用户获取模板的推荐方式**:
+    - **首选**: 使用 GitHub 的 "Use this template" 功能，自动创建独立的 Git 历史
+    - **次选**: Fork 仓库（适合贡献代码）
+    - **不推荐**: 直接克隆（仅用于快速测试）
+
+5.  **解决构建问题**:
+    - 如果 `pnpm dev` 失败，检查 `wrangler dev` 的日志。如果是文件加载问题 (`.html`, `.svg` 等)，检查 `wrangler.jsonc` 中的 `esbuild` 配置。
+    - 如果 `pnpm build:frontend` 失败，检查 Vite 配置 (`frontend/vite.config.mts`)，特别是路径别名等。
+
+6.  **保持专业与优雅**:
+    - 始终编写简洁、可读、易于维护的代码。
+    - 禁止为了"快速修复"而使用 hacky 的手段或添加 `@ts-ignore`。从根源上解决问题。
+    - **深刻教训**: 在修复问题时，必须同时考虑 Vite 前端和 Wrangler 后端两种构建环境的差异。同时，在更新文档时，必须严格遵守既定格式和结构，绝不能随意添加内容破坏布局。**此外，在处理任何构建或配置问题时，必须遵循以下铁律：**
+      1.  **禁止臆断**：绝不能基于对相似工具的经验，去假设平台特定配置文件（如 `wrangler.jsonc`）的行为。**必须**第一时间查阅官方文档，确认每一个配置项的有效性和语法。
+      2.  **日志优先**：必须逐行、仔细地审查所有日志输出，特别是警告信息。一个被忽略的警告往往是定位问题根源的关键。
+      3.  **验证语法**：在提出任何代码或配置修改，特别是针对包管理器（如 `pnpm`）或构建工具的复杂语法时，**必须**通过官方文档或实例进行交叉验证。严禁提供任何未经证实或凭空捏造的解决方案。
+      4.  **承认局限**：当问题源于平台本身的限制时，必须清晰地向用户阐明这一事实，并解释为何需要采用"变通方案"（Workaround）。变通方案本身也必须是经过验证的、社区公认的最佳实践，而非临时拼凑的"黑魔法"。
+
+7.  **集中化管理原则**:
+    - **单一数据源**: 避免在多个文件中重复定义相同的配置信息
+    - **模块化设计**: 每个功能模块都有清晰的职责边界
+    - **自动化优先**: 通过脚本和工具减少手动操作，降低出错概率
+    - **文档同步**: 确保代码变更与文档更新同步进行
+
+8.  **Cloudflare Workers & SSR 特殊规则**:
+    - **现代化配置优先**: 始终使用最新的 `assets` binding，禁止使用已废弃的 `site.bucket` 配置
+    - **SSR 兼容性处理**: 对于 React 生态库（特别是 Material-UI 相关），必须在 `frontend/vite.config.mts` 的 `ssr.noExternal` 中显式声明
+    - **本地调试优先**: 使用 `wrangler dev --env production` 进行本地生产环境调试，避免依赖云端部署进行故障排查
+    - **静态资源服务**: 生产环境中通过 `c.env.ASSETS.fetch()` 处理静态文件请求，确保正确的 MIME 类型
+    - **关键库清单**: 以下库必须包含在 `ssr.noExternal` 中：`react-router-dom`, `@mui/material`, `@mui/system`, `@mui/icons-material`, `@emotion/react`, `@emotion/styled`, `react-i18next`, `i18next`
+
+## 4. 用户认证系统
+
+项目现已集成完整的 GitHub OAuth 登录功能，包含：
+
+### 4.1. 后端认证架构
+
+- **OAuth 流程**: 完整的 GitHub OAuth 2.0 授权码流程
+- **会话管理**: 基于 cuid2 生成的会话 token，有效期 30 天
+- **API Key 系统**: 每个用户拥有唯一的 API Key（`ak-` 前缀 + 64 位十六进制）
+- **中间件保护**: 使用 `authMiddleware` 保护需要认证的端点
+- **安全实践**: CSRF 防护（state 参数）、会话自动过期、安全的密钥生成
+
+### 4.2. 前端认证体验
+
+- **统一状态管理**: 通过 `useAuth` hook 管理全局认证状态
+- **跨标签页同步**: localStorage 变化自动同步到所有标签页
+- **SSR 兼容**: 所有 localStorage 操作使用安全封装，避免 SSR 错误
+- **用户体验**: 加载状态、错误提示、自动跳转、头像菜单
+- **Dashboard 功能**: 用户信息展示、API Key 查看/复制/重新生成
+
+### 4.3. 数据库设计
+
+- **users 表**: 存储用户基本信息（GitHub ID、用户名、邮箱、头像、API Key）
+- **userSessions 表**: 管理会话 token 和过期时间
+- **级联删除**: 用户删除时自动清理相关会话
+
+### 4.4. 环境配置
+
+- **必需变量**: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `APP_BASE_URL`
+- **本地开发**: 使用 `.dev.vars` 文件（已加入 .gitignore）
+- **生产环境**: 通过 Cloudflare Dashboard 或 `wrangler.jsonc` 配置
+
+详细配置请参考 `docs/AUTHENTICATION.md`。
+
+## 5. 最新架构优势总结
+
+通过最近的架构重构，项目现已实现：
+
+1. **用户认证系统**: 完整的 GitHub OAuth 登录、会话管理和 API Key 系统
+2. **集中化配置管理**: SEO、主题、路由等关键配置都采用单一数据源模式
+3. **统一路由架构**: 消除了客户端和服务端路由定义的重复，提升开发效率
+4. **完整文档体系**: 模块化的文档结构，为不同水平的开发者提供渐进式学习路径
+5. **自动化工作流**: 通过脚本减少手动操作，提升开发体验
+6. **类型安全保障**: 从数据库到前端的端到端类型安全
+7. **用户友好**: 推荐使用 GitHub 模板功能，降低用户接触成本
+
+这些改进确保了 NekroEdge 既能提供出色的开发体验，又能满足生产环境的可维护性和扩展性需求。

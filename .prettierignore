@@ -1,0 +1,11 @@
+# Ignore artifacts:
+node_modules
+dist
+.wrangler
+migrations
+
+# Ignore lockfiles
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+bun.lockb
