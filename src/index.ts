@@ -13,8 +13,11 @@ import { secureHeaders } from "hono/secure-headers";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { etag } from "hono/etag";
+import { drizzle } from "drizzle-orm/d1";
+import * as drizzleSchema from "./db/schema";
 
 import api from "./routes/api";
+import execution from "./routes/execution";
 import { Bindings } from "./types";
 
 const app = new OpenAPIHono<{ Bindings: Bindings }>();
@@ -32,12 +35,21 @@ app.use(
 // API routes
 app.route("/api", api);
 
+// Endpoint execution layer (with DB middleware)
+app.use("/e/*", async (c, next) => {
+  const db = drizzle(c.env.DB, { schema: drizzleSchema });
+  // @ts-ignore - Variables type not available in main app context
+  c.set("db", db);
+  await next();
+});
+app.route("/", execution);
+
 // OpenAPI Docs
 app.doc("/api/doc", {
   openapi: "3.1.0",
   info: {
     version: "1.0.0",
-    title: "NekroEdge API",
+    title: "NekroEndpoint API",
   },
 });
 

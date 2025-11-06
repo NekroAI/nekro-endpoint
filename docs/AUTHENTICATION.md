@@ -1,6 +1,6 @@
 # 认证配置指南
 
-本指南将详细介绍如何在 NekroEdge 模板中配置和使用 GitHub OAuth 登录功能。
+本指南将详细介绍如何在 NekroEndpoint 平台中配置和使用 GitHub OAuth 登录功能。
 
 ## 目录
 
@@ -22,7 +22,7 @@
 **本地开发环境：**
 
 ```
-Application name: NekroEdge Template (Local)
+Application name: NekroEndpoint Platform (Local)
 Homepage URL: http://localhost:8787
 Authorization callback URL: http://localhost:8787/auth/callback
 ```
@@ -30,7 +30,7 @@ Authorization callback URL: http://localhost:8787/auth/callback
 **生产环境：**
 
 ```
-Application name: NekroEdge Template
+Application name: NekroEndpoint Platform
 Homepage URL: https://your-domain.pages.dev
 Authorization callback URL: https://your-domain.pages.dev/auth/callback
 ```
@@ -317,4 +317,4 @@ pnpm db:migrate
 
 ---
 
-**需要帮助？** 在 [GitHub Issues](https://github.com/NekroAI/nekro-edge-template/issues) 提问。
+**需要帮助？** 在 [GitHub Issues](https://github.com/NekroAI/nekro-endpoint/issues) 提问。

@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <!-- Main gradient -->
+    <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8A2BE2" />
+      <stop offset="50%" stop-color="#4A90E2" />
+      <stop offset="100%" stop-color="#50E3C2" />
+    </linearGradient>
+
+    <!-- Glow gradient for center node -->
+    <radialGradient id="glow-grad" cx="50%" cy="50%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.9" />
+      <stop offset="50%" stop-color="#50E3C2" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#4A90E2" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Shadow filter -->
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Background circle for glow effect -->
+  <circle cx="32" cy="32" r="28" fill="url(#glow-grad)" opacity="0.15" />
+
+  <!-- Outer nodes - representing distributed edge endpoints -->
+  <circle cx="32" cy="8" r="3.5" fill="url(#logo-grad)" filter="url(#shadow)" />
+  <circle cx="52" cy="20" r="3.5" fill="url(#logo-grad)" filter="url(#shadow)" />
+  <circle cx="52" cy="44" r="3.5" fill="url(#logo-grad)" filter="url(#shadow)" />
+  <circle cx="32" cy="56" r="3.5" fill="url(#logo-grad)" filter="url(#shadow)" />
+  <circle cx="12" cy="44" r="3.5" fill="url(#logo-grad)" filter="url(#shadow)" />
+  <circle cx="12" cy="20" r="3.5" fill="url(#logo-grad)" filter="url(#shadow)" />
+
+  <!-- Connection lines - tree structure -->
+  <g opacity="0.4" stroke="url(#logo-grad)" stroke-width="1.5" stroke-linecap="round">
+    <line x1="32" y1="8" x2="32" y2="20" />
+    <line x1="52" y1="20" x2="40" y2="26" />
+    <line x1="52" y1="44" x2="40" y2="38" />
+    <line x1="32" y1="56" x2="32" y2="44" />
+    <line x1="12" y1="44" x2="24" y2="38" />
+    <line x1="12" y1="20" x2="24" y2="26" />
+  </g>
+
+  <!-- Middle ring - orchestration layer -->
+  <circle cx="32" cy="32" r="18" stroke="url(#logo-grad)" stroke-width="2" fill="none" opacity="0.3" stroke-dasharray="4 4" />
+
+  <!-- Center node - core platform -->
+  <circle cx="32" cy="32" r="10" fill="url(#logo-grad)" filter="url(#shadow)" />
+
+  <!-- Center glow -->
+  <circle cx="32" cy="32" r="8" fill="white" opacity="0.9" />
+
+  <!-- Center icon - endpoint symbol (三条横线代表端点列表) -->
+  <g fill="url(#logo-grad)" opacity="0.8">
+    <rect x="26" y="26" width="12" height="2" rx="1" />
+    <rect x="26" y="31" width="12" height="2" rx="1" />
+    <rect x="26" y="36" width="12" height="2" rx="1" />
+  </g>
+</svg>

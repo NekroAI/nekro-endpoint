@@ -1,6 +1,6 @@
 # 📋 安装配置指南
 
-本指南将详细介绍 NekroEdge 模板的安装、配置和初始化过程。
+本指南将详细介绍 NekroEndpoint 平台的安装、配置和初始化过程。
 
 ## 📋 系统要求
 
@@ -22,7 +22,7 @@
 
 #### 方式一：使用 GitHub 模板 (🌟 强烈推荐)
 
-1. 访问 [NekroEdge 模板页面](https://github.com/NekroAI/nekro-edge-template)
+1. 访问 [NekroEndpoint 平台页面](https://github.com/NekroAI/nekro-endpoint)
 2. 点击绿色的 **"Use this template"** 按钮
 3. 选择 **"Create a new repository"**
 4. 填写你的仓库名称和描述
@@ -46,11 +46,11 @@ cd your-project-name
 
 如果你计划向原模板贡献代码，可以选择 Fork：
 
-1. 在 [GitHub 模板页面](https://github.com/NekroAI/nekro-edge-template) 点击 **"Fork"**
+1. 在 [GitHub 平台页面](https://github.com/NekroAI/nekro-endpoint) 点击 **"Fork"**
 2. 克隆你的 Fork
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/nekro-edge-template.git your-project-name
+git clone https://github.com/YOUR_USERNAME/nekro-endpoint.git your-project-name
 cd your-project-name
 ```
 
@@ -58,7 +58,7 @@ cd your-project-name
 
 ```bash
 # 仅用于快速测试，不推荐用于正式项目
-git clone https://github.com/NekroAI/nekro-edge-template.git your-project-name
+git clone https://github.com/NekroAI/nekro-endpoint.git your-project-name
 cd your-project-name
 
 # 如需创建新的 Git 历史

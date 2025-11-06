@@ -60,7 +60,7 @@ export const HeroSection = () => {
                 WebkitTextFillColor: "transparent",
               }}
             >
-              NekroEdge
+              NekroEndpoint
             </Typography>
             <Chip
               label="Template"
@@ -194,7 +194,7 @@ export const HeroSection = () => {
               体验演示
             </Button>
             <Button
-              href="https://github.com/NekroAI/nekro-edge-template"
+              href="https://github.com/NekroAI/nekro-endpoint"
               target="_blank"
               variant="outlined"
               size="large"

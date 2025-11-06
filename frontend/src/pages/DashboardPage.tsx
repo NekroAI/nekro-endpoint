@@ -23,17 +23,25 @@ import {
   Refresh as RefreshIcon,
   ExitToApp as LogoutIcon,
   CheckCircle as CheckIcon,
+  Storage as EndpointsIcon,
+  VpnKey as PermissionsIcon,
+  ArrowForward as ArrowIcon,
+  Warning as WarningIcon,
 } from "@mui/icons-material";
 import { useAuth, fetchWithAuth } from "../hooks/useAuth";
 import { RegenerateApiKeyResponseSchema } from "../../../common/validators/auth.schema";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { z } from "zod";
+import { useEndpoints } from "../hooks/useEndpoints";
+import { usePermissionGroups } from "../hooks/usePermissionGroups";
 
 export function DashboardPage() {
   const theme = useTheme();
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const navigate = useNavigate();
+  const { data: endpointsData } = useEndpoints("flat");
+  const { data: permissionGroupsData } = usePermissionGroups();
   const [regenerateDialogOpen, setRegenerateDialogOpen] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [newApiKey, setNewApiKey] = useState<string | null>(null);
@@ -42,6 +50,10 @@ export function DashboardPage() {
     message: "",
     severity: "success",
   });
+
+  const endpoints = (endpointsData as any)?.data?.endpoints || [];
+  const publishedEndpoints = endpoints.filter((e: any) => e.isPublished);
+  const permissionGroups = (permissionGroupsData as any)?.data?.groups || [];
 
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -128,6 +140,102 @@ export function DashboardPage() {
         <Button startIcon={<LogoutIcon />} onClick={logout} variant="outlined" color="error">
           登出
         </Button>
+      </Box>
+
+      {/* 账号激活状态提示 */}
+      {!user?.isActivated && (
+        <Alert severity="info" icon={<WarningIcon />} sx={{ mb: 4 }}>
+          <Typography variant="body2">
+            <strong>账号未激活：</strong>
+            您可以正常使用部分功能（创建端点、管理权限组等），但暂时无法<strong>发布端点</strong>
+            。发布功能需要管理员激活您的账号。
+          </Typography>
+        </Alert>
+      )}
+
+      {/* 快速访问卡片 */}
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3, mb: 4 }}>
+        <Card
+          sx={{ transition: "all 0.3s", "&:hover": { transform: "translateY(-4px)", boxShadow: theme.shadows[8] } }}
+        >
+          <CardContent>
+            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+              <Box
+                sx={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 2,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  bgcolor: `${theme.palette.primary.main}15`,
+                  mr: 2,
+                }}
+              >
+                <EndpointsIcon sx={{ fontSize: 28, color: "primary.main" }} />
+              </Box>
+              <Box sx={{ flexGrow: 1 }}>
+                <Typography variant="h6" gutterBottom sx={{ mb: 0.5 }}>
+                  端点管理
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {endpoints.length} 个端点，{publishedEndpoints.length} 个已发布
+                </Typography>
+              </Box>
+            </Box>
+            <Button
+              component={RouterLink}
+              to="/endpoints"
+              variant="outlined"
+              fullWidth
+              endIcon={<ArrowIcon />}
+              sx={{ mt: 1 }}
+            >
+              管理端点
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card
+          sx={{ transition: "all 0.3s", "&:hover": { transform: "translateY(-4px)", boxShadow: theme.shadows[8] } }}
+        >
+          <CardContent>
+            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+              <Box
+                sx={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 2,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  bgcolor: `${theme.palette.success.main}15`,
+                  mr: 2,
+                }}
+              >
+                <PermissionsIcon sx={{ fontSize: 28, color: "success.main" }} />
+              </Box>
+              <Box sx={{ flexGrow: 1 }}>
+                <Typography variant="h6" gutterBottom sx={{ mb: 0.5 }}>
+                  权限组
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {permissionGroups.length} 个权限组
+                </Typography>
+              </Box>
+            </Box>
+            <Button
+              component={RouterLink}
+              to="/permissions"
+              variant="outlined"
+              fullWidth
+              endIcon={<ArrowIcon />}
+              sx={{ mt: 1 }}
+            >
+              管理权限
+            </Button>
+          </CardContent>
+        </Card>
       </Box>
 
       {/* 用户信息卡片 */}
@@ -240,7 +348,7 @@ export function DashboardPage() {
                 color: theme.palette.mode === "dark" ? "grey.300" : "text.primary",
               }}
             >
-              {`curl -H "Authorization: Bearer ${user.apiKey}" \\
+              {`curl -H "Authorization: Bearer ${formatApiKey(user.apiKey)}" \\
   ${window.location.origin}/api/your-endpoint`}
             </Typography>
           </Paper>

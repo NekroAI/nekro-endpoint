@@ -4,6 +4,11 @@ import HomePage from "./pages/HomePage";
 import { Features } from "./pages/Features";
 import { DashboardPage } from "./pages/DashboardPage";
 import { AuthCallbackPage } from "./pages/AuthCallbackPage";
+import { EndpointsPage } from "./pages/EndpointsPage";
+import { PermissionGroupsPage } from "./pages/PermissionGroupsPage";
+import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
+import { InitPage } from "./pages/InitPage";
+import { DocsPage } from "./pages/DocsPage";
 
 /**
  * 应用路由配置
@@ -18,10 +23,17 @@ import { AuthCallbackPage } from "./pages/AuthCallbackPage";
  */
 export const AppRoutes = () => (
   <Routes>
+    {/* 初始化页面（不需要 App 布局） */}
+    <Route path="/init" element={<InitPage />} />
+
     <Route path="/" element={<App />}>
       <Route index element={<HomePage />} />
+      <Route path="docs" element={<DocsPage />} />
       <Route path="features" element={<Features />} />
       <Route path="dashboard" element={<DashboardPage />} />
+      <Route path="endpoints" element={<EndpointsPage />} />
+      <Route path="permissions" element={<PermissionGroupsPage />} />
+      <Route path="admin/users" element={<AdminUsersPage />} />
       <Route path="auth/callback" element={<AuthCallbackPage />} />
       {/* 在这里添加新的路由 */}
     </Route>

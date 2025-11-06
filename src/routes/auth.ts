@@ -280,7 +280,7 @@ auth
       const userResponse = await fetch("https://api.github.com/user", {
         headers: {
           Authorization: `token ${tokenData.access_token}`,
-          "User-Agent": "nekro-edge-template",
+          "User-Agent": "nekro-endpoint",
           Accept: "application/vnd.github.v3+json",
         },
       });
@@ -374,7 +374,12 @@ auth
               email: user.email,
               avatarUrl: user.avatarUrl,
               apiKey: user.apiKey,
-              createdAt: user.createdAt.toISOString(),
+              role: user.role as "user" | "admin",
+              isActivated: user.isActivated,
+              createdAt:
+                user.createdAt instanceof Date
+                  ? user.createdAt.toISOString()
+                  : new Date((user.createdAt as number) * 1000).toISOString(),
             },
             sessionToken,
           },
@@ -434,7 +439,12 @@ protectedRoutes
       email: user.email,
       avatarUrl: user.avatarUrl,
       apiKey: user.apiKey,
-      createdAt: user.createdAt.toISOString(),
+      role: user.role as "user" | "admin",
+      isActivated: user.isActivated,
+      createdAt:
+        user.createdAt instanceof Date
+          ? user.createdAt.toISOString()
+          : new Date((user.createdAt as number) * 1000).toISOString(),
     });
 
     return c.json(result, 200);

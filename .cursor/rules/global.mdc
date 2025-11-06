@@ -164,6 +164,10 @@ alwaysApply: true
 - **API Key 系统**: 每个用户拥有唯一的 API Key（`ak-` 前缀 + 64 位十六进制）
 - **中间件保护**: 使用 `authMiddleware` 保护需要认证的端点
 - **安全实践**: CSRF 防护（state 参数）、会话自动过期、安全的密钥生成
+- **激活系统**:
+  - 未激活用户可以使用所有管理功能（创建端点、编辑配置、管理权限组等）
+  - **唯一限制**: 未激活用户无法**发布**端点
+  - `activationMiddleware` 仅应用于 `/endpoints/:id/publish` 路由
 
 ### 4.2. 前端认证体验
 

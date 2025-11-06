@@ -1,10 +1,10 @@
 # 🔌 API 开发指南
 
-本指南介绍如何在 NekroEdge 模板中创建和管理后端 API。
+本指南介绍如何在 NekroEndpoint 平台中创建和管理后端 API。
 
 ## 🏗️ API 架构概览
 
-NekroEdge 使用 **Hono** 作为后端框架，结合 **Zod** 进行数据验证，**Drizzle ORM** 进行数据库操作。
+NekroEndpoint 使用 **Hono** 作为后端框架，结合 **Zod** 进行数据验证，**Drizzle ORM** 进行数据库操作。
 
 ### 核心特性
 
@@ -239,7 +239,7 @@ app.use("/users/*", authMiddleware);
 apiApp.doc("/doc", {
   openapi: "3.0.0",
   info: {
-    title: "NekroEdge API",
+    title: "NekroEndpoint API",
     version: "1.0.0",
     description: "全栈应用 API 文档",
   },

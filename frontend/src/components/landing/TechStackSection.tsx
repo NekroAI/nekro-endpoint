@@ -129,7 +129,7 @@ export const TechStackSection = () => {
               mx: "auto",
             })}
           >
-            NekroEdge 精心整合了以下业界一流的技术，为您提供卓越的全栈开发体验。
+            NekroEndpoint 精心整合了以下业界一流的技术，为您提供卓越的端点编排体验。
           </Typography>
         </motion.div>
 

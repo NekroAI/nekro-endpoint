@@ -18,11 +18,14 @@ import {
   Dashboard as DashboardIcon,
   ExitToApp as LogoutIcon,
   GitHub as GitHubIcon,
+  Storage as EndpointsIcon,
+  VpnKey as PermissionsIcon,
+  AdminPanelSettings as AdminIcon,
 } from "@mui/icons-material";
 import { Link as RouterLink, Outlet, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { Footer } from "./components/Footer";
-import { NekroEdgeLogo } from "./assets/logos";
+import { NekroEndpointLogo } from "./assets/logos";
 import { ToggleThemeButton } from "./components/ToggleThemeButton";
 import { useAuth } from "./hooks/useAuth";
 
@@ -71,7 +74,7 @@ function App() {
                 color: "inherit",
               }}
             >
-              <NekroEdgeLogo height={32} />
+              <NekroEndpointLogo height={32} />
               <Typography
                 variant="h6"
                 noWrap
@@ -82,7 +85,7 @@ function App() {
                   fontWeight: 700,
                 }}
               >
-                NekroEdge
+                NekroEndpoint
               </Typography>
             </Box>
 
@@ -91,30 +94,31 @@ function App() {
             {/* 导航链接 */}
             <Button
               component={RouterLink}
-              to="/features"
+              to="/docs"
               sx={{
                 my: 2,
                 color: "inherit",
                 display: "block",
-                fontWeight: location.pathname === "/features" ? "bold" : "normal",
+                fontWeight: location.pathname === "/docs" ? "bold" : "normal",
               }}
             >
-              API 示例
+              使用文档
             </Button>
-
             {isAuthenticated && (
-              <Button
-                component={RouterLink}
-                to="/dashboard"
-                sx={{
-                  my: 2,
-                  color: "inherit",
-                  display: "block",
-                  fontWeight: location.pathname === "/dashboard" ? "bold" : "normal",
-                }}
-              >
-                控制台
-              </Button>
+              <>
+                <Button
+                  component={RouterLink}
+                  to="/endpoints"
+                  sx={{
+                    my: 2,
+                    color: "inherit",
+                    display: "block",
+                    fontWeight: location.pathname === "/endpoints" ? "bold" : "normal",
+                  }}
+                >
+                  端点管理
+                </Button>
+              </>
             )}
 
             <ToggleThemeButton />
@@ -146,11 +150,25 @@ function App() {
                   anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
                 >
                   <MenuItem onClick={handleMenuClose} component={RouterLink} to="/dashboard">
-                    <DashboardIcon sx={{ mr: 1 }} />
+                    <DashboardIcon sx={{ mr: 1, fontSize: 20 }} />
                     控制台
                   </MenuItem>
+                  <MenuItem onClick={handleMenuClose} component={RouterLink} to="/endpoints">
+                    <EndpointsIcon sx={{ mr: 1, fontSize: 20 }} />
+                    端点管理
+                  </MenuItem>
+                  <MenuItem onClick={handleMenuClose} component={RouterLink} to="/permissions">
+                    <PermissionsIcon sx={{ mr: 1, fontSize: 20 }} />
+                    权限组
+                  </MenuItem>
+                  {user?.role === "admin" && (
+                    <MenuItem onClick={handleMenuClose} component={RouterLink} to="/admin/users">
+                      <AdminIcon sx={{ mr: 1, fontSize: 20 }} />
+                      管理后台
+                    </MenuItem>
+                  )}
                   <MenuItem onClick={handleLogout}>
-                    <LogoutIcon sx={{ mr: 1 }} />
+                    <LogoutIcon sx={{ mr: 1, fontSize: 20 }} />
                     登出
                   </MenuItem>
                 </Menu>

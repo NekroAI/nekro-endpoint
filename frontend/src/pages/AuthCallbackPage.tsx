@@ -42,8 +42,16 @@ export function AuthCallbackPage() {
           queryClient.setQueryData<z.infer<typeof UserInfoSchema>>(["auth", "user"], data.data.user);
           // 3. 触发 refetch 以确保状态同步
           await refetch();
-          // 4. 导航到控制台页面
-          navigate("/dashboard");
+          // 4. 检查是否是从初始化页面跳转过来的
+          const initReturn = sessionStorage.getItem("init_return");
+          if (initReturn === "true") {
+            sessionStorage.removeItem("init_return");
+            // 重定向回初始化页面
+            navigate("/init");
+          } else {
+            // 导航到控制台页面
+            navigate("/dashboard");
+          }
         } else {
           console.error("Authentication failed:", data.message);
           navigate("/");

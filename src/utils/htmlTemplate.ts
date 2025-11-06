@@ -7,6 +7,35 @@ import {
 } from "../config/seo";
 
 /**
+ * 生成 favicon 链接标签
+ * 支持 SVG、PNG、ICO 等多种格式
+ */
+function generateFaviconLink(): string {
+  const { favicon } = seoConfig;
+
+  // 判断是否为绝对 URL
+  const faviconUrl = favicon.startsWith("http://") || favicon.startsWith("https://")
+    ? favicon
+    : favicon;
+
+  // 根据文件扩展名判断 MIME 类型
+  const extension = favicon.split(".").pop()?.toLowerCase();
+  const mimeTypes: Record<string, string> = {
+    svg: "image/svg+xml",
+    png: "image/png",
+    ico: "image/x-icon",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    gif: "image/gif",
+    webp: "image/webp",
+  };
+
+  const type = extension && mimeTypes[extension] ? mimeTypes[extension] : "image/x-icon";
+
+  return `<link rel="icon" type="${type}" href="${faviconUrl}">`;
+}
+
+/**
  * 生成完整的HTML页面模板
  * 统一的HTML生成逻辑，避免重复代码
  */
@@ -81,10 +110,10 @@ export function generateHtmlTemplate(options: {
       }
     }
     </script>
-    
+
     <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3e%3cdefs%3e%3clinearGradient id='a' x1='0' y1='0' x2='1' y2='1'%3e%3cstop offset='0%25' stop-color='%238A2BE2'/%3e%3cstop offset='100%25' stop-color='%234A90E2'/%3e%3c/linearGradient%3e%3clinearGradient id='b' x1='0' y1='0' x2='1' y2='1'%3e%3cstop offset='0%25' stop-color='%2350E3C2'/%3e%3cstop offset='100%25' stop-color='%234A90E2'/%3e%3c/linearGradient%3e%3c/defs%3e%3cpath d='M32 4L54 18V46L32 60L10 46V18L32 4Z' fill='url(%23a)'/%3e%3cpath d='M10 32 C 14 16, 50 16, 54 32 C 50 22, 14 22, 10 32 Z' fill='url(%23b)'/%3e%3c/svg%3e">
-    
+    ${generateFaviconLink()}
+
     <!-- Stylesheets -->
     ${cssFiles.map((css) => `<link rel="stylesheet" crossorigin href="${css}">`).join("\n    ")}
   </head>

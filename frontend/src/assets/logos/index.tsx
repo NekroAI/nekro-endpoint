@@ -1,23 +1,93 @@
 import { SVGProps } from "react";
 
-export const NekroEdgeLogo = (props: SVGProps<SVGSVGElement>) => (
+export const NekroEndpointLogo = (props: SVGProps<SVGSVGElement>) => (
   <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
     <defs>
-      <linearGradient id="logo-grad" x1="0" y1="0" x2="1" y2="1">
+      {/* Main gradient */}
+      <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#8A2BE2" />
         <stop offset="50%" stopColor="#4A90E2" />
         <stop offset="100%" stopColor="#50E3C2" />
       </linearGradient>
-      <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="2" dy="2" stdDeviation="2" floodColor="#000000" floodOpacity="0.2" />
+
+      {/* Glow gradient for center node */}
+      <radialGradient id="glow-grad" cx="50%" cy="50%">
+        <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.9" />
+        <stop offset="50%" stopColor="#50E3C2" stopOpacity="0.6" />
+        <stop offset="100%" stopColor="#4A90E2" stopOpacity="0" />
+      </radialGradient>
+
+      {/* Shadow filter */}
+      <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+        <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000000" floodOpacity="0.25" />
+      </filter>
+
+      {/* Glow filter for center */}
+      <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
       </filter>
     </defs>
-    {/* Main Hexagon */}
-    <path d="M32 4L54 18V46L32 60L10 46V18L32 4Z" fill="url(#logo-grad)" filter="url(#shadow)" />
-    {/* Center Circle */}
+
+    {/* Background circle for glow effect */}
+    <circle cx="32" cy="32" r="28" fill="url(#glow-grad)" opacity="0.15" />
+
+    {/* Outer nodes - representing distributed edge endpoints */}
+    <circle cx="32" cy="8" r="3.5" fill="url(#logo-grad)" filter="url(#shadow)" />
+    <circle cx="52" cy="20" r="3.5" fill="url(#logo-grad)" filter="url(#shadow)" />
+    <circle cx="52" cy="44" r="3.5" fill="url(#logo-grad)" filter="url(#shadow)" />
+    <circle cx="32" cy="56" r="3.5" fill="url(#logo-grad)" filter="url(#shadow)" />
+    <circle cx="12" cy="44" r="3.5" fill="url(#logo-grad)" filter="url(#shadow)" />
+    <circle cx="12" cy="20" r="3.5" fill="url(#logo-grad)" filter="url(#shadow)" />
+
+    {/* Connection lines - tree structure */}
+    <g opacity="0.4" stroke="url(#logo-grad)" strokeWidth="1.5" strokeLinecap="round">
+      <line x1="32" y1="8" x2="32" y2="20" />
+      <line x1="52" y1="20" x2="40" y2="26" />
+      <line x1="52" y1="44" x2="40" y2="38" />
+      <line x1="32" y1="56" x2="32" y2="44" />
+      <line x1="12" y1="44" x2="24" y2="38" />
+      <line x1="12" y1="20" x2="24" y2="26" />
+    </g>
+
+    {/* Middle ring - orchestration layer */}
+    <circle
+      cx="32"
+      cy="32"
+      r="18"
+      stroke="url(#logo-grad)"
+      strokeWidth="2"
+      fill="none"
+      opacity="0.3"
+      strokeDasharray="4 4"
+    >
+      <animateTransform
+        attributeName="transform"
+        type="rotate"
+        from="0 32 32"
+        to="360 32 32"
+        dur="20s"
+        repeatCount="indefinite"
+      />
+    </circle>
+
+    {/* Center node - core platform */}
+    <circle cx="32" cy="32" r="10" fill="url(#logo-grad)" filter="url(#shadow)" />
+
+    {/* Center glow */}
     <circle cx="32" cy="32" r="8" fill="white" opacity="0.9" />
-    {/* Inner Symbol */}
-    <path d="M28 28L36 32L28 36V28Z" fill="url(#logo-grad)" />
+
+    {/* Center icon - endpoint symbol (三条横线代表端点列表) */}
+    <g fill="url(#logo-grad)" opacity="0.8">
+      <rect x="26" y="26" width="12" height="2" rx="1" />
+      <rect x="26" y="31" width="12" height="2" rx="1" />
+      <rect x="26" y="36" width="12" height="2" rx="1" />
+    </g>
+
+    {/* Pulse effect rings */}
+    <circle cx="32" cy="32" r="14" stroke="url(#logo-grad)" strokeWidth="1" fill="none" opacity="0.2">
+      <animate attributeName="r" values="14;20;14" dur="3s" repeatCount="indefinite" />
+      <animate attributeName="opacity" values="0.2;0;0.2" dur="3s" repeatCount="indefinite" />
+    </circle>
   </svg>
 );
 

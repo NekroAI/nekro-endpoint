@@ -1,17 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useMemo } from "react";
 import { safeLocalStorage, isBrowser } from "../utils/storage";
+import type { User, ApiResponse } from "../../../common/types";
+import { UserInfoSchema } from "../../../common/validators/auth.schema";
 
-// 类型定义
-interface User {
-  id: string;
-  username: string;
-  email: string | null;
-  avatarUrl: string | null;
-  apiKey: string;
-  createdAt: string;
-}
-
+// 认证响应类型
 interface AuthResponse {
   success: boolean;
   message: string;
@@ -54,7 +47,9 @@ const authApi = {
       throw new Error("Failed to fetch user");
     }
 
-    return response.json();
+    // 使用 Zod Schema 验证并确保类型正确
+    const data = await response.json();
+    return UserInfoSchema.parse(data) as User;
   },
 
   // 登出
@@ -90,7 +85,17 @@ export const fetchWithAuth = async (input: RequestInfo | URL, init?: RequestInit
 };
 
 // 自定义 Hook
-export function useAuth() {
+export function useAuth(): {
+  user: User | undefined;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: Error | null;
+  login: () => void;
+  logout: () => void;
+  refetch: () => Promise<any>;
+  isLoginLoading: boolean;
+  isLogoutLoading: boolean;
+} {
   const queryClient = useQueryClient();
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasToken, setHasToken] = useState(() => !!safeLocalStorage.getItem("auth_token"));
@@ -101,7 +106,7 @@ export function useAuth() {
     isLoading,
     error,
     refetch,
-  } = useQuery({
+  } = useQuery<User>({
     queryKey: ["auth", "user"],
     queryFn: authApi.getCurrentUser,
     enabled: hasToken,
@@ -118,6 +123,14 @@ export function useAuth() {
       // 跳转到 GitHub 授权页面
       if (isBrowser) {
         window.location.href = data.authUrl;
+      }
+    },
+    onError: (error: Error) => {
+      console.error("登录失败:", error);
+      if (isBrowser) {
+        alert(
+          `登录失败: ${error.message}\n\n请检查：\n1. GitHub OAuth 是否已配置\n2. .dev.vars 文件是否存在并包含正确的 GITHUB_CLIENT_ID 和 GITHUB_CLIENT_SECRET`,
+        );
       }
     },
   });
@@ -183,13 +196,13 @@ export function useAuth() {
   const isAuthenticated = useMemo(() => !!user && hasToken, [user, hasToken]);
 
   // 调试日志
-  console.log("useAuth 状态:", {
-    user: user ? `${user.username} (${user.id})` : null,
-    hasToken,
-    isAuthenticated,
-    isLoading,
-    isInitialized,
-  });
+  // console.log("useAuth 状态:", {
+  //   user: user ? `${user.username} (${user.id})` : null,
+  //   hasToken,
+  //   isAuthenticated,
+  //   isLoading,
+  //   isInitialized,
+  // });
 
   return {
     user,

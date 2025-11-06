@@ -15,11 +15,11 @@ export const Footer = () => {
         <Divider sx={{ mb: 4 }} />
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            © {new Date().getFullYear()} NekroEdge Template. Built with ❤️ using Cloudflare.
+            © {new Date().getFullYear()} NekroEndpoint Platform. Built with ❤️ using Cloudflare.
           </Typography>
           <Box sx={{ display: "flex", gap: 3 }}>
             <Link
-              href="https://github.com/NekroAI/nekro-edge-template"
+              href="https://github.com/NekroAI/nekro-endpoint"
               target="_blank"
               rel="noopener"
               variant="body2"
@@ -27,7 +27,7 @@ export const Footer = () => {
             >
               GitHub
             </Link>
-            <Link href="https://edge.nekro.ai" target="_blank" rel="noopener" variant="body2" color="text.secondary">
+            <Link href="https://ep.nekro.ai" target="_blank" rel="noopener" variant="body2" color="text.secondary">
               Demo
             </Link>
             <Link href="https://cloudflare.com" target="_blank" rel="noopener" variant="body2" color="text.secondary">
