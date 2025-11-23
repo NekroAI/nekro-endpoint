@@ -192,10 +192,11 @@ app.all("/e/:username/*", async (c) => {
           responseHeaders[key] = value;
         });
 
-        return c.body(await proxyResponse.arrayBuffer(), {
+        return new Response(proxyResponse.body, {
           status: proxyResponse.status,
           headers: responseHeaders,
         });
+        
       } catch (error: any) {
         if (error.name === "AbortError") {
           return c.json({ error: "Proxy timeout" }, 504);
