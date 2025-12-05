@@ -85,7 +85,7 @@ export const endpoints = sqliteTable(
     parentId: text("parent_id"), // 树形结构：父节点ID
     path: text("path").notNull(), // 端点路径
     name: text("name").notNull(), // 端点名称
-    type: text("type").notNull(), // static | proxy | script
+    type: text("type").notNull(), // static | proxy | dynamicProxy | script
     config: text("config").notNull(), // JSON 配置
     accessControl: text("access_control").notNull().default("public"), // public | authenticated
     requiredPermissionGroups: text("required_permission_groups"), // JSON array of group IDs

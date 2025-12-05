@@ -9,6 +9,10 @@ import {
   EndpointTypeSchema,
   AccessControlSchema,
   EndpointConfigSchema,
+  StaticConfigSchema,
+  ProxyConfigSchema,
+  DynamicProxyConfigSchema,
+  ScriptConfigSchema,
   EndpointSchema,
   CreateEndpointSchema,
   UpdateEndpointSchema,
@@ -34,8 +38,20 @@ export type EndpointType = z.infer<typeof EndpointTypeSchema>;
 /** 访问控制类型 */
 export type AccessControl = z.infer<typeof AccessControlSchema>;
 
-/** 端点配置类型 */
+/** 端点配置类型（联合类型） */
 export type EndpointConfig = z.infer<typeof EndpointConfigSchema>;
+
+/** 静态端点配置 */
+export type StaticConfig = z.infer<typeof StaticConfigSchema>;
+
+/** 代理端点配置 */
+export type ProxyConfig = z.infer<typeof ProxyConfigSchema>;
+
+/** 动态代理端点配置 */
+export type DynamicProxyConfig = z.infer<typeof DynamicProxyConfigSchema>;
+
+/** 脚本端点配置 */
+export type ScriptConfig = z.infer<typeof ScriptConfigSchema>;
 
 // ==================== 实体类型 (从 Schema 推导) ====================
 
@@ -125,7 +141,7 @@ export interface UsersListData {
 // ==================== 常量导出 ====================
 
 /** 端点类型常量 */
-export const ENDPOINT_TYPES = ["static", "proxy", "script"] as const;
+export const ENDPOINT_TYPES = ["static", "proxy", "dynamicProxy", "script"] as const;
 
 /** 访问控制级别常量 */
 export const ACCESS_CONTROLS = ["public", "authenticated"] as const;

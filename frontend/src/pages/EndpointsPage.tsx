@@ -51,6 +51,7 @@ import {
   Link as LinkIcon,
   VpnKey as KeyIcon,
   ArrowDropDown as ArrowDropDownIcon,
+  AccountTree as DynamicProxyIcon,
 } from "@mui/icons-material";
 import { SimpleTreeView } from "@mui/x-tree-view/SimpleTreeView";
 import { TreeItem } from "@mui/x-tree-view/TreeItem";
@@ -77,7 +78,7 @@ interface PathTreeNode {
     id: string;
     name: string;
     path: string;
-    type: "static" | "proxy" | "script";
+    type: "static" | "proxy" | "dynamicProxy" | "script";
     config: any;
     accessControl: "public" | "authenticated";
     isPublished: boolean;
@@ -128,7 +129,7 @@ export function EndpointsPage() {
   // 创建端点表单状态
   const [newEndpointName, setNewEndpointName] = useState("");
   const [newEndpointPath, setNewEndpointPath] = useState("");
-  const [newEndpointType, setNewEndpointType] = useState<"static" | "proxy" | "script">("static");
+  const [newEndpointType, setNewEndpointType] = useState<"static" | "proxy" | "dynamicProxy" | "script">("static");
   const [newEndpointAccessControl, setNewEndpointAccessControl] = useState<"public" | "authenticated">("public");
   const [newEndpointPermissionGroups, setNewEndpointPermissionGroups] = useState<string[]>([]);
 
@@ -190,10 +191,19 @@ export function EndpointsPage() {
                 removeHeaders: [],
                 timeout: 10000,
               }
-            : {
-                code: "// 编写脚本\nexport default async function handler(request) {\n  return new Response('Hello World');\n}",
-                runtime: "javascript" as const,
-              };
+            : newEndpointType === "dynamicProxy"
+              ? {
+                  baseUrl: "",
+                  autoAppendSlash: true,
+                  headers: {},
+                  removeHeaders: [],
+                  timeout: 15000,
+                  allowedPaths: [],
+                }
+              : {
+                  code: "// 编写脚本\nexport default async function handler(request) {\n  return new Response('Hello World');\n}",
+                  runtime: "javascript" as const,
+                };
 
       await createEndpoint.mutateAsync({
         name: newEndpointName,
@@ -304,6 +314,8 @@ export function EndpointsPage() {
         return <FileIcon sx={{ fontSize: "1.2rem", color: "primary.main" }} />;
       case "proxy":
         return <ProxyIcon sx={{ fontSize: "1.2rem", color: "info.main" }} />;
+      case "dynamicProxy":
+        return <DynamicProxyIcon sx={{ fontSize: "1.2rem", color: "success.main" }} />;
       case "script":
         return <CodeIcon sx={{ fontSize: "1.2rem", color: "secondary.main" }} />;
       default:
@@ -444,7 +456,7 @@ export function EndpointsPage() {
     selectedNode && !selectedNode.isVirtual && endpointDetail ? (endpointDetail as any)?.data : null;
 
   return (
-    <Box sx={{ display: "flex", height: "calc(100vh - 64px)", overflow: "hidden" }}>
+    <Box sx={{ display: "flex", height: "100%", overflow: "hidden" }}>
       {/* 左侧：树形视图 */}
       <Paper
         elevation={1}
@@ -583,6 +595,8 @@ export function EndpointsPage() {
                         <FileIcon />
                       ) : selectedEndpoint.type === "proxy" ? (
                         <ProxyIcon />
+                      ) : selectedEndpoint.type === "dynamicProxy" ? (
+                        <DynamicProxyIcon />
                       ) : (
                         <CodeIcon />
                       )}
@@ -834,10 +848,11 @@ export function EndpointsPage() {
             label="端点类型"
             fullWidth
             value={newEndpointType}
-            onChange={(e) => setNewEndpointType(e.target.value as "static" | "proxy" | "script")}
+            onChange={(e) => setNewEndpointType(e.target.value as "static" | "proxy" | "dynamicProxy" | "script")}
           >
             <MenuItem value="static">静态内容</MenuItem>
-            <MenuItem value="proxy">代理转发</MenuItem>
+            <MenuItem value="proxy">代理转发（固定 URL）</MenuItem>
+            <MenuItem value="dynamicProxy">动态代理（子路径转发）</MenuItem>
             <MenuItem value="script">脚本端点 (Phase 3)</MenuItem>
           </TextField>
           <TextField
@@ -1087,12 +1102,7 @@ function AccessKeySelectionDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>取消</Button>
-        <Button
-          onClick={handleCopy}
-          variant="contained"
-          disabled={!selectedKeyValue}
-          startIcon={<CopyIcon />}
-        >
+        <Button onClick={handleCopy} variant="contained" disabled={!selectedKeyValue} startIcon={<CopyIcon />}>
           复制地址
         </Button>
       </DialogActions>
@@ -1117,8 +1127,7 @@ function AccessKeyGroupSection({
 
   // 只显示可用的密钥
   const activeKeys = keys.filter(
-    (key: any) =>
-      key.isActive && (!key.expiresAt || new Date(key.expiresAt) > new Date())
+    (key: any) => key.isActive && (!key.expiresAt || new Date(key.expiresAt) > new Date()),
   );
 
   if (activeKeys.length === 0) {
@@ -1152,11 +1161,7 @@ function AccessKeyGroupSection({
                 sx={{ cursor: "pointer" }}
               >
                 <TableCell padding="checkbox">
-                  <Radio
-                    checked={selectedKeyId === key.id}
-                    value={key.id}
-                    size="small"
-                  />
+                  <Radio checked={selectedKeyId === key.id} value={key.id} size="small" />
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>

@@ -1,7 +1,6 @@
 import { Box, Container, Typography, Button, Grid, Card, CardContent, useTheme, Paper, Chip } from "@mui/material";
 import {
-  Storage as EndpointsIcon,
-  VpnKey as KeyIcon,
+  Dashboard as WorkspaceIcon,
   Speed as SpeedIcon,
   Security as SecurityIcon,
   Code as CodeIcon,
@@ -9,6 +8,8 @@ import {
   Router as RouterIcon,
   Description as DocsIcon,
   GitHub as GitHubIcon,
+  Storage as EndpointsIcon,
+  VpnKey as KeyIcon,
 } from "@mui/icons-material";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
@@ -53,32 +54,32 @@ const HomePage = () => {
               color="text.secondary"
               sx={{ mb: 4, maxWidth: "800px", mx: "auto", fontWeight: 400 }}
             >
-              在边缘构建你的 API 端点，支持静态内容、代理转发、动态脚本执行。
+              在边缘构建你的 API 端点，支持静态内容托管、资源代理等
               <br />
-              立即注册即可使用所有功能，激活后发布你的端点。
+              完全开源！部署即可使用所有功能，立即发布你的端点到全球边缘网络
             </Typography>
             <Box sx={{ display: "flex", gap: 2, justifyContent: "center", flexWrap: "wrap" }}>
               {isAuthenticated ? (
                 <>
                   <Button
                     component={RouterLink}
-                    to="/endpoints"
+                    to="/dashboard"
                     variant="contained"
                     size="large"
-                    startIcon={<EndpointsIcon />}
+                    startIcon={<WorkspaceIcon />}
                     sx={{ px: 4, py: 1.5 }}
                   >
-                    管理端点
+                    进入工作台
                   </Button>
                   <Button
                     component={RouterLink}
-                    to="/permissions"
+                    to="/docs"
                     variant="outlined"
                     size="large"
-                    startIcon={<KeyIcon />}
+                    startIcon={<DocsIcon />}
                     sx={{ px: 4, py: 1.5 }}
                   >
-                    权限配置
+                    使用文档
                   </Button>
                   <Button
                     component="a"
@@ -171,12 +172,13 @@ const HomePage = () => {
                   多种端点类型
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  支持静态内容返回、代理转发、动态脚本执行三种端点类型，满足不同场景需求
+                  支持静态内容、固定代理、动态代理、脚本执行四种端点类型，满足不同场景需求
                 </Typography>
                 <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
                   <Chip label="Static" size="small" />
                   <Chip label="Proxy" size="small" />
-                  <Chip label="Script" size="small" color="primary" />
+                  <Chip label="Dynamic Proxy" size="small" color="success" />
+                  <Chip label="Script" size="small" variant="outlined" />
                 </Box>
               </CardContent>
             </Card>
@@ -215,7 +217,7 @@ const HomePage = () => {
                 <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
                   <Chip label="权限组" size="small" />
                   <Chip label="访问密钥" size="small" />
-                  <Chip label="到期时间" size="small" color="success" />
+                  <Chip label="期限控制" size="small" color="success" />
                 </Box>
               </CardContent>
             </Card>
@@ -253,7 +255,7 @@ const HomePage = () => {
                 </Typography>
                 <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
                   <Chip label="全球部署" size="small" />
-                  <Chip label="零冷启动" size="small" />
+                  <Chip label="极低成本" size="small" />
                   <Chip label="极速响应" size="small" color="warning" />
                 </Box>
               </CardContent>
@@ -279,10 +281,10 @@ const HomePage = () => {
                   <RouterIcon sx={{ fontSize: 32, color: "primary.main", mt: 0.5 }} />
                   <Box>
                     <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                      API 代理与聚合
+                      仓库资源加速 ⭐
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      将多个上游 API 聚合为统一端点，添加自定义逻辑，实现 API 网关功能
+                      通过动态代理一键代理整个 GitHub 仓库，加速访问所有文件，无需为每个资源创建端点
                     </Typography>
                   </Box>
                 </Box>
@@ -295,10 +297,10 @@ const HomePage = () => {
                   <CodeIcon sx={{ fontSize: 32, color: "success.main", mt: 0.5 }} />
                   <Box>
                     <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                      动态脚本执行
+                      API 代理与转发
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      在边缘运行自定义 JavaScript 代码，实现数据处理、格式转换等功能
+                      代理第三方 API，隐藏密钥、添加请求头、实现跨域访问，构建统一的 API 网关
                     </Typography>
                   </Box>
                 </Box>
@@ -311,10 +313,10 @@ const HomePage = () => {
                   <SecurityIcon sx={{ fontSize: 32, color: "warning.main", mt: 0.5 }} />
                   <Box>
                     <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                      内容分发与保护
+                      配置文件托管
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      发布静态内容或文件，配置访问密钥实现安全分发和权限控制
+                      托管 Clash 订阅、规则列表等配置文件，配合访问密钥实现安全分发和版本管理
                     </Typography>
                   </Box>
                 </Box>
@@ -327,10 +329,10 @@ const HomePage = () => {
                   <CloudIcon sx={{ fontSize: 32, color: "info.main", mt: 0.5 }} />
                   <Box>
                     <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                      Webhook 处理
+                      CDN 资源代理
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      接收和处理来自第三方服务的 Webhook，实现事件驱动的自动化流程
+                      代理 CDN 资源目录，加速静态资源访问，支持图片、CSS、JS 等多种文件类型
                     </Typography>
                   </Box>
                 </Box>

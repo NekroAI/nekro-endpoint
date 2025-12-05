@@ -16,6 +16,14 @@ alwaysApply: true
 - **目标用户**: 希望在 Cloudflare 生态中快速构建现代化 Web 应用的开发者。
 - **你的角色**: 维护并增强这个模板的工程化能力、易用性和健壮性。始终以"最佳实践"和"最低维护成本"为原则进行开发。
 
+**当前项目状态**（NekroEndpoint 实现）：
+
+- **Phase 1（MVP）**：100% 完成 ✅
+- **Phase 2（权限组系统）**：100% 完成 ✅
+- **Phase 3.1（动态代理端点）**：100% 完成 ✅
+- **Phase 3.2（脚本端点）**：计划中 ⏳
+- **可投入生产使用**：适用于静态内容托管、固定代理和动态子路径代理场景
+
 ## 2. 核心技术与架构
 
 ### 2.1. 整体架构
@@ -58,6 +66,8 @@ alwaysApply: true
 
 ### 2.3. 前端 (`frontend/`)
 
+#### 路由与入口
+
 - **统一路由配置**:
   - **核心改进**: `frontend/src/routes.tsx` - 唯一的路由定义文件，被客户端和服务端入口共享使用。
   - **开发友好**: 添加新页面时，只需要在此文件中修改一次，避免了在多个入口文件中重复定义。
@@ -65,25 +75,134 @@ alwaysApply: true
   - `entry-client.tsx`: **客户端入口**。负责在浏览器中"激活"(hydrate) 由服务器渲染的 HTML。使用统一的路由配置。
   - `entry-server.tsx`: **服务器端渲染入口**。负责在后端生成初始的 HTML 字符串。使用统一的路由配置。
   - **关键优化**: 两个入口文件都使用 `AppRoutes` 组件，确保路由定义的一致性。
-- **主题系统**:
-  - **核心**:
-    - `frontend/src/context/ThemeContextProvider.tsx` 提供了一个全局的 `AppThemeProvider` 和 `useAppTheme` hook。
-    - `frontend/src/theme/` 目录是我们中心化的主题定义模块。
-  - **架构与规则**:
-    - **自定义主题**: 我们通过对 Material-UI 主题进行模块扩展 (module augmentation) 来添加自定义、类型安全的主题属性。类型定义位于 `frontend/src/theme/types.ts`。
-    - **中心化管理**: 所有与主题相关的样式（如特定页面的背景、自定义组件颜色等）都**必须**在 `frontend/src/theme/index.ts` 中的 `lightTheme` 和 `darkTheme` 对象里进行定义。
-    - **组件内使用**: 组件**禁止**通过 `theme.palette.mode === 'dark'` 这样的条件判断来硬编码样式。**必须**直接从主题对象中获取预先定义好的自定义属性 (例如 `theme.pageBackground`)。
-    - **状态切换**: 所有主题状态的读取和切换都**必须**通过 `useAppTheme` hook 进行。
-- **认证系统**:
-  - **useAuth Hook** (`hooks/useAuth.ts`): 统一的认证状态管理，提供 login/logout/refetch 方法。
-  - **Storage 工具** (`utils/storage.ts`): SSR 安全的 localStorage 封装，支持跨标签页状态同步。
-  - **认证回调页面** (`pages/AuthCallbackPage.tsx`): 处理 GitHub OAuth 回调。
-  - **Dashboard 页面** (`pages/DashboardPage.tsx`): 显示用户信息、API Key 管理（查看、复制、重新生成）。
-- **页面与布局**:
-  - `pages/`: 存放页面级组件。
-  - `App.tsx`: 应用内部的主布局，包含导航栏、用户头像菜单、登录按钮、页脚和主题切换。
+
+#### 页面结构（完整实现）
+
+- **pages/HomePage.tsx**: 首页，展示项目介绍
+- **pages/AuthCallbackPage.tsx**: GitHub OAuth 回调处理页面
+- **pages/DashboardPage.tsx**: 用户仪表盘
+  - 用户信息展示
+  - API Key 查看/复制/重新生成
+  - 账户统计信息
+- **pages/EndpointsPage.tsx**: 端点管理页面（核心功能）
+  - 左侧：路径树视图（TreeView）
+  - 右侧：端点编辑器（Monaco Editor）
+  - 功能：创建、编辑、删除、发布、移动端点
+  - 支持：静态端点、代理端点配置
+- **pages/PermissionGroupsPage.tsx**: 权限组管理页面
+  - 权限组列表
+  - 访问密钥管理（生成、编辑、撤销、删除）
+  - 密钥显示/隐藏切换
+  - 快捷到期时间设置
+- **pages/InitPage.tsx**: 系统初始化页面
+  - 检查系统状态
+  - 选择首个管理员
+  - 自动激活用户
+- **pages/admin/AdminUsersPage.tsx**: 管理员用户管理页面
+  - 用户列表（分页、搜索、筛选）
+  - 激活/停用用户
+  - 删除用户
+- **pages/DocsPage.tsx**: 文档页面
+- **pages/Features.tsx**: 功能开关页面（模板遗留）
+
+#### 主题系统
+
+- **核心**:
+  - `frontend/src/context/ThemeContextProvider.tsx` 提供了一个全局的 `AppThemeProvider` 和 `useAppTheme` hook。
+  - `frontend/src/theme/` 目录是我们中心化的主题定义模块。
+- **架构与规则**:
+  - **自定义主题**: 我们通过对 Material-UI 主题进行模块扩展 (module augmentation) 来添加自定义、类型安全的主题属性。类型定义位于 `frontend/src/theme/types.ts`。
+  - **中心化管理**: 所有与主题相关的样式（如特定页面的背景、自定义组件颜色等）都**必须**在 `frontend/src/theme/index.ts` 中的 `lightTheme` 和 `darkTheme` 对象里进行定义。
+  - **组件内使用**: 组件**禁止**通过 `theme.palette.mode === 'dark'` 这样的条件判断来硬编码样式。**必须**直接从主题对象中获取预先定义好的自定义属性 (例如 `theme.pageBackground`)。
+  - **状态切换**: 所有主题状态的读取和切换都**必须**通过 `useAppTheme` hook 进行。
+
+#### 认证系统
+
+- **useAuth Hook** (`hooks/useAuth.ts`): 统一的认证状态管理，提供 login/logout/refetch 方法。
+- **Storage 工具** (`utils/storage.ts`): SSR 安全的 localStorage 封装，支持跨标签页状态同步。
+- **认证流程**:
+  1. 用户点击登录按钮
+  2. 调用 `/api/auth/github` 获取 OAuth URL
+  3. 跳转到 GitHub 授权页面
+  4. GitHub 回调到 `/auth/callback`
+  5. `AuthCallbackPage` 处理回调，获取 sessionToken
+  6. 存储 sessionToken 到 localStorage
+  7. 跳转到 Dashboard
+
+#### 状态管理
+
+- **React Query**: 用于服务器状态管理
+  - `hooks/useEndpoints.ts`: 端点数据管理
+  - `hooks/usePermissionGroups.ts`: 权限组数据管理
+  - `hooks/useAccessKeys.ts`: 访问密钥数据管理
+  - `hooks/useAuth.ts`: 认证状态管理
+- **React Context**: 用于全局客户端状态
+  - `ThemeContext`: 主题状态管理
+
+#### 核心组件
+
+- **components/WorkspaceTopBar.tsx**: 工作区顶栏组件
+  - macOS 风格紧凑设计（40px 高度）
+  - Logo + 导航按钮 + 更多菜单 + 用户头像
+  - 主题切换按钮
+- **components/endpoints/EndpointEditor.tsx**: 端点编辑器组件
+  - Monaco Editor 集成
+  - 静态端点内容编辑
+  - 代理端点配置表单
+  - 动态代理端点配置表单（Phase 3.1）
+- **App.tsx**: 标准网页布局
+  - 导航栏
+  - 用户头像菜单
+  - 登录按钮
+  - 页脚
+  - 主题切换按钮
+  - 用于首页、文档、控制台等内容页面
+
+#### 布局系统
+
+项目现有**两套布局系统**，根据页面类型选择：
+
+**1. 标准网页布局（App.tsx）**
+
+- 用途：首页、文档等内容展示页面
+- 特点：完整的导航栏（64px）+ 内容区 + 页脚
+- 滚动：内容区可整页滚动
+- 风格：传统网页体验
+
+**2. 工作区布局（WorkspaceLayout.tsx）** ⭐
+
+- 用途：控制台、端点管理、权限组管理、管理后台等专业工具页面
+- 特点：紧凑的 macOS 风格顶栏（40px）+ 无页脚 + 全高度内容
+- 滚动：内部容器管理滚动，无整页滚动
+- 风格：类桌面应用的沉浸式工作区
+- 顶栏功能：Logo、导航按钮（控制台、端点管理、权限组、管理后台）、文档图标、主题切换、用户头像菜单
+
+**路由配置规则**（`frontend/src/routes.tsx`）：
+
+```tsx
+// 工作区布局（专业工具页面）
+<Route element={<WorkspaceLayout />}>
+  <Route path="/dashboard" element={<DashboardPage />} />
+  <Route path="/endpoints" element={<EndpointsPage />} />
+  <Route path="/permissions" element={<PermissionGroupsPage />} />
+  <Route path="/admin/users" element={<AdminUsersPage />} />
+</Route>
+
+// 标准布局（内容页面）
+<Route path="/" element={<App />}>
+  <Route index element={<HomePage />} />
+  <Route path="docs" element={<DocsPage />} />
+</Route>
+```
+
+#### 构建配置
+
 - **Vite 配置: `vite.config.mts`**:
-  - **关键认知**: 配置了 `resolve.alias` 来支持 `@/` 路径别名。如果未来有构建问题，应检查此处的配置。
+  - **路径别名**: `@/` 指向 `frontend/src/`
+  - **SSR 兼容**: `ssr.noExternal` 包含 React Router、Material-UI、Emotion 等库
+  - **构建输出**:
+    - 客户端：`dist/client/`
+    - 服务端：`dist/server/`
 
 ### 2.4. 数据库与迁移
 
@@ -111,7 +230,305 @@ alwaysApply: true
 
 **文档维护原则**: 确保每个功能领域都有专门的文档，避免重复内容，便于团队协作和知识管理。
 
-## 3. 你的工作原则
+### 2.6. 实际实现与设计文档的差异
+
+基于 `.cursor/trace/design.md` 的产品设计文档，以下是当前实现的关键差异点：
+
+#### 数据库 Schema 差异
+
+**已实现的表（6/7 核心表）**：
+
+- ✅ **users**（用户表）- 完整实现
+  - 包含 githubId、username、email、avatarUrl
+  - apiKey（格式：`sec-{64位十六进制}`）
+  - platformApiKey（PBKDF2 哈希存储）
+  - role（user/admin）、isActivated
+- ✅ **userSessions**（会话表）- 完整实现
+  - sessionToken（cuid2，30天有效期）
+  - 替代原设计的 OAuth Session 表
+- ✅ **endpoints**（端点表）- 完整实现，支持树形结构
+  - 支持 static、proxy、dynamicProxy、script 四种类型
+  - 路径树虚拟节点自动构建
+  - 发布/启用状态控制
+  - dynamicProxy 类型强制为叶子节点（无子节点）
+- ✅ **permissionGroups**（权限组表）- 完整实现
+- ✅ **accessKeys**（访问密钥表）- 完整实现
+  - ⚠️ keyValue 字段**明文存储**（与设计不同）
+  - 格式：`ep-{32位十六进制}`
+- ✅ **features**（功能开关表）- 模板遗留，非设计要求
+
+**未实现的表（1/7）**：
+
+- ❌ **accessLogs**（访问日志表）- 监控统计功能
+  - 影响：无法记录端点访问历史
+  - 影响：无法提供访问统计和分析
+
+**已弃用的设计**：
+
+- ~~envVars（环境变量表）~~ - 使用 Cloudflare Workers 原生环境变量系统替代
+
+**⚠️ 关键实现差异**：
+
+1. **密钥存储策略**：
+   - Platform API Key：✅ PBKDF2 哈希存储（符合设计）
+   - Endpoint Access Key：⚠️ **明文存储**（与设计不同）
+     - 原因：简化验证逻辑，避免哈希计算开销
+     - 验证：直接字符串比较（`accessKey === key.keyValue`）
+     - 影响：降低安全性，但适合非敏感场景
+     - 位置：`src/routes/execution.ts` 第 102 行
+
+2. **会话管理**：
+   - 未单独存储 OAuth access_token
+   - 使用 sessionToken 进行认证
+   - 会话过期后需重新 OAuth 登录
+
+3. **环境变量**：
+   - 使用 Cloudflare Workers 平台能力
+   - 配置位置：`.dev.vars`（本地）或 Cloudflare Dashboard（生产）
+
+#### API 实现差异
+
+**⚠️ 鉴权方式差异**：
+
+- **设计文档**：`Authorization: Bearer <access_key>` 或 `?token=<access_key>`
+- **实际实现**：`X-Access-Key: <access_key>` 或 `?access_key=<access_key>`
+- **位置**：`src/routes/execution.ts` 第 63 行
+- **影响**：客户端需使用实际实现的鉴权方式
+
+**✅ 已完整实现的 API 模块**：
+
+- ✅ 认证系统（`/api/auth/*`）
+  - GitHub OAuth 登录/回调
+  - 用户信息获取
+  - 登出
+  - API Key 重新生成
+- ✅ 端点管理（`/api/endpoints/*`）
+  - 完整 CRUD
+  - 发布/取消发布
+  - 移动端点
+  - 批量排序
+- ✅ 权限组管理（`/api/permission-groups/*`）
+  - 完整 CRUD
+  - 关联端点统计
+- ✅ 访问密钥管理（`/api/access-keys/*`）
+  - 生成/撤销/删除
+  - 编辑备注和到期时间
+- ✅ 管理员功能（`/api/admin/*`）
+  - 用户管理（激活/停用/删除）
+  - 端点审查
+  - 系统统计
+- ✅ 初始化系统（`/api/init/*`）
+  - 检查初始化状态
+  - 设置首个管理员
+- ✅ 端点执行层（`/e/:username/:path/*`）
+  - 静态端点
+  - 代理端点（固定 URL 转发）
+  - 动态代理端点（子路径转发 + SSRF 防护）
+  - 访问控制验证
+
+**❌ 未实现的 API**：
+
+- ❌ 环境变量管理（4个 API）- 已弃用设计，使用平台能力
+- ❌ Platform API Key 撤销 API（`DELETE /api/user/api-key`）
+- ❌ Platform API Key 查看 API（`GET /api/user/api-key/info`）
+- ❌ 访问日志统计 API（依赖 accessLogs 表）
+- ❌ 脚本端点执行（Phase 3.2）
+
+#### 安全实现差异
+
+**密钥存储与加密策略**：
+
+1. **Platform API Key**（用户管理密钥）✅：
+   - 格式：`sec-{64位十六进制}`
+   - 生成：`generateUserApiKey()` in `src/utils/encryption.ts`
+   - 存储：PBKDF2 哈希（100,000 次迭代，SHA-256）
+   - 用途：操作平台功能（创建端点、管理权限组等）
+   - 安全性：符合设计，高安全性
+
+2. **Endpoint Access Key**（端点访问密钥）⚠️：
+   - 格式：`ep-{32位十六进制}`
+   - 生成：`generateAccessKey()` in `src/utils/encryption.ts`
+   - 存储：**明文存储**（与设计不同）
+   - 验证：直接字符串比较
+   - 用途：访问用户发布的端点
+   - 安全性：较低，但适合非敏感场景
+   - 备注：`hashAccessKey()` 和 `verifyAccessKey()` 函数已实现但未使用
+
+3. **Session Token**（会话令牌）✅：
+   - 格式：cuid2 生成的随机字符串
+   - 存储：明文存储在 userSessions 表
+   - 有效期：30天
+   - 验证：查询数据库 + 过期时间检查
+   - 传输：`Authorization: Bearer {sessionToken}`
+
+**动态代理安全防护** ✅（Phase 3.1 新增）：
+
+- **SSRF 防护**：`isTargetUrlSafe()` 函数
+  - 协议白名单：仅允许 HTTP/HTTPS
+  - 主机黑名单：localhost、内网 IP、云厂商 metadata 端点
+  - IP 范围检查：阻止 10.x、172.16-31.x、192.168.x 等私有网段
+- **路径遍历防护**：`sanitizePath()` 函数
+  - 移除 `..` 路径穿越符号
+  - 规范化多余斜杠
+- **路径白名单**：`isPathAllowed()` 函数
+  - 支持通配符模式（如 `/repos/*`）
+  - 可选配置，默认允许所有路径
+- **树结构约束**：
+  - dynamicProxy 端点不能有子节点
+  - 不能在 dynamicProxy 端点下创建/移动子端点
+  - 前后端双重验证
+
+**环境变量管理** ✅：
+
+- **实现方式**：使用 Cloudflare Workers 原生环境变量系统
+- **配置位置**：
+  - 本地开发：`.dev.vars` 文件（已加入 .gitignore）
+  - 生产环境：Cloudflare Dashboard 或 `wrangler.jsonc`
+- **必需变量**：
+  - `GITHUB_CLIENT_ID`
+  - `GITHUB_CLIENT_SECRET`
+  - `APP_BASE_URL`
+  - `NODE_ENV`
+  - `VITE_PORT`（可选，默认 5173）
+- **优势**：无需应用层加密存储，利用平台级安全保障
+
+**OAuth Token 处理** ✅：
+
+- GitHub access_token 仅在登录时使用
+- 不持久化存储，降低泄露风险
+- 使用 sessionToken 进行后续认证
+
+#### 额外实现的功能（超出设计）
+
+以下功能超出原设计文档，显著增强了用户体验：
+
+1. **初始化系统可视化** ✅
+   - 路由：`/init`
+   - API：`/api/init/*`
+   - 功能：可视化选择首个管理员，自动激活
+   - 安全：已有管理员后自动禁用访问
+
+2. **路径树虚拟节点** ✅
+   - 实现：`src/utils/pathTree.ts` 中的 `buildPathTree()`
+   - 功能：基于端点路径自动构建类似 IDE 的文件树
+   - 特性：虚拟目录节点、多层级路径、自动排序
+   - 用户体验：类似 VSCode 文件浏览器
+
+3. **密钥编辑功能增强** ✅
+   - 快捷到期时间预设（1天到2年，含永久）
+   - 延期功能（7天到365天）
+   - 编辑对话框（修改备注、到期时间、启用/禁用）
+
+4. **密钥显示/隐藏切换** ✅
+   - 功能：点击眼睛图标切换显示状态
+   - 隐藏格式：`ep-abc***def`（保留前6位和后4位）
+   - 实现：`maskKey()` 函数
+
+5. **端点地址复制功能** ✅
+   - 公开端点：直接复制 URL
+   - 鉴权端点：选择密钥后复制带密钥的 URL
+   - 密钥选择对话框：显示可用密钥、备注、到期时间
+
+6. **Monaco Editor 集成** ✅
+   - 依赖：`@monaco-editor/react`
+   - 用途：静态端点内容编辑
+   - 特性：语法高亮、代码折叠、自动补全、多语言支持
+
+#### 当前可投入使用的场景
+
+**✅ 已支持的生产场景**：
+
+1. **静态内容托管**
+   - 规则列表（如广告过滤规则）
+   - 配置文件（JSON、YAML、TOML 等）
+   - API 文档（Markdown、HTML）
+   - 文本内容分发
+   - 支持自定义 Content-Type 和响应头
+
+2. **固定代理端点**（proxy 类型）
+   - GitHub Raw 内容加速
+   - 第三方 API 转发（固定 URL）
+   - 跨域资源代理
+   - 请求头注入/移除
+   - 超时控制（默认 10 秒）
+
+3. **动态子路径代理**（dynamicProxy 类型，Phase 3.1 新增）
+   - 资源完整路径代理（如 `/e/user/myrepo/assets/logo.png` → `https://raw.githubusercontent.com/user/repo/main/assets/logo.png`）
+   - 自动移除端点路径前缀，仅转发子路径部分
+   - 支持代理任意 URL 下的子路径资源（CDN、仓库、API 等）
+   - 支持所有 HTTP 方法（GET、POST、PUT、DELETE 等）
+   - 查询参数自动转发
+   - 请求体透传
+   - 路径白名单限制（可选）
+   - SSRF 攻击防护（内网地址阻断）
+   - 路径遍历防护
+   - 超时控制（默认 15 秒）
+
+4. **多用户协作管理**
+   - 权限组分发密钥
+   - 细粒度访问控制
+   - 密钥到期管理
+   - 使用统计追踪
+
+5. **访问控制场景**
+   - 公开端点（无需鉴权）
+   - 鉴权端点（需要访问密钥）
+   - 用户激活状态控制
+   - 端点发布/下线控制
+
+**❌ 不支持的场景**：
+
+1. **脚本端点**（Phase 3.2 未实现）
+   - 自定义 JavaScript 执行
+   - 动态内容生成
+   - 数据处理和转换
+
+2. **访问统计分析**（accessLogs 表未实现）
+   - 访问历史记录
+   - 流量统计
+   - 地理位置分析
+   - 请求速率监控
+
+3. **高级功能**
+   - 请求速率限制
+   - 自动缓存策略
+   - Webhook 触发器
+
+## 3. UI/UX 设计规范
+
+### 3.1. 滚动条样式规范
+
+**全局滚动条样式已在主题配置中统一定义**（`frontend/src/theme/index.ts`）：
+
+- **宽度/高度**: 8px（细窄设计）
+- **轨道背景**: 透明
+- **滚动块颜色**:
+  - 亮色模式: `rgba(0, 0, 0, 0.2)` | hover: `rgba(0, 0, 0, 0.3)`
+  - 暗色模式: `rgba(255, 255, 255, 0.2)` | hover: `rgba(255, 255, 255, 0.3)`
+- **圆角**: 4px
+
+**使用规则**:
+
+1. ✅ **所有需要滚动的容器直接使用 `overflow: "auto"`**，样式会自动应用
+2. ❌ **禁止在组件中重复定义滚动条样式**（已全局配置）
+3. ✅ 滚动容器必须设置明确的高度约束（如 `height: "100%"` 或 `flexGrow: 1`）
+
+**示例**:
+
+```tsx
+// ✅ 正确：直接使用 overflow，自动应用全局样式
+<Box sx={{ flexGrow: 1, overflow: "auto", p: 3 }}>
+  {/* 可滚动内容 */}
+</Box>
+
+// ❌ 错误：不要重复定义滚动条样式
+<Box sx={{
+  overflow: "auto",
+  "&::-webkit-scrollbar": { ... }  // 多余！
+}}>
+```
+
+## 4. 你的工作原则
 
 1.  **首要原则：维护本文档**: 如果你的任何操作（如添加新技术、修改架构）导致本文档过时，**你必须在提交最终代码前，先更新本文档** ([global.mdc](mdc:.cursor/rules/global.mdc))。
 2.  **遵循既定模式**:

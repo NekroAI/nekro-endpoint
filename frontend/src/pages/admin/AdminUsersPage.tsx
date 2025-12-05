@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   Box,
-  Container,
   Typography,
   Paper,
   Button,
@@ -12,7 +11,6 @@ import {
   TableHead,
   TableRow,
   Chip,
-  IconButton,
   CircularProgress,
   Alert,
   TextField,
@@ -53,25 +51,25 @@ export function AdminUsersPage() {
 
   if (!user || user.role !== "admin") {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", p: 3 }}>
         <Alert severity="error">您没有管理员权限</Alert>
-      </Container>
+      </Box>
     );
   }
 
   if (isLoading) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4, textAlign: "center" }}>
+      <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <CircularProgress />
-      </Container>
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", p: 3 }}>
         <Alert severity="error">加载失败: {(error as Error).message}</Alert>
-      </Container>
+      </Box>
     );
   }
 
@@ -120,14 +118,24 @@ export function AdminUsersPage() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
-        <Typography variant="h4" component="h1">
-          用户管理
-        </Typography>
-      </Box>
-
-      {stats && (
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      }}
+    >
+      {/* 内容区域 */}
+      <Box
+        sx={{
+          flexGrow: 1,
+          overflow: "auto",
+          p: 3,
+        }}
+      >
+        {/* 统计卡片 */}
+        {stats && (
         <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
           <Paper sx={{ p: 2, flex: 1 }}>
             <Typography variant="body2" color="text.secondary">
@@ -154,9 +162,10 @@ export function AdminUsersPage() {
             <Typography variant="h5">{stats.publishedEndpoints}</Typography>
           </Paper>
         </Box>
-      )}
+        )}
 
-      <Paper sx={{ p: 2, mb: 2 }}>
+        {/* 搜索和筛选 */}
+        <Paper sx={{ p: 2, mb: 2 }}>
         <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
           <TextField
             size="small"
@@ -193,9 +202,10 @@ export function AdminUsersPage() {
             </Select>
           </FormControl>
         </Box>
-      </Paper>
+        </Paper>
 
-      <TableContainer component={Paper}>
+        {/* 用户列表 */}
+        <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
@@ -300,7 +310,8 @@ export function AdminUsersPage() {
             )}
           </TableBody>
         </Table>
-      </TableContainer>
-    </Container>
+        </TableContainer>
+      </Box>
+    </Box>
   );
 }

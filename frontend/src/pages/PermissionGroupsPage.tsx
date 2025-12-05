@@ -170,7 +170,7 @@ export function PermissionGroupsPage() {
   };
 
   return (
-    <Box sx={{ display: "flex", height: "calc(100vh - 64px)", overflow: "hidden" }}>
+    <Box sx={{ display: "flex", height: "100%", overflow: "hidden" }}>
       {/* 左侧：权限组列表 */}
       <Paper
         elevation={1}

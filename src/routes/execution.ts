@@ -4,6 +4,7 @@ import { users, endpoints as endpointsTable, accessKeys, permissionGroups } from
 import type { Bindings } from "../types";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import * as drizzleSchema from "../db/schema";
+import { isTargetUrlSafe, sanitizePath, isPathAllowed } from "../utils/security";
 
 type Variables = {
   db: DrizzleD1Database<typeof drizzleSchema>;
@@ -41,10 +42,36 @@ app.all("/e/:username/*", async (c) => {
     return c.json({ error: "User not activated" }, 403);
   }
 
-  // 查找端点
-  const endpoint = await db.query.endpoints.findFirst({
-    where: and(eq(endpointsTable.ownerUserId, user.id), eq(endpointsTable.path, path)),
-  });
+  // 查找端点（支持前缀匹配用于 dynamicProxy）
+  // 先查找该用户的所有已发布端点
+  const allEndpoints = await db
+    .select()
+    .from(endpointsTable)
+    .where(and(eq(endpointsTable.ownerUserId, user.id), eq(endpointsTable.isPublished, true)));
+
+  // 查找最长匹配的端点路径
+  let endpoint: (typeof allEndpoints)[0] | undefined;
+  let matchedPath = "";
+
+  for (const ep of allEndpoints) {
+    // 对于 dynamicProxy，支持前缀匹配
+    if (ep.type === "dynamicProxy") {
+      if (path === ep.path || path.startsWith(ep.path + "/")) {
+        // 选择最长匹配
+        if (ep.path.length > matchedPath.length) {
+          endpoint = ep;
+          matchedPath = ep.path;
+        }
+      }
+    } else {
+      // 其他类型端点，精确匹配
+      if (path === ep.path) {
+        endpoint = ep;
+        matchedPath = ep.path;
+        break; // 精确匹配优先，直接退出
+      }
+    }
+  }
 
   if (!endpoint) {
     return c.json({ error: "Endpoint not found" }, 404);
@@ -141,9 +168,7 @@ app.all("/e/:username/*", async (c) => {
       });
 
       // 确保 Content-Type 包含 charset=utf-8
-      const finalContentType = contentType.includes("charset")
-        ? contentType
-        : `${contentType}; charset=utf-8`;
+      const finalContentType = contentType.includes("charset") ? contentType : `${contentType}; charset=utf-8`;
 
       return c.body(content, {
         headers: {
@@ -196,7 +221,100 @@ app.all("/e/:username/*", async (c) => {
           status: proxyResponse.status,
           headers: responseHeaders,
         });
-        
+      } catch (error: any) {
+        if (error.name === "AbortError") {
+          return c.json({ error: "Proxy timeout" }, 504);
+        }
+        return c.json({ error: "Proxy error", details: error.message }, 502);
+      }
+    }
+
+    case "dynamicProxy": {
+      const {
+        baseUrl,
+        autoAppendSlash = true,
+        headers = {},
+        removeHeaders = [],
+        timeout = 15000,
+        allowedPaths,
+      } = config;
+
+      // 安全检查：验证基础 URL
+      if (!isTargetUrlSafe(baseUrl)) {
+        return c.json({ error: "Base URL not allowed" }, 403);
+      }
+
+      // 提取子路径（总是移除端点路径前缀）
+      const fullPath = new URL(c.req.url).pathname; // /e/username/myrepo/assets/logo.png
+      const endpointPath = endpoint.path; // /myrepo
+      const prefix = `/e/${username}${endpointPath}`;
+
+      let subPath = fullPath.startsWith(prefix) ? fullPath.slice(prefix.length) : "";
+
+      // 路径安全检查
+      subPath = sanitizePath(subPath || "");
+
+      // 路径白名单检查
+      if (!isPathAllowed(subPath || "/", allowedPaths || [])) {
+        return c.json({ error: "Path not allowed" }, 403);
+      }
+
+      // 构造目标 URL：正确拼接 baseUrl 和 subPath
+      // 根据 autoAppendSlash 配置决定是否自动补充斜杠
+      let normalizedBaseUrl = baseUrl;
+      if (autoAppendSlash && !baseUrl.endsWith("/")) {
+        normalizedBaseUrl = baseUrl + "/";
+      }
+      let normalizedSubPath = subPath.startsWith("/") ? subPath.slice(1) : subPath;
+
+      const targetUrl = new URL(normalizedSubPath, normalizedBaseUrl);
+
+      // 复制查询参数（过滤鉴权参数）
+      const searchParams = new URL(c.req.url).searchParams;
+      searchParams.forEach((value, key) => {
+        if (key !== "access_key") {
+          targetUrl.searchParams.set(key, value);
+        }
+      });
+
+      // 准备请求头
+      const proxyHeaders: Record<string, string> = {
+        ...Object.fromEntries(c.req.raw.headers),
+        ...headers,
+      };
+
+      // 移除指定的请求头
+      removeHeaders.forEach((header: string) => {
+        delete proxyHeaders[header.toLowerCase()];
+      });
+
+      // 删除某些不应该转发的头
+      delete proxyHeaders["host"];
+      delete proxyHeaders["x-access-key"];
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+        const proxyResponse = await fetch(targetUrl.toString(), {
+          method: c.req.method,
+          headers: proxyHeaders,
+          body: c.req.method !== "GET" && c.req.method !== "HEAD" ? await c.req.raw.clone().arrayBuffer() : undefined,
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        // 转发响应
+        const responseHeaders: Record<string, string> = {};
+        proxyResponse.headers.forEach((value, key) => {
+          responseHeaders[key] = value;
+        });
+
+        return c.body(await proxyResponse.arrayBuffer(), {
+          status: proxyResponse.status,
+          headers: responseHeaders,
+        });
       } catch (error: any) {
         if (error.name === "AbortError") {
           return c.json({ error: "Proxy timeout" }, 504);
@@ -206,7 +324,7 @@ app.all("/e/:username/*", async (c) => {
     }
 
     case "script": {
-      // Script 端点在 Phase 2/3 实现
+      // Script 端点在 Phase 3 实现
       return c.json({ error: "Script endpoints not yet supported" }, 501);
     }
 

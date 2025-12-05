@@ -20,6 +20,7 @@ import {
 } from "../../common/validators/endpoint.schema";
 import { buildTree, checkCircularReference } from "../utils/tree";
 import { buildPathTree } from "../utils/pathTree";
+import { validateDynamicProxyConfig } from "../utils/security";
 
 type Variables = {
   db: DrizzleD1Database<typeof drizzleSchema>;
@@ -136,6 +137,34 @@ app.openapi(createEndpointRoute, async (c): Promise<any> => {
     // 对于新节点，我们传递一个临时 ID
     if (checkCircularReference(allEndpoints, "temp-new-id", body.parentId)) {
       return c.json({ success: false, message: "无法创建循环引用" }, 400);
+    }
+  }
+
+  // Phase 3: dynamicProxy 约束检查
+  if (body.type === "dynamicProxy") {
+    // 检查 1: dynamicProxy 不能在另一个 dynamicProxy 下创建
+    if (body.parentId) {
+      const parent = await db.query.endpoints.findFirst({
+        where: eq(endpointsTable.id, body.parentId),
+      });
+
+      if (parent?.type === "dynamicProxy") {
+        return c.json({ success: false, message: "不能在动态代理端点下创建子端点" }, 400);
+      }
+    }
+
+    // 注意：创建时不验证配置，允许用户先创建再配置
+    // 配置验证在发布时进行
+  }
+
+  // 检查 2: 不能在 dynamicProxy 端点下创建子端点
+  if (body.parentId) {
+    const parent = await db.query.endpoints.findFirst({
+      where: eq(endpointsTable.id, body.parentId),
+    });
+
+    if (parent?.type === "dynamicProxy") {
+      return c.json({ success: false, message: "不能在动态代理端点下创建子端点" }, 400);
     }
   }
 
@@ -271,6 +300,47 @@ app.openapi(updateEndpointRoute, async (c): Promise<any> => {
     }
   }
 
+  // Phase 3: dynamicProxy 约束检查
+  const targetType = body.type || endpoint.type;
+
+  // 检查 1: 切换到 dynamicProxy 时，不能有子节点
+  if (body.type === "dynamicProxy" && body.type !== endpoint.type) {
+    const children = await db.select().from(endpointsTable).where(eq(endpointsTable.parentId, id));
+
+    if (children.length > 0) {
+      return c.json(
+        {
+          success: false,
+          message: `无法切换为动态代理类型：当前端点有 ${children.length} 个子节点，请先删除所有子节点`,
+        },
+        400,
+      );
+    }
+  }
+
+  // 检查 2: 如果更新 parentId，确保新父节点不是 dynamicProxy
+  if (body.parentId !== undefined && body.parentId !== null) {
+    const newParent = await db.query.endpoints.findFirst({
+      where: eq(endpointsTable.id, body.parentId),
+    });
+
+    if (newParent?.type === "dynamicProxy") {
+      return c.json({ success: false, message: "不能将端点移动到动态代理端点下" }, 400);
+    }
+  }
+
+  // 检查 3: 验证 dynamicProxy 配置安全性（仅当配置了 targetDomain 时）
+  if (body.config && (body.type === "dynamicProxy" || endpoint.type === "dynamicProxy")) {
+    const config = body.config as any;
+    // 只有当 targetDomain 非空时才进行安全验证，允许保存空配置（编辑中）
+    if (config.targetDomain && config.targetDomain.trim() !== "") {
+      const validation = validateDynamicProxyConfig(config);
+      if (!validation.valid) {
+        return c.json({ success: false, message: validation.error || "配置验证失败" }, 400);
+      }
+    }
+  }
+
   // 如果更新了路径，检查是否冲突
   if (body.path && body.path !== endpoint.path) {
     const existingEndpoint = await db.query.endpoints.findFirst({
@@ -402,6 +472,44 @@ app.openapi(publishEndpointRoute, async (c): Promise<any> => {
     return c.json({ success: false, message: "端点已发布" }, 400);
   }
 
+  // Phase 3: 发布前验证 dynamicProxy 配置
+  if (endpoint.type === "dynamicProxy") {
+    try {
+      const config = JSON.parse(endpoint.config);
+
+      // 检查 baseUrl 是否已配置
+      if (!config.baseUrl || config.baseUrl.trim() === "") {
+        return c.json(
+          {
+            success: false,
+            message: "请先配置基础 URL 后再发布",
+          },
+          400,
+        );
+      }
+
+      // 验证配置安全性
+      const validation = validateDynamicProxyConfig(config);
+      if (!validation.valid) {
+        return c.json(
+          {
+            success: false,
+            message: `配置验证失败: ${validation.error}`,
+          },
+          400,
+        );
+      }
+    } catch (error) {
+      return c.json(
+        {
+          success: false,
+          message: "配置格式错误，请检查端点配置",
+        },
+        400,
+      );
+    }
+  }
+
   const updatedEndpoint = await db
     .update(endpointsTable)
     .set({ isPublished: true, updatedAt: new Date() })
@@ -514,6 +622,17 @@ app.openapi(moveEndpointRoute, async (c): Promise<any> => {
   const allEndpoints = await db.select().from(endpointsTable).where(eq(endpointsTable.ownerUserId, user.id));
   if (checkCircularReference(allEndpoints, id, newParentId)) {
     return c.json({ success: false, message: "无法创建循环引用" }, 400);
+  }
+
+  // Phase 3: 检查是否移动到 dynamicProxy 端点下
+  if (newParentId) {
+    const newParent = await db.query.endpoints.findFirst({
+      where: eq(endpointsTable.id, newParentId),
+    });
+
+    if (newParent?.type === "dynamicProxy") {
+      return c.json({ success: false, message: "不能将端点移动到动态代理端点下" }, 400);
+    }
   }
 
   const updatedEndpoint = await db

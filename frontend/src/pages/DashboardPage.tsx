@@ -1,6 +1,5 @@
 import {
   Box,
-  Container,
   Typography,
   Card,
   CardContent,
@@ -21,8 +20,6 @@ import {
 import {
   ContentCopy as CopyIcon,
   Refresh as RefreshIcon,
-  ExitToApp as LogoutIcon,
-  CheckCircle as CheckIcon,
   Storage as EndpointsIcon,
   VpnKey as PermissionsIcon,
   ArrowForward as ArrowIcon,
@@ -112,49 +109,56 @@ export function DashboardPage() {
 
   if (isLoading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 8, display: "flex", justifyContent: "center" }}>
+      <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <CircularProgress />
-      </Container>
+      </Box>
     );
   }
 
   if (!isAuthenticated || !user) {
     return (
-      <Container maxWidth="lg" sx={{ py: 8 }}>
+      <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", p: 3 }}>
         <Alert severity="info">
           请先登录以访问控制台
           <Button onClick={() => navigate("/")} sx={{ ml: 2 }}>
             返回首页
           </Button>
         </Alert>
-      </Container>
+      </Box>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
-        <Typography variant="h3" component="h1">
-          控制台
-        </Typography>
-        <Button startIcon={<LogoutIcon />} onClick={logout} variant="outlined" color="error">
-          登出
-        </Button>
-      </Box>
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      }}
+    >
+      {/* 内容区域 */}
+      <Box
+        sx={{
+          flexGrow: 1,
+          overflow: "auto",
+          p: 3,
+        }}
+      >
 
-      {/* 账号激活状态提示 */}
-      {!user?.isActivated && (
-        <Alert severity="info" icon={<WarningIcon />} sx={{ mb: 4 }}>
-          <Typography variant="body2">
-            <strong>账号未激活：</strong>
-            您可以正常使用部分功能（创建端点、管理权限组等），但暂时无法<strong>发布端点</strong>
-            。发布功能需要管理员激活您的账号。
-          </Typography>
-        </Alert>
-      )}
+        {/* 账号激活状态提示 */}
+        {!user?.isActivated && (
+          <Alert severity="info" icon={<WarningIcon />} sx={{ mb: 3 }}>
+            <Typography variant="body2">
+              <strong>账号未激活：</strong>
+              您可以正常使用部分功能（创建端点、管理权限组等），但暂时无法<strong>发布端点</strong>
+              。发布功能需要管理员激活您的账号。
+            </Typography>
+          </Alert>
+        )}
 
-      {/* 快速访问卡片 */}
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3, mb: 4 }}>
+        {/* 快速访问卡片 */}
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3, mb: 3 }}>
         <Card
           sx={{ transition: "all 0.3s", "&:hover": { transform: "translateY(-4px)", boxShadow: theme.shadows[8] } }}
         >
@@ -236,10 +240,10 @@ export function DashboardPage() {
             </Button>
           </CardContent>
         </Card>
-      </Box>
+        </Box>
 
-      {/* 用户信息卡片 */}
-      <Card sx={{ mb: 4 }}>
+        {/* 用户信息卡片 */}
+        <Card sx={{ mb: 3 }}>
         <CardContent>
           <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
             <Avatar src={user.avatarUrl || undefined} alt={user.username} sx={{ width: 80, height: 80, mr: 3 }}>
@@ -318,10 +322,10 @@ export function DashboardPage() {
             </Alert>
           </Box>
         </CardContent>
-      </Card>
+        </Card>
 
-      {/* 使用说明卡片 */}
-      <Card>
+        {/* 使用说明卡片 */}
+        <Card>
         <CardContent>
           <Typography variant="h6" gutterBottom>
             如何使用 API Key
@@ -353,7 +357,8 @@ export function DashboardPage() {
             </Typography>
           </Paper>
         </CardContent>
-      </Card>
+        </Card>
+      </Box>
 
       {/* 重新生成确认对话框 */}
       <Dialog open={regenerateDialogOpen} onClose={() => !isRegenerating && setRegenerateDialogOpen(false)}>
@@ -394,6 +399,6 @@ export function DashboardPage() {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </Container>
+    </Box>
   );
 }

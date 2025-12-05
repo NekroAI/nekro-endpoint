@@ -1,7 +1,7 @@
 import { z } from "@hono/zod-openapi";
 
 // 端点类型枚举
-export const EndpointTypeSchema = z.enum(["static", "proxy", "script"]);
+export const EndpointTypeSchema = z.enum(["static", "proxy", "dynamicProxy", "script"]);
 
 export const AccessControlSchema = z.enum(["public", "authenticated"]);
 
@@ -12,23 +12,37 @@ export const StaticConfigSchema = z.object({
   headers: z.record(z.string()).optional(),
 });
 
-// 代理端点配置
+// 代理端点配置（固定 URL 转发）
 export const ProxyConfigSchema = z.object({
   targetUrl: z.string().url(),
-  pathMapping: z.string().optional(),
   headers: z.record(z.string()).optional(),
   removeHeaders: z.array(z.string()).optional(),
   timeout: z.number().int().min(1000).max(30000).default(10000),
 });
 
-// 脚本端点配置 (Phase 2/3)
+// 动态代理端点配置（子路径代理）
+export const DynamicProxyConfigSchema = z.object({
+  baseUrl: z.union([z.literal(""), z.string().url()]), // 创建时允许空字符串，编辑时填写有效 URL
+  autoAppendSlash: z.boolean().default(true), // 自动在 baseUrl 末尾补充斜杠
+  headers: z.record(z.string()).optional(),
+  removeHeaders: z.array(z.string()).optional(),
+  timeout: z.number().int().min(1000).max(30000).default(15000),
+  allowedPaths: z.array(z.string()).optional(),
+});
+
+// 脚本端点配置 (Phase 3)
 export const ScriptConfigSchema = z.object({
   code: z.string(),
   runtime: z.enum(["javascript"]).default("javascript"),
 });
 
 // 统一配置类型
-export const EndpointConfigSchema = z.union([StaticConfigSchema, ProxyConfigSchema, ScriptConfigSchema]);
+export const EndpointConfigSchema = z.union([
+  StaticConfigSchema,
+  ProxyConfigSchema,
+  DynamicProxyConfigSchema,
+  ScriptConfigSchema,
+]);
 
 // 完整端点 Schema
 export const EndpointSchema = z.object({

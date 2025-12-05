@@ -13,15 +13,7 @@ import {
   IconButton,
   CircularProgress,
 } from "@mui/material";
-import {
-  AccountCircle as AccountIcon,
-  Dashboard as DashboardIcon,
-  ExitToApp as LogoutIcon,
-  GitHub as GitHubIcon,
-  Storage as EndpointsIcon,
-  VpnKey as PermissionsIcon,
-  AdminPanelSettings as AdminIcon,
-} from "@mui/icons-material";
+import { Dashboard as WorkspaceIcon, ExitToApp as LogoutIcon, GitHub as GitHubIcon } from "@mui/icons-material";
 import { Link as RouterLink, Outlet, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { Footer } from "./components/Footer";
@@ -105,20 +97,20 @@ function App() {
               使用文档
             </Button>
             {isAuthenticated && (
-              <>
-                <Button
-                  component={RouterLink}
-                  to="/endpoints"
-                  sx={{
-                    my: 2,
-                    color: "inherit",
-                    display: "block",
-                    fontWeight: location.pathname === "/endpoints" ? "bold" : "normal",
-                  }}
-                >
-                  端点管理
-                </Button>
-              </>
+              <Button
+                component={RouterLink}
+                to="/dashboard"
+                sx={{
+                  my: 2,
+                  color: "inherit",
+                  display: "block",
+                  fontWeight: ["/dashboard", "/endpoints", "/permissions", "/admin/users"].includes(location.pathname)
+                    ? "bold"
+                    : "normal",
+                }}
+              >
+                工作台
+              </Button>
             )}
 
             <ToggleThemeButton />
@@ -150,23 +142,9 @@ function App() {
                   anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
                 >
                   <MenuItem onClick={handleMenuClose} component={RouterLink} to="/dashboard">
-                    <DashboardIcon sx={{ mr: 1, fontSize: 20 }} />
-                    控制台
+                    <WorkspaceIcon sx={{ mr: 1, fontSize: 20 }} />
+                    工作台
                   </MenuItem>
-                  <MenuItem onClick={handleMenuClose} component={RouterLink} to="/endpoints">
-                    <EndpointsIcon sx={{ mr: 1, fontSize: 20 }} />
-                    端点管理
-                  </MenuItem>
-                  <MenuItem onClick={handleMenuClose} component={RouterLink} to="/permissions">
-                    <PermissionsIcon sx={{ mr: 1, fontSize: 20 }} />
-                    权限组
-                  </MenuItem>
-                  {user?.role === "admin" && (
-                    <MenuItem onClick={handleMenuClose} component={RouterLink} to="/admin/users">
-                      <AdminIcon sx={{ mr: 1, fontSize: 20 }} />
-                      管理后台
-                    </MenuItem>
-                  )}
                   <MenuItem onClick={handleLogout}>
                     <LogoutIcon sx={{ mr: 1, fontSize: 20 }} />
                     登出

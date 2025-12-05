@@ -486,20 +486,236 @@ proxies:
             </CardContent>
           </Card>
 
+          {/* 动态代理端点 */}
+          <Card variant="outlined">
+            <CardContent>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+                <Chip label="Dynamic Proxy" color="success" size="small" />
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  动态代理端点 ⭐ 新功能
+                </Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary" paragraph>
+                将所有子路径请求动态拼接到基础 URL 后进行转发，适用于代理整个目录、仓库资源、API 命名空间等场景。
+              </Typography>
+
+              <Alert severity="success" sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }} gutterBottom>
+                  💡 实战案例：代理 GitHub 仓库资源
+                </Typography>
+                <Typography variant="body2" gutterBottom>
+                  一次配置，代理整个仓库的所有文件，无需为每个文件创建端点。
+                </Typography>
+              </Alert>
+
+              <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                第 1 步：创建动态代理端点
+              </Typography>
+              <List dense>
+                <ListItem>
+                  <ListItemText
+                    primary="在端点管理页面点击「新建端点」"
+                    secondary="填写名称（如'我的仓库'）和路径（如'/myrepo'）"
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemText primary="端点类型选择「Dynamic Proxy」" secondary="用于动态转发子路径请求" />
+                </ListItem>
+                <ListItem>
+                  <ListItemText primary="访问控制选择「public」" secondary="允许公开访问" />
+                </ListItem>
+              </List>
+
+              <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600, mt: 2 }}>
+                第 2 步：配置基础 URL
+              </Typography>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                创建端点后，在右侧配置表单中填写：
+              </Typography>
+              <List dense>
+                <ListItem>
+                  <ListItemText
+                    primary="基础 URL"
+                    secondary="https://raw.githubusercontent.com/yourusername/yourrepo/main/"
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemText primary="自动补充斜杠" secondary="开启（确保 URL 拼接正确）" />
+                </ListItem>
+                <ListItem>
+                  <ListItemText primary="超时时间" secondary="15000 毫秒（15秒）" />
+                </ListItem>
+              </List>
+
+              <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600, mt: 2 }}>
+                第 3 步：发布并使用
+              </Typography>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                保存后点击「发布」，然后访问任意子路径：
+              </Typography>
+              <CodeBlock
+                id="dynamic-proxy-usage"
+                code={`# 访问 README.md
+curl ${domain}/e/${username}/myrepo/README.md
+
+# 访问 assets 目录下的图片
+curl ${domain}/e/${username}/myrepo/assets/logo.png
+
+# 访问 docs 目录下的文档
+curl ${domain}/e/${username}/myrepo/docs/guide.md`}
+              />
+
+              <Alert severity="info" sx={{ mt: 2 }}>
+                <Typography variant="body2">
+                  <strong>转发规则：</strong>访问 <code>/e/{username}/myrepo/assets/logo.png</code> 会自动转发到{" "}
+                  <code>https://raw.githubusercontent.com/.../main/assets/logo.png</code>
+                </Typography>
+              </Alert>
+
+              <Divider sx={{ my: 3 }} />
+
+              <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                💡 更多实战案例
+              </Typography>
+
+              {/* 案例 2 - Accordion */}
+              <Accordion>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    案例 2：代理 CDN 资源目录
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    配置基础 URL 为 CDN 目录：
+                  </Typography>
+                  <List dense sx={{ mb: 2 }}>
+                    <ListItem>
+                      <ListItemText primary="基础 URL" secondary="https://cdn.example.com/assets/" />
+                    </ListItem>
+                  </List>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    访问示例：
+                  </Typography>
+                  <CodeBlock
+                    id="cdn-proxy"
+                    code={`# 访问 CSS 文件
+${domain}/e/${username}/cdn/styles/main.css
+
+# 访问 JS 文件
+${domain}/e/${username}/cdn/scripts/app.js
+
+# 访问图片
+${domain}/e/${username}/cdn/images/banner.jpg`}
+                  />
+                </AccordionDetails>
+              </Accordion>
+
+              {/* 案例 3 - Accordion */}
+              <Accordion>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    案例 3：代理 API 命名空间
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    配置基础 URL 为 API 基础路径：
+                  </Typography>
+                  <List dense sx={{ mb: 2 }}>
+                    <ListItem>
+                      <ListItemText primary="基础 URL" secondary="https://api.example.com/v1/" />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemText
+                        primary="路径白名单（可选）"
+                        secondary="添加 /users/*, /posts/* 限制可访问的 API 端点"
+                      />
+                    </ListItem>
+                  </List>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    访问示例：
+                  </Typography>
+                  <CodeBlock
+                    id="api-namespace"
+                    code={`# 访问用户列表
+curl ${domain}/e/${username}/api/users
+
+# 访问用户详情
+curl ${domain}/e/${username}/api/users/123
+
+# 访问文章列表
+curl ${domain}/e/${username}/api/posts`}
+                  />
+                </AccordionDetails>
+              </Accordion>
+
+              <Divider sx={{ my: 3 }} />
+
+              <Alert severity="info">
+                <Typography variant="body2" sx={{ fontWeight: 600 }} gutterBottom>
+                  🔒 安全防护
+                </Typography>
+                <Typography variant="body2">
+                  • <strong>SSRF 防护</strong>：自动阻止内网地址、localhost、云厂商 metadata 端点
+                  <br />• <strong>路径遍历防护</strong>：自动移除 <code>..</code> 等危险路径符号
+                  <br />• <strong>路径白名单</strong>：可选配置允许访问的路径模式（支持通配符 <code>*</code>）
+                  <br />• <strong>超时控制</strong>：防止长时间挂起，默认 15 秒超时
+                </Typography>
+              </Alert>
+
+              <Divider sx={{ my: 3 }} />
+
+              <Alert severity="warning">
+                <Typography variant="body2" sx={{ fontWeight: 600 }} gutterBottom>
+                  ⚠️ 使用限制
+                </Typography>
+                <Typography variant="body2">
+                  • 动态代理端点<strong>不能有子端点</strong>（必须是叶子节点）
+                  <br />• 所有子路径请求都会被转发到基础 URL
+                  <br />• 支持所有 HTTP 方法（GET、POST、PUT、DELETE 等）
+                  <br />• 查询参数和请求体会自动转发
+                  <br />• 适合代理整个目录、仓库或 API 命名空间
+                </Typography>
+              </Alert>
+
+              <Divider sx={{ my: 3 }} />
+
+              <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                📊 与普通代理端点的对比
+              </Typography>
+              <Paper sx={{ p: 2, bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.50" }}>
+                <Typography variant="body2" component="div">
+                  <strong>普通代理端点（Proxy）：</strong>
+                  <br />• 一个端点 → 一个固定 URL
+                  <br />• 适合代理单个资源或 API 端点
+                  <br />• 可以有子端点
+                  <br />
+                  <br />
+                  <strong>动态代理端点（Dynamic Proxy）：</strong>
+                  <br />• 一个端点 → 整个目录/命名空间
+                  <br />• 适合代理多个资源或整个 API
+                  <br />• 不能有子端点（叶子节点）
+                  <br />• 子路径自动拼接到基础 URL
+                </Typography>
+              </Paper>
+            </CardContent>
+          </Card>
+
           {/* 脚本端点 */}
           <Card variant="outlined">
             <CardContent>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
                 <Chip label="Script" color="secondary" size="small" />
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  脚本端点（开发中）
+                  脚本端点（计划中）
                 </Typography>
               </Box>
               <Typography variant="body2" color="text.secondary" paragraph>
                 在边缘节点运行自定义 JavaScript 代码，实现动态逻辑处理。
               </Typography>
               <Alert severity="info">
-                <Typography variant="body2">此功能计划在 Phase 3 推出，敬请期待！</Typography>
+                <Typography variant="body2">此功能计划在 Phase 3.2 推出，敬请期待！</Typography>
               </Alert>
             </CardContent>
           </Card>
@@ -719,6 +935,52 @@ proxies:
             <Typography variant="body2" color="text.secondary">
               首次部署后，访问 <code>/init</code>{" "}
               页面可设置第一个管理员。之后该页面会被禁用，只能由现有管理员在管理后台手动变更用户角色。
+            </Typography>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+              Q: 普通代理和动态代理有什么区别？
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Typography variant="body2" color="text.secondary">
+              <strong>普通代理（Proxy）</strong>：一个端点对应一个固定的目标 URL，适合代理单个资源。
+              <br />
+              <strong>动态代理（Dynamic Proxy）</strong>
+              ：一个端点可以代理整个目录或命名空间，所有子路径请求会自动拼接到基础 URL 后转发，适合代理多个资源。
+            </Typography>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+              Q: 为什么动态代理端点不能有子端点？
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Typography variant="body2" color="text.secondary">
+              动态代理端点会处理所有子路径请求，如果允许创建子端点，会导致路径冲突和逻辑混乱。因此系统强制要求动态代理端点必须是叶子节点（无子端点）。
+            </Typography>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+              Q: 动态代理的路径白名单如何使用？
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Typography variant="body2" color="text.secondary">
+              路径白名单用于限制可以访问的路径范围，支持通配符 <code>*</code>。例如：
+              <br />• <code>/repos/*</code> - 允许访问所有以 /repos/ 开头的路径
+              <br />• <code>/users/*/profile</code> - 允许访问特定模式的路径
+              <br />
+              留空则允许访问所有路径。建议为公开的动态代理端点配置白名单以提高安全性。
             </Typography>
           </AccordionDetails>
         </Accordion>

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Box } from "@mui/material";
 import { StaticEndpointEditor } from "./StaticEndpointEditor";
 import { ProxyEndpointEditor } from "./ProxyEndpointEditor";
+import { DynamicProxyEndpointEditor } from "./DynamicProxyEndpointEditor";
 import { ScriptEndpointEditor } from "./ScriptEndpointEditor";
 
 interface EndpointEditorProps {
@@ -9,10 +10,11 @@ interface EndpointEditorProps {
     id: string;
     name: string;
     path: string;
-    type: "static" | "proxy" | "script";
+    type: "static" | "proxy" | "dynamicProxy" | "script";
     config: any;
     accessControl: "public" | "authenticated";
     isPublished: boolean;
+    children?: any[];
   };
   onSave: (id: string, updates: any) => Promise<void>;
 }
@@ -23,6 +25,13 @@ export function EndpointEditor({ endpoint, onSave }: EndpointEditorProps) {
       return <StaticEndpointEditor endpoint={endpoint} onSave={onSave} />;
     case "proxy":
       return <ProxyEndpointEditor endpoint={endpoint} onSave={onSave} />;
+    case "dynamicProxy":
+      return (
+        <DynamicProxyEndpointEditor
+          endpoint={endpoint}
+          onSave={(config) => onSave(endpoint.id, { config })}
+        />
+      );
     case "script":
       return <ScriptEndpointEditor endpoint={endpoint} onSave={onSave} />;
     default:
