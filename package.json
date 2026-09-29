@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Endpoint Orchestration Platform - Build and manage your API endpoints at the edge",
   "private": true,
+  "packageManager": "pnpm@10.11.1",
   "scripts": {
     "dev": "concurrently \"npm:dev:backend\" \"npm:dev:frontend\"",
     "dev:backend": "wrangler dev",
