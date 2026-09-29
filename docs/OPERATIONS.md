@@ -124,6 +124,14 @@ The private input needs `proxies`, self-contained `proxy-groups`, DNS bootstrap 
 
 Each run keeps its private configuration/log/report under `~/.local/share/nekro-endpoint/native-runs/`. Failures preserve the previous output and do not upload anything. After validation, copy the result to a freshly pulled endpoint workspace and use `epctl push --apply`. Do not run the main desktop proxy configuration directly as a background refresh job.
 
+## Import an endpoint with a QR code
+
+In **端点管理**, select a published, enabled endpoint and click the QR icon beside the copy action. Public endpoints open the QR dialog immediately. Protected endpoints first ask you to select an active, unexpired `ep-` access key from an associated permission group. Management `sec-` keys are never included.
+
+For a Shadowrocket subscription endpoint, scan the code using **Shadowrocket → 首页 → 扫码**. The dialog also supports copying the URL and downloading a PNG. It encodes the ordinary HTTPS subscription URL; importing it does not configure client routing, DNS or relay selection.
+
+QR images are generated locally in the browser with a lazily loaded `qrcode` module. No third-party QR service receives the URL. A protected QR carries the selected access credential: keep it private, and disable that key if it is exposed. The feature does not create keys or change endpoint permissions. Disabled and unpublished endpoints cannot generate a QR from the toolbar.
+
 ## Release and verification
 
 ```bash

@@ -26,6 +26,9 @@ alwaysApply: true
 
 ## 2. 核心技术与架构
 
+- 端点管理页支持本地二维码分享：`endpointShare.ts` 统一构建访问 URL、验证 `ep-` 密钥并懒加载 `qrcode`；`EndpointQrDialog` 仅在浏览器生成 PNG，不调用外部二维码服务。已发布且启用的端点才可分享，受保护端点复用权限组密钥选择流程。
+
+
 ### 2.1. 整体架构
 
 这是一个**混合渲染模式 (Hybrid Rendering)** 的单体应用，部署在 Cloudflare Pages & Workers 上。

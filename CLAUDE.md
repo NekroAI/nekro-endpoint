@@ -6,6 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 2026-09 管理自动化补充（优先于下方历史描述）
 
+- 端点管理页支持本地二维码分享：`endpointShare.ts` 统一构建访问 URL、验证 `ep-` 密钥并懒加载 `qrcode`；`EndpointQrDialog` 仅在浏览器生成 PNG，不调用外部二维码服务。已发布且启用的端点才可分享，受保护端点复用权限组密钥选择流程。
+
+
 - 管理鉴权现同时支持 `Authorization: Bearer` 的网页登录会话与 `sec-` 管理密钥；生成的管理密钥实际存于 `users.apiKey`（明文），不是未使用的 `platformApiKey` 哈希列。`ep-` 只用于已发布端点。
 - `/api/auth/me` 复用鉴权中间件；不要恢复输出 OAuth/session/API 密钥的调试日志。发布激活中间件必须注册在发布处理器之前。
 - `scripts/epctl.py` 是仓库外状态的 Python 管理客户端；`subscription_guard.py` 检查原生客户端导出的节点完整性；`refresh_native.py` 在隔离配置下调用本机 Mihomo 做一次性刷新，不接管系统网络。工具和私有数据路径规范见 `docs/OPERATIONS.md`。

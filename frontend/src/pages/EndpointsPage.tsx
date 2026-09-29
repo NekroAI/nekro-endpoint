@@ -52,6 +52,7 @@ import {
   VpnKey as KeyIcon,
   ArrowDropDown as ArrowDropDownIcon,
   AccountTree as DynamicProxyIcon,
+  QrCode2 as QrCodeIcon,
 } from "@mui/icons-material";
 import { SimpleTreeView } from "@mui/x-tree-view/SimpleTreeView";
 import { TreeItem } from "@mui/x-tree-view/TreeItem";
@@ -68,6 +69,9 @@ import { usePermissionGroups } from "../hooks/usePermissionGroups";
 import { useAccessKeys } from "../hooks/useAccessKeys";
 import { useAuth } from "../hooks/useAuth";
 import { EndpointEditor } from "../components/endpoints/EndpointEditor";
+import { EndpointQrDialog } from "../components/endpoints/EndpointQrDialog";
+import { buildEndpointAccessUrl, isShareableAccessKey } from "../utils/endpointShare";
+import type { AccessKey } from "../../../common/types";
 
 interface PathTreeNode {
   id: string;
@@ -142,6 +146,8 @@ export function EndpointsPage() {
   // 复制菜单和访问密钥选择
   const [copyMenuAnchor, setCopyMenuAnchor] = useState<null | HTMLElement>(null);
   const [accessKeyDialogOpen, setAccessKeyDialogOpen] = useState(false);
+  const [accessKeyAction, setAccessKeyAction] = useState<"copy" | "qr">("copy");
+  const [qrShare, setQrShare] = useState<{ url: string; endpointPath: string; authenticated: boolean } | null>(null);
 
   if (!user) {
     return (
@@ -327,9 +333,8 @@ export function EndpointsPage() {
   const handleCopyEndpointUrl = async (endpointPath: string) => {
     const username = user?.username || "";
     const baseUrl = window.location.origin;
-    const fullUrl = `${baseUrl}/e/${username}${endpointPath}`;
-
     try {
+      const fullUrl = buildEndpointAccessUrl(baseUrl, username, endpointPath);
       await navigator.clipboard.writeText(fullUrl);
       setSnackbar({ open: true, message: "端点地址已复制到剪贴板", severity: "success" });
     } catch (err) {
@@ -352,7 +357,26 @@ export function EndpointsPage() {
     if (type === "plain") {
       handleCopyEndpointUrl(selectedEndpoint?.path || "");
     } else {
+      setAccessKeyAction("copy");
       setAccessKeyDialogOpen(true);
+    }
+  };
+
+  const handleShowQr = () => {
+    if (!selectedEndpoint?.isPublished || !selectedEndpoint.enabled) return;
+    if (selectedEndpoint.accessControl === "authenticated") {
+      setAccessKeyAction("qr");
+      setAccessKeyDialogOpen(true);
+    } else {
+      try {
+        setQrShare({
+          url: buildEndpointAccessUrl(window.location.origin, user.username, selectedEndpoint.path),
+          endpointPath: selectedEndpoint.path,
+          authenticated: false,
+        });
+      } catch {
+        setSnackbar({ open: true, message: "无法生成该端点的访问地址", severity: "error" });
+      }
     }
   };
 
@@ -730,6 +754,25 @@ export function EndpointsPage() {
                       </Tooltip>
                     )}
 
+                    <Tooltip
+                      title={
+                        selectedEndpoint.isPublished && selectedEndpoint.enabled
+                          ? "生成端点二维码"
+                          : "端点发布并启用后可生成二维码"
+                      }
+                    >
+                      <span>
+                        <IconButton
+                          size="small"
+                          aria-label="生成端点二维码"
+                          onClick={handleShowQr}
+                          disabled={!selectedEndpoint.isPublished || !selectedEndpoint.enabled}
+                        >
+                          <QrCodeIcon fontSize="small" />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+
                     {/* 危险操作 */}
                     <Tooltip title="删除端点">
                       <IconButton size="small" color="error" onClick={handleDeleteEndpoint}>
@@ -1016,20 +1059,32 @@ export function EndpointsPage() {
       />
 
       {/* 访问密钥选择对话框 */}
-      {selectedEndpoint && selectedEndpoint.accessControl === "authenticated" && (
+      {selectedEndpoint && selectedEndpoint.accessControl === "authenticated" && accessKeyDialogOpen && (
         <AccessKeySelectionDialog
+          key={selectedEndpoint.id}
           open={accessKeyDialogOpen}
+          action={accessKeyAction}
           onClose={() => setAccessKeyDialogOpen(false)}
           endpointPath={selectedEndpoint.path}
           permissionGroupIds={(selectedEndpoint as any).requiredPermissionGroups || []}
           permissionGroups={permissionGroups}
-          onCopyUrl={(url) => {
-            navigator.clipboard.writeText(url);
-            setSnackbar({ open: true, message: "鉴权访问地址已复制到剪贴板", severity: "success" });
-            setAccessKeyDialogOpen(false);
+          onCopyUrl={async (url) => {
+            if (accessKeyAction === "qr") {
+              setQrShare({ url, endpointPath: selectedEndpoint.path, authenticated: true });
+              setAccessKeyDialogOpen(false);
+              return;
+            }
+            try {
+              await navigator.clipboard.writeText(url);
+              setSnackbar({ open: true, message: "鉴权访问地址已复制到剪贴板", severity: "success" });
+              setAccessKeyDialogOpen(false);
+            } catch {
+              setSnackbar({ open: true, message: "复制失败，请检查剪贴板权限", severity: "error" });
+            }
           }}
         />
       )}
+      {qrShare && <EndpointQrDialog key={qrShare.url} {...qrShare} onClose={() => setQrShare(null)} />}
     </Box>
   );
 }
@@ -1041,7 +1096,8 @@ interface AccessKeySelectionDialogProps {
   endpointPath: string;
   permissionGroupIds: string[];
   permissionGroups: any[];
-  onCopyUrl: (url: string) => void;
+  action: "copy" | "qr";
+  onCopyUrl: (url: string) => void | Promise<void>;
 }
 
 function AccessKeySelectionDialog({
@@ -1050,11 +1106,13 @@ function AccessKeySelectionDialog({
   endpointPath,
   permissionGroupIds,
   permissionGroups,
+  action,
   onCopyUrl,
 }: AccessKeySelectionDialogProps) {
   const { user } = useAuth();
   const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null);
-  const [selectedKeyValue, setSelectedKeyValue] = useState<string>("");
+  const [selectedKey, setSelectedKey] = useState<AccessKey | null>(null);
+  const [selectionError, setSelectionError] = useState("");
 
   // 构建权限组和密钥的映射
   const groupsWithKeys = permissionGroupIds
@@ -1065,17 +1123,25 @@ function AccessKeySelectionDialog({
     .filter((item) => item.group);
 
   const handleCopy = () => {
-    if (!selectedKeyValue) return;
+    if (!selectedKey || !isShareableAccessKey(selectedKey, permissionGroupIds)) {
+      setSelectionError("所选密钥已失效，请重新选择可用密钥。");
+      return;
+    }
 
     const username = user?.username || "";
     const baseUrl = window.location.origin;
-    const fullUrl = `${baseUrl}/e/${username}${endpointPath}?access_key=${selectedKeyValue}`;
-    onCopyUrl(fullUrl);
+    try {
+      const fullUrl = buildEndpointAccessUrl(baseUrl, username, endpointPath, selectedKey.keyValue);
+      void onCopyUrl(fullUrl);
+    } catch {
+      setSelectionError("无法生成该端点的访问地址。");
+    }
   };
 
-  const handleKeySelect = (keyId: string, keyValue: string) => {
-    setSelectedKeyId(keyId);
-    setSelectedKeyValue(keyValue);
+  const handleKeySelect = (key: AccessKey) => {
+    setSelectedKeyId(key.id);
+    setSelectedKey(key);
+    setSelectionError("");
   };
 
   return (
@@ -1087,6 +1153,7 @@ function AccessKeySelectionDialog({
         </Typography>
 
         <Box sx={{ mt: 2 }}>
+          {groupsWithKeys.length === 0 && <Alert severity="warning">此端点没有可用的权限组，请先配置访问权限。</Alert>}
           <RadioGroup value={selectedKeyId}>
             {groupsWithKeys.map(({ groupId, group }) => (
               <AccessKeyGroupSection
@@ -1099,11 +1166,17 @@ function AccessKeySelectionDialog({
             ))}
           </RadioGroup>
         </Box>
+        {selectionError && <Alert severity="error">{selectionError}</Alert>}
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>取消</Button>
-        <Button onClick={handleCopy} variant="contained" disabled={!selectedKeyValue} startIcon={<CopyIcon />}>
-          复制地址
+        <Button
+          onClick={handleCopy}
+          variant="contained"
+          disabled={!selectedKey || !isShareableAccessKey(selectedKey, permissionGroupIds)}
+          startIcon={action === "qr" ? <QrCodeIcon /> : <CopyIcon />}
+        >
+          {action === "qr" ? "生成二维码" : "复制地址"}
         </Button>
       </DialogActions>
     </Dialog>
@@ -1120,18 +1193,23 @@ function AccessKeyGroupSection({
   groupId: string;
   group: any;
   selectedKeyId: string | null;
-  onKeySelect: (keyId: string, keyValue: string) => void;
+  onKeySelect: (key: AccessKey) => void;
 }) {
-  const { data: keysData } = useAccessKeys(groupId);
-  const keys = (keysData as any)?.data?.keys || [];
+  const { data: keysData, isLoading, error } = useAccessKeys(groupId);
+  const keys: AccessKey[] = keysData?.data?.keys || [];
 
   // 只显示可用的密钥
-  const activeKeys = keys.filter(
-    (key: any) => key.isActive && (!key.expiresAt || new Date(key.expiresAt) > new Date()),
-  );
+  const activeKeys = keys.filter((key) => isShareableAccessKey(key, [groupId]));
+
+  if (isLoading) return <CircularProgress size={20} aria-label="正在读取访问密钥" />;
+  if (error) return <Alert severity="error">无法读取权限组 {group.name} 的访问密钥。</Alert>;
 
   if (activeKeys.length === 0) {
-    return null;
+    return (
+      <Alert severity="info" sx={{ mb: 2 }}>
+        权限组 {group.name} 暂无未过期且启用的访问密钥。
+      </Alert>
+    );
   }
 
   return (
@@ -1152,12 +1230,12 @@ function AccessKeyGroupSection({
             </TableRow>
           </TableHead>
           <TableBody>
-            {activeKeys.map((key: any) => (
+            {activeKeys.map((key) => (
               <TableRow
                 key={key.id}
                 hover
                 selected={selectedKeyId === key.id}
-                onClick={() => onKeySelect(key.id, key.keyValue)}
+                onClick={() => onKeySelect(key)}
                 sx={{ cursor: "pointer" }}
               >
                 <TableCell padding="checkbox">
