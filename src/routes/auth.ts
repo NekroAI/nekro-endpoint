@@ -13,7 +13,6 @@ import { createId } from "@paralleldrive/cuid2";
 import type { Bindings } from "../types";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import * as drizzleSchema from "../db/schema";
-import { and, gt } from "drizzle-orm";
 import { authMiddleware } from "../middleware/auth";
 
 type Variables = {
@@ -263,10 +262,8 @@ auth
         error?: string;
         error_description?: string;
       };
-      console.log("GitHub token response:", tokenData);
-
       if (!tokenData.access_token) {
-        console.error("GitHub token data invalid:", tokenData);
+        console.error("GitHub token response did not contain an access token");
         return c.json(
           {
             success: false,
@@ -287,8 +284,6 @@ auth
 
       if (!userResponse.ok) {
         console.error("GitHub user request failed:", userResponse.status, userResponse.statusText);
-        const errorText = await userResponse.text();
-        console.error("GitHub user error response:", errorText);
         return c.json(
           {
             success: false,
@@ -361,8 +356,6 @@ auth
         expiresAt,
       });
 
-      console.log(`[Auth Callback] Session created for user ${user.id} with token ${sessionToken}`);
-
       return c.json(
         {
           success: true,
@@ -400,28 +393,8 @@ auth
 
 protectedRoutes
   .openapi(meRoute, async (c) => {
-    const authHeader = c.req.header("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return c.json({ code: 401, message: "认证令牌缺失" }, 401);
-    }
-
-    const sessionToken = authHeader.substring(7);
-    console.log(`[Auth Me] Checking token: ${sessionToken}`);
-    const db = c.get("db");
-
-    const session = await db
-      .select()
-      .from(userSessions)
-      .where(and(eq(userSessions.sessionToken, sessionToken), gt(userSessions.expiresAt, new Date())))
-      .get();
-
-    console.log(`[Auth Me] Session found in DB:`, session);
-
-    if (!session) {
-      return c.json({ code: 401, message: "认证令牌无效或已过期" }, 401);
-    }
-
-    const user = await db.select().from(users).where(eq(users.id, session.userId)).get();
+    // Both browser sessions and management API keys are resolved by middleware.
+    const user = c.get("user");
 
     if (!user) {
       return c.json(

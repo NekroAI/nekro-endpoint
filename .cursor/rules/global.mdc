@@ -570,6 +570,15 @@ alwaysApply: true
     - **静态资源服务**: 生产环境中通过 `c.env.ASSETS.fetch()` 处理静态文件请求，确保正确的 MIME 类型
     - **关键库清单**: 以下库必须包含在 `ssr.noExternal` 中：`react-router-dom`, `@mui/material`, `@mui/system`, `@mui/icons-material`, `@emotion/react`, `@emotion/styled`, `react-i18next`, `i18next`
 
+## 2026-09 管理自动化实现更新
+
+- 管理 API 接受有效会话或 `sec-` 管理密钥，仍执行原有所有权、角色与发布激活检查。`ep-` 是已发布端点访问密钥，不能管理平台。
+- 与本文历史描述不同，当前生成的管理密钥存于 `users.apiKey` 明文列；`platformApiKey` 和 PBKDF2 辅助函数不在此路径使用。勿将其描述为已实现哈希存储。
+- `scripts/epctl.py` 提供私有备份、拉取、差异预览、上传、草稿、发布与恢复；上传仅更改 config，默认预览，写入后回读验证。它不是 Worker 运行时代码。
+- `scripts/subscription_guard.py` 使用可选 PyYAML 检查 YAML/URI 订阅，拒绝仅引导节点或节点数异常下降；不负责模拟机场客户端或自动抓取。
+- 详见 `docs/OPERATIONS.md`。真实账号、订阅原始导出与私钥存于仓库外，不得提交。
+- production 明确指向 `nekro-endpoint`。已关联 GitHub 的部署优先沿用 Workers Builds，不从本机额外发布未跟踪版本。
+
 ## 4. 用户认证系统
 
 项目现已集成完整的 GitHub OAuth 登录功能，包含：

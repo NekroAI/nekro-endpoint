@@ -19,11 +19,31 @@ export const authMiddleware = createMiddleware<{
     return c.json({ success: false, message: "认证令牌缺失" }, 401);
   }
 
-  const sessionToken = authHeader.substring(7);
+  const token = authHeader.substring(7);
   const db = c.get("db");
 
+  // Management keys are stored in users.apiKey. They are distinct from the
+  // ep-* keys used by the published endpoint execution layer.
+  if (/^sec-[a-f0-9]{64}$/.test(token)) {
+    const user = await db.query.users.findFirst({
+      where: eq(users.apiKey, token),
+    });
+
+    if (!user) {
+      return c.json({ success: false, message: "认证令牌无效或已过期" }, 401);
+    }
+
+    c.set("user", user);
+    await next();
+    return;
+  }
+
+  if (token.startsWith("sec-") || token.startsWith("ep-")) {
+    return c.json({ success: false, message: "认证令牌无效或已过期" }, 401);
+  }
+
   const session = await db.query.userSessions.findFirst({
-    where: and(eq(userSessions.sessionToken, sessionToken), gt(userSessions.expiresAt, new Date())),
+    where: and(eq(userSessions.sessionToken, token), gt(userSessions.expiresAt, new Date())),
   });
 
   if (!session) {

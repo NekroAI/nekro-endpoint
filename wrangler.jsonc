@@ -23,6 +23,7 @@
   },
   "env": {
     "production": {
+      "name": "nekro-endpoint",
       "assets": {
         "binding": "ASSETS",
         "directory": "./dist/client"

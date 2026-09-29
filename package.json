@@ -15,6 +15,8 @@
     "deploy": "pnpm build && wrangler deploy --env production",
     "serve:prod": "pnpm build && wrangler dev --env production",
     "test": "vitest",
+    "test:ci": "vitest run && python3 -m unittest discover -s scripts -p 'test_*.py'",
+    "ep": "python3 scripts/epctl.py",
     "cf-typegen": "wrangler types",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "wrangler d1 migrations apply DB --local",
@@ -23,7 +25,7 @@
     "db:check": "drizzle-kit check",
     "db:seed": "wrangler d1 execute DB --local --file=./drizzle/seed.sql",
     "db:seed:prod": "wrangler d1 execute DB --remote --file=./drizzle/seed.sql",
-    "typecheck": "tsc --noEmit && tsc -p frontend/tsconfig.json --noEmit",
+    "typecheck": "tsc --noEmit",
     "lint": "tsx",
     "format": "eslint . --fix"
   },

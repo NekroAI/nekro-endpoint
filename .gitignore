@@ -174,3 +174,8 @@ dist
 # Local dev database
 local.db
 *.db
+
+# Local management exports may contain API/subscription credentials.
+.ep-private/
+__pycache__/
+*.pyc
