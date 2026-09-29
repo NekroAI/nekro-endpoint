@@ -116,7 +116,7 @@ pnpm typecheck
 pnpm build
 ```
 
-The root TypeScript configuration already includes frontend and backend. There is no separate `frontend/tsconfig.json`. Build scripts for the pinned native dependencies are explicitly allowed in `pnpm-workspace.yaml` for pnpm 11 installations.
+The root TypeScript configuration already includes frontend and backend. There is no separate `frontend/tsconfig.json`. The package manager is pinned to pnpm 10.11.1, matching the existing Workers Builds image. `pnpm-workspace.yaml` explicitly declares the root package and uses `onlyBuiltDependencies` to allow the required native build scripts; the newer `allowBuilds` format is not supported by that image's pnpm version.
 
 For a Worker connected to GitHub via Workers Builds, follow the configured Git branch release flow; do not separately deploy an untracked local build. Confirm the Worker name, branch, D1 binding and existing deployment before releasing. An environment suffix can otherwise target an unintended Worker. The production configuration explicitly uses `nekro-endpoint`.
 
