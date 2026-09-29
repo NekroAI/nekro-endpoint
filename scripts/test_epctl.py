@@ -1,4 +1,5 @@
 import contextlib
+import base64
 import copy
 import importlib.util
 import io
@@ -55,6 +56,16 @@ class ToolTests(unittest.TestCase):
         text = secrets[0] + " " + secrets[1] + '\npassword: line-pass\n{password: "inline-pass", uuid: uuid-value}\nvmess://encoded-vmess\nhttps://example.com/url-path-token?access_key=other\n'
         redacted = epctl.redact(text)
         for secret in secrets: self.assertNotIn(secret, redacted)
+
+    def test_redacts_embedded_json_documents_during_restore(self):
+        document = json.dumps({"config": {"content": 'proxies:\n - {password: "nested-secret"}\n', "code": 'const value = "code-secret";'}})
+        result = epctl.redact(document)
+        self.assertNotIn("nested-secret", result)
+        self.assertNotIn("code-secret", result)
+
+    def test_redacts_base64_subscription_documents(self):
+        encoded = base64.b64encode(("trojan://private-password@example.com:443#private-node\n" * 2).encode()).decode()
+        self.assertNotIn(encoded, epctl.redact(encoded))
 
     def make_workspace(self, folder, client):
         epctl.save_baseline(folder, client.state)

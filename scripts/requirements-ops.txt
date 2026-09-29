@@ -1,2 +1,2 @@
-# Only subscription_guard.py needs this; epctl.py uses the Python standard library.
+# subscription_guard.py and refresh_native.py use this; epctl.py uses only the standard library.
 PyYAML>=6.0.2,<7

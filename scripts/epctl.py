@@ -28,6 +28,12 @@ class ToolError(Exception):
 
 def redact(value):
     text = str(value)
+    # Base64 subscriptions contain credentials even though no password key or
+    # URI is visible until decoding. Display only the separately computed hash.
+    text = re.sub(r"(?m)^[A-Za-z0-9+/=_-]{48,}$", "[ENCODED DOCUMENT REDACTED]", text)
+    # JSON-escaped config content/code is an opaque document, not a safe diff
+    # line. Avoid exposing credentials hidden behind escaped newlines/quotes.
+    text = re.sub(r'(?i)("(?:content|code)"\s*:\s*)"(?:\\.|[^"\\])*"', r'\1"[DOCUMENT REDACTED]"', text)
     text = re.sub(r"\b(?:sec-[a-fA-F0-9]{64}|ep-[a-fA-F0-9]{32})\b", "[REDACTED]", text)
     text = re.sub(r"(?i)([?&](?:access_key|access_token|token|key|auth|password)=)[^\s&\"'<>]+", r"\1[REDACTED]", text)
     text = re.sub(r"(?i)((?:trojan|ss|vless|vmess|https?)://)[^\s/@]+@", r"\1[REDACTED]@", text)

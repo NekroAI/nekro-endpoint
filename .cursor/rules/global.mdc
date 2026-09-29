@@ -576,6 +576,7 @@ alwaysApply: true
 - 与本文历史描述不同，当前生成的管理密钥存于 `users.apiKey` 明文列；`platformApiKey` 和 PBKDF2 辅助函数不在此路径使用。勿将其描述为已实现哈希存储。
 - `scripts/epctl.py` 提供私有备份、拉取、差异预览、上传、草稿、发布与恢复；上传仅更改 config，默认预览，写入后回读验证。它不是 Worker 运行时代码。
 - `scripts/subscription_guard.py` 使用可选 PyYAML 检查 YAML/URI 订阅，拒绝仅引导节点或节点数异常下降；不负责模拟机场客户端或自动抓取。
+- `scripts/refresh_native.py` 可调用已安装的原生 Mihomo，以独立引导配置获取一个指定订阅并通过完整性检查；不启用TUN、不复制其他监听、不自动上传，失败不覆盖上次完整文件。
 - 详见 `docs/OPERATIONS.md`。真实账号、订阅原始导出与私钥存于仓库外，不得提交。
 - production 明确指向 `nekro-endpoint`。已关联 GitHub 的部署优先沿用 Workers Builds，不从本机额外发布未跟踪版本。
 

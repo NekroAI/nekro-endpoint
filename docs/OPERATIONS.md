@@ -108,6 +108,22 @@ Recommended separation:
 
 Do not silently replace a last-good full export with a bootstrap-only response. Do not add automatic refresh timers before the native retrieval path has been proven.
 
+### One-shot native refresh
+
+`refresh_native.py` can invoke an installed Mihomo binary using a private, self-contained bootstrap configuration. The native core performs the upstream HTTP request with the provider's configured route and documented client headers. The helper strips TUN, system-facing listeners and unrelated providers, uses a temporary authenticated loopback controller, validates the downloaded file, and always terminates its own process.
+
+```bash
+python3 scripts/refresh_native.py \
+  --mihomo /path/to/mihomo \
+  --config /private/path/native-refresh.yaml --provider native-main \
+  --baseline /private/path/last-good.yaml \
+  --out /private/path/validated-export.yaml --min-nodes 20
+```
+
+The private input needs `proxies`, self-contained `proxy-groups`, DNS bootstrap settings and the selected HTTP `proxy-providers` definition (including an explicit `proxy`). It must not obtain its bootstrap nodes from the provider being refreshed. Use the actual supported native-client identity/settings, not random User-Agent variants. This does not reproduce a different application's TLS fingerprint, and an upstream may still reject the client.
+
+Each run keeps its private configuration/log/report under `~/.local/share/nekro-endpoint/native-runs/`. Failures preserve the previous output and do not upload anything. After validation, copy the result to a freshly pulled endpoint workspace and use `epctl push --apply`. Do not run the main desktop proxy configuration directly as a background refresh job.
+
 ## Release and verification
 
 ```bash

@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - 管理鉴权现同时支持 `Authorization: Bearer` 的网页登录会话与 `sec-` 管理密钥；生成的管理密钥实际存于 `users.apiKey`（明文），不是未使用的 `platformApiKey` 哈希列。`ep-` 只用于已发布端点。
 - `/api/auth/me` 复用鉴权中间件；不要恢复输出 OAuth/session/API 密钥的调试日志。发布激活中间件必须注册在发布处理器之前。
-- `scripts/epctl.py` 是仓库外状态的 Python 管理客户端；`subscription_guard.py` 检查原生客户端导出的节点完整性。工具和私有数据路径规范见 `docs/OPERATIONS.md`。
+- `scripts/epctl.py` 是仓库外状态的 Python 管理客户端；`subscription_guard.py` 检查原生客户端导出的节点完整性；`refresh_native.py` 在隔离配置下调用本机 Mihomo 做一次性刷新，不接管系统网络。工具和私有数据路径规范见 `docs/OPERATIONS.md`。
 - 生产部署优先沿用 Cloudflare Workers Builds 的 Git 集成。production Worker 名称显式为 `nekro-endpoint`，不要根据环境后缀另建 Worker。
 - `pnpm test:ci` 包含 Vitest 和 Python 工具测试；`pnpm typecheck` 使用根配置覆盖前后端。此仓库没有 `frontend/tsconfig.json`。
 
