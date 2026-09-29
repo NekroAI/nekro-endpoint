@@ -31,6 +31,9 @@ const app = new OpenAPIHono<{ Bindings: Bindings; Variables: Variables }>();
 
 // 应用认证中间件到所有端点管理路由
 app.use("/endpoints/*", authMiddleware);
+// Register before the handler; middleware added after an OpenAPI handler does
+// not run when that handler returns its response without calling next().
+app.use("/endpoints/:id/publish", activationMiddleware);
 
 // 列出端点（树形或扁平）
 const listEndpointsRoute = createRoute({
@@ -694,8 +697,5 @@ app.openapi(reorderEndpointsRoute, async (c): Promise<any> => {
     message: "排序更新成功",
   });
 });
-
-// 只在发布相关的路由上应用激活检查中间件
-app.use("/endpoints/:id/publish", activationMiddleware);
 
 export default app;

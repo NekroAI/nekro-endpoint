@@ -184,10 +184,10 @@ protectedRoutes.openapi(meRoute, async (c) => {
 ### API Key 格式
 
 ```
-ak-{64位十六进制字符串}
+sec-{64位小写十六进制字符串}
 ```
 
-示例：`ak-a1b2c3d4e5f6...`
+由 `generateUserApiKey()` 生成，当前保存于 `users.api_key`。`platform_api_key` 哈希列尚未用于该认证路径，不能将现有实现描述为管理密钥已哈希存储。
 
 ### 查看 API Key
 
@@ -205,9 +205,11 @@ ak-{64位十六进制字符串}
 在 API 请求中添加 Authorization 头：
 
 ```bash
-curl -H "Authorization: Bearer ak-your-api-key-here" \
-  https://your-domain.pages.dev/api/your-endpoint
+curl -H "Authorization: Bearer $EP_TOKEN" \
+  https://your-domain.pages.dev/api/auth/me
 ```
+
+管理 API 同时接受有效网页登录会话和 `sec-` 管理密钥；`ep-` 端点访问密钥不能用于管理。管理密钥不绕过账号激活、管理员角色及端点所有者检查。旧部署仅支持会话，需要发布鉴权修复后才能使用管理密钥。安全的交互式凭据保存、配置备份和上传流程见 [运维工具说明](./OPERATIONS.md)。
 
 ### API Key 安全提示
 
