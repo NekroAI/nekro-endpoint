@@ -49,6 +49,18 @@ class DailyProfileTests(unittest.TestCase):
         result=shadowrocket_daily(flat,p,rules)
         self.assertEqual(shadowrocket_nodes(result)['proxies'][0]['dialer-proxy'],'HK-auto')
 
+    def test_mobile_community_policy_expands_dns_and_udp_without_changing_desktop(self):
+        flat,p,rules=self.sample()
+        p['rule-providers']['claude']={'format':'text','behavior':'classical'}
+        p['x-rule-provider-controls']={'claude':{'target':'TW-only','dns':['https://1.1.1.1/dns-query#TW-only'],'reject-udp443':True}}
+        p['rules'].insert(1,'RULE-SET,claude,TW-only')
+        rules['claude']='DOMAIN-SUFFIX,clau.de\nDOMAIN,cdn.example.com'
+        result=shadowrocket_daily(flat,p,rules)
+        self.assertEqual(result['rules'][1],'AND,((DOMAIN-SUFFIX,clau.de),(NETWORK,udp),(DST-PORT,443)),REJECT')
+        self.assertEqual(result['dns']['nameserver-policy']['+.clau.de'],['https://1.1.1.1/dns-query#TW-only'])
+        self.assertNotIn('+.clau.de',flat['dns']['nameserver-policy'])
+        self.assertIn('(PROTOCOL,UDP)',shadowrocket_config(result,daily=True))
+
     def test_final_and_bad_group_override_fail(self):
         flat,p,rules=self.sample();p['rules'][-1]='MATCH,daily'
         with self.assertRaises(ToolError):shadowrocket_daily(flat,p,rules)
