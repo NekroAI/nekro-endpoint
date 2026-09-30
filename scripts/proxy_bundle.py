@@ -80,6 +80,10 @@ def compile_clash(master, sources, rule_files):
         group['proxies'] = list(dict.fromkeys(members))
         # A geographically empty group must reject, never become COMPATIBLE/DIRECT.
         if not members: group['proxies'] = ['REJECT']
+    domestic_dns = out.get('x-direct-dns-from-rule-providers', [])
+    if not isinstance(domestic_dns, list) or any(n not in rule_providers for n in domestic_dns):
+        raise ToolError('Domestic DNS provider references must exist.')
+    dns_domains = []
     rules = []
     for rule in out.get('rules', []):
         if not rule.startswith('RULE-SET,'):
@@ -109,10 +113,21 @@ def compile_clash(master, sources, rule_files):
             own_no_resolve = entry.endswith(',no-resolve')
             if own_no_resolve: entry = entry[:-11]
             if entry.startswith('RULE-SET,'): raise ToolError('Nested rule-set is unsupported.')
+            if name in domestic_dns and target == 'DIRECT':
+                kind, separator, domain = entry.partition(',')
+                if separator and kind in ('DOMAIN', 'DOMAIN-SUFFIX'):
+                    dns_domains.append(('+.' if kind == 'DOMAIN-SUFFIX' else '') + domain)
             rules.append(entry + ',' + target + (',no-resolve' if own_no_resolve or options else ''))
             count += 1
         if not count: raise ToolError('Empty external rule set.')
     out['rules'] = rules
+    if dns_domains:
+        dns = out.setdefault('dns', {})
+        resolvers = dns.get('direct-nameserver')
+        if not resolvers: raise ToolError('Domestic DNS expansion needs direct-nameserver.')
+        policy = dns.setdefault('nameserver-policy', {})
+        for domain in dict.fromkeys(dns_domains):
+            policy.setdefault(domain, resolvers)
     for key in list(out):
         if key.startswith('x-'): out.pop(key)
     # Client shells own their management/TUN listeners; no machine credentials escape.
