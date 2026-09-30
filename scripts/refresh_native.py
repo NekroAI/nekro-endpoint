@@ -41,7 +41,7 @@ def prepare(source, provider_name, folder, port, secret):
     return config
 
 
-def fetch_native(binary, source, provider, timeout=45, min_nodes=20, baseline=None, max_drop=0.4):
+def fetch_native(binary, source, provider, timeout=45, min_nodes=20, baseline=None, max_drop=0.4, allow_bootstrap=False):
     try:
         import yaml
     except ImportError:
@@ -77,6 +77,10 @@ def fetch_native(binary, source, provider, timeout=45, min_nodes=20, baseline=No
                     if status.get("proxies") and export.exists():
                         raw = export.read_bytes()
                         report = inspect(raw, baseline=baseline, min_nodes=min_nodes, max_drop=max_drop)
+                        if allow_bootstrap and report["bootstrap_only"] and report["node_count"] >= min_nodes and baseline is None:
+                            report["accepted"] = True
+                            report["bootstrap_stage"] = True
+                            report["reasons"] = []
                         private_write(folder / "report.json", json_text(report))
                         if not report["accepted"]:
                             raise ToolError(f"Native export failed completeness checks; previous output preserved. Report: {folder / 'report.json'}")
