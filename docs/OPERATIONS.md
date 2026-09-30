@@ -61,7 +61,7 @@ pnpm ep publish /proxy/clash_next
 pnpm ep publish /proxy/clash_next --apply
 ```
 
-New static endpoints are drafts. Authenticated access requires a permission group; public access requires explicit `--public`. Keep node passwords and upstream subscription tokens behind authenticated endpoints. A parent path is not an implicit permission boundary: each endpoint needs its own access configuration.
+New static endpoints are drafts. Authenticated access requires a permission group; public access requires explicit `--public`. Keep sensitive endpoint contents behind authenticated endpoints. A parent path is not an implicit permission boundary: each endpoint needs its own access configuration.
 
 The tool omits delete and key-rotation commands intentionally. `unpublish` is available with the same preview/`--apply` pattern. Neither creating nor editing an endpoint automatically publishes it.
 
@@ -77,58 +77,18 @@ Restore checks endpoint ID, owner and path, backs up the current state and verif
 ## Read a published endpoint
 
 ```bash
-pnpm ep download /proxy/clash --username USER \
+pnpm ep download /config/example --username USER \
   --access-key-file /private/path/endpoint-access-key \
-  --out /private/path/clash.yaml
+  --out /private/path/config.txt
 ```
 
 This request uses only the endpoint access key, never the management Bearer token. Redirects are refused to avoid credential forwarding. The client never prints the downloaded configuration; it writes a 0600 file and reports its size/hash. The currently implemented client still loads the configured management profile to select the origin, but does not send that profile's token on this request.
-
-## Guard native subscription exports
-
-Some upstreams return only bootstrap nodes unless fetched by an approved client through a designated entry. HTTP 200 is not evidence of a complete subscription.
-
-```bash
-python3 -m pip install -r scripts/requirements-ops.txt
-python3 scripts/subscription_guard.py /private/path/new-export.yaml \
-  --baseline /private/path/last-good.yaml --min-nodes 20 \
-  --report /private/path/report.json
-```
-
-The guard accepts proxy YAML or supported URI/base64 exports, rejects HTML/errors/empty exports, detects the known bootstrap/V0-only pattern and checks a configurable count drop. It does not fetch upstream URLs, modify the baseline or claim node connectivity. Thresholds depend on the subscription; a genuinely smaller valid subscription may require review and an adjusted threshold.
-
-Use an approved native client for upstream retrieval when required. An EP proxy endpoint performs a new HTTP request from the Worker: preserving `User-Agent` alone does not preserve the original client's TLS session or its chosen network egress. A client routing its request to EP through an airport node does not automatically make the Worker's upstream request follow that node.
-
-Recommended separation:
-
-- Upstream retrieval: native client plus independent bootstrap nodes and the provider's documented request settings.
-- Validation: parse, detect incomplete exports, compare with the last-good snapshot, and test representative nodes.
-- Distribution: EP authenticated static endpoints serve validated artifacts and client configurations.
-- Rollout: draft/new path, validate with real clients, then update the stable endpoint without changing the user's subscription URL.
-
-Do not silently replace a last-good full export with a bootstrap-only response. Do not add automatic refresh timers before the native retrieval path has been proven.
-
-### One-shot native refresh
-
-`refresh_native.py` can invoke an installed Mihomo binary using a private, self-contained bootstrap configuration. The native core performs the upstream HTTP request with the provider's configured route and documented client headers. The helper strips TUN, system-facing listeners and unrelated providers, uses a temporary authenticated loopback controller, validates the downloaded file, and always terminates its own process.
-
-```bash
-python3 scripts/refresh_native.py \
-  --mihomo /path/to/mihomo \
-  --config /private/path/native-refresh.yaml --provider native-main \
-  --baseline /private/path/last-good.yaml \
-  --out /private/path/validated-export.yaml --min-nodes 20
-```
-
-The private input needs `proxies`, self-contained `proxy-groups`, DNS bootstrap settings and the selected HTTP `proxy-providers` definition (including an explicit `proxy`). It must not obtain its bootstrap nodes from the provider being refreshed. Use the actual supported native-client identity/settings, not random User-Agent variants. This does not reproduce a different application's TLS fingerprint, and an upstream may still reject the client.
-
-Each run keeps its private configuration/log/report under `~/.local/share/nekro-endpoint/native-runs/`. Failures preserve the previous output and do not upload anything. After validation, copy the result to a freshly pulled endpoint workspace and use `epctl push --apply`. Do not run the main desktop proxy configuration directly as a background refresh job.
 
 ## Import an endpoint with a QR code
 
 In **端点管理**, select a published, enabled endpoint and click the QR icon beside the copy action. Public endpoints open the QR dialog immediately. Protected endpoints first ask you to select an active, unexpired `ep-` access key from an associated permission group. Management `sec-` keys are never included.
 
-For a Shadowrocket subscription endpoint, scan the code using **Shadowrocket → 首页 → 扫码**. The dialog also supports copying the URL and downloading a PNG. It encodes the ordinary HTTPS subscription URL; importing it does not configure client routing, DNS or relay selection.
+The dialog supports scanning, copying the URL and downloading a PNG. It encodes the endpoint access URL, not the response body. How a receiving application uses that URL is outside the platform’s scope.
 
 QR images are generated locally in the browser with a lazily loaded `qrcode` module. No third-party QR service receives the URL. A protected QR carries the selected access credential: keep it private, and disable that key if it is exposed. The feature does not create keys or change endpoint permissions. Disabled and unpublished endpoints cannot generate a QR from the toolbar.
 
@@ -136,6 +96,8 @@ QR images are generated locally in the browser with a lazily loaded `qrcode` mod
 
 ```bash
 pnpm test:ci
+# Optional CLI checks; Python standard library only:
+pnpm test:cli
 pnpm typecheck
 pnpm build
 ```
@@ -145,7 +107,3 @@ The root TypeScript configuration already includes frontend and backend. There i
 For a Worker connected to GitHub via Workers Builds, follow the configured Git branch release flow; do not separately deploy an untracked local build. Confirm the Worker name, branch, D1 binding and existing deployment before releasing. An environment suffix can otherwise target an unintended Worker. The production configuration explicitly uses `nekro-endpoint`.
 
 After release, verify `whoami`, snapshot the intended subtree, and test a non-production draft endpoint before updating an existing published configuration. Never put account credentials or actual subscription exports in this public repository.
-
-## Canonical client generation
-
-For new-layout sources, single-file client outputs and manual batch updates, see [PROXY_SYNC.md](PROXY_SYNC.md). `proxy_sync.py` builds and validates everything before publication; it does not reload clients or modify legacy addresses.
