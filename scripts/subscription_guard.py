@@ -7,6 +7,7 @@ import binascii
 import collections
 import hashlib
 import json
+import re
 from pathlib import Path
 import sys
 import urllib.parse
@@ -20,7 +21,7 @@ def decode_subscription(raw):
     text = raw.decode("utf-8-sig").strip()
     if not text or text.lstrip().startswith(("<", "<!")):
         raise ToolError("Empty/HTML response is not a subscription.")
-    if "proxies:" in text or text.startswith("{"):
+    if re.search(r"(?m)^\s*(?:proxies|\"proxies\"|'proxies')\s*:", text) or text.startswith("{"):
         try:
             import yaml
         except ImportError:

@@ -145,3 +145,7 @@ The root TypeScript configuration already includes frontend and backend. There i
 For a Worker connected to GitHub via Workers Builds, follow the configured Git branch release flow; do not separately deploy an untracked local build. Confirm the Worker name, branch, D1 binding and existing deployment before releasing. An environment suffix can otherwise target an unintended Worker. The production configuration explicitly uses `nekro-endpoint`.
 
 After release, verify `whoami`, snapshot the intended subtree, and test a non-production draft endpoint before updating an existing published configuration. Never put account credentials or actual subscription exports in this public repository.
+
+## Canonical client generation
+
+For new-layout sources, single-file client outputs and manual batch updates, see [PROXY_SYNC.md](PROXY_SYNC.md). `proxy_sync.py` builds and validates everything before publication; it does not reload clients or modify legacy addresses.

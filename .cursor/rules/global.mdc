@@ -634,3 +634,7 @@ alwaysApply: true
 7. **用户友好**: 推荐使用 GitHub 模板功能，降低用户接触成本
 
 这些改进确保了 NekroEdge 既能提供出色的开发体验，又能满足生产环境的可维护性和扩展性需求。
+
+## Canonical proxy generation (2026-09-30)
+
+`scripts/proxy_sync.py` orchestrates manual native source retrieval and guarded new-layout publication; `proxy_bundle.py` is the pure client compiler. Private metadata and raw URLs never enter this repo. See `docs/PROXY_SYNC.md` for source/adapter boundaries, unsupported semantics, journal recovery, and Shadowrocket device-verification limits. Keep legacy endpoints and running clients untouched. Native bootstrap-only acceptance is opt-in and restricted to stage one.

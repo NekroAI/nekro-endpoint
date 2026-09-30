@@ -767,3 +767,7 @@ interface ApiResponse<T> {
 ---
 
 **重要提醒**：这是一个生产级的边缘端点编排平台，强调类型安全、开发体验和可维护性。遇到问题时，优先查阅 `src/routes/` 和 `frontend/src/hooks/` 中的现有模式，遵循既定架构。
+
+## Canonical proxy generation (2026-09-30)
+
+`scripts/proxy_sync.py` orchestrates manual native source retrieval and guarded new-layout publication; `proxy_bundle.py` is the pure client compiler. Private metadata and raw URLs never enter this repo. See `docs/PROXY_SYNC.md` for source/adapter boundaries, unsupported semantics, journal recovery, and Shadowrocket device-verification limits. Keep legacy endpoints and running clients untouched. Native bootstrap-only acceptance is opt-in and restricted to stage one.
