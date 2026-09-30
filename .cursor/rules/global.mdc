@@ -642,3 +642,5 @@ alwaysApply: true
 Shadowrocket daily-use differences belong in the canonical master’s `x-shadowrocket` policy, not a separately edited rules file. The adapter expands mobile rule sources, limits visible groups, preserves Claude/Taiwan priority and requires DIRECT as the final rule. Do not propagate these mobile defaults to desktop/Nikki or reload the router during publication.
 
 Canonical domestic DNS mappings may be derived via `x-direct-dns-from-rule-providers`; explicit DNS exceptions win. Keep single-file output self-contained. Do not add unresolved rule-set DNS selectors or silently override fixed Claude DNS. Large flattened lists must fit EP/D1 storage limits.
+
+Community fixed-exit sets use `x-rule-provider-controls` in the master and mobile policy to keep routing, DNS and optional UDP/443 guards synchronized. Controls support literal DOMAIN/DOMAIN-SUFFIX only and must match their RULE-SET target. Keep local exceptions and community dependencies distinct; unsupported changes block publication. Mobile Host output distinguishes exact domains from suffixes.

@@ -83,6 +83,16 @@ def compile_clash(master, sources, rule_files):
     domestic_dns = out.get('x-direct-dns-from-rule-providers', [])
     if not isinstance(domestic_dns, list) or any(n not in rule_providers for n in domestic_dns):
         raise ToolError('Domestic DNS provider references must exist.')
+    controls = out.get('x-rule-provider-controls', {})
+    if not isinstance(controls, dict): raise ToolError('Rule-provider controls must be a mapping.')
+    for name, control in controls.items():
+        if name not in rule_providers or not isinstance(control, dict) or set(control) != {'target', 'dns', 'reject-udp443'}:
+            raise ToolError('Invalid controlled rule-provider specification.')
+        if not isinstance(control['target'], str) or not isinstance(control['reject-udp443'], bool):
+            raise ToolError('Invalid controlled rule-provider target/UDP setting.')
+        if not isinstance(control['dns'], list) or not control['dns'] or any(not isinstance(v, str) or not v.startswith('https://') or not v.endswith('#' + control['target']) for v in control['dns']):
+            raise ToolError('Controlled provider DNS must use its fixed proxy target.')
+    fixed_dns = {}; used_controls = set()
     dns_domains = []
     rules = []
     for rule in out.get('rules', []):
@@ -94,6 +104,9 @@ def compile_clash(master, sources, rule_files):
         _, name, target, *options = parts
         if name not in rule_providers or name not in rule_files:
             raise ToolError('Missing rule dependency: ' + name)
+        control = controls.get(name)
+        if control and target != control['target']:
+            raise ToolError('Controlled provider cannot route to a different target.')
         spec = rule_providers[name]
         if spec.get('format', 'yaml') not in ('text', 'yaml'):
             raise ToolError('Only text/YAML rule providers are supported; binary MRS must be decoded explicitly.')
@@ -113,6 +126,14 @@ def compile_clash(master, sources, rule_files):
             own_no_resolve = entry.endswith(',no-resolve')
             if own_no_resolve: entry = entry[:-11]
             if entry.startswith('RULE-SET,'): raise ToolError('Nested rule-set is unsupported.')
+            if control:
+                kind, separator, domain = entry.partition(',')
+                if not separator or kind not in ('DOMAIN', 'DOMAIN-SUFFIX') or not re.fullmatch(r'[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+', domain):
+                    raise ToolError('Controlled provider requires literal DOMAIN/DOMAIN-SUFFIX entries.')
+                fixed_dns[('+.' if kind == 'DOMAIN-SUFFIX' else '') + domain] = control['dns']
+                if control['reject-udp443']:
+                    rules.append('AND,((' + entry + '),(NETWORK,udp),(DST-PORT,443)),REJECT')
+                used_controls.add(name)
             if name in domestic_dns and target == 'DIRECT':
                 kind, separator, domain = entry.partition(',')
                 if separator and kind in ('DOMAIN', 'DOMAIN-SUFFIX'):
@@ -121,6 +142,10 @@ def compile_clash(master, sources, rule_files):
             count += 1
         if not count: raise ToolError('Empty external rule set.')
     out['rules'] = rules
+    if set(controls) != used_controls: raise ToolError('Controlled rule provider is unused or empty.')
+    if fixed_dns:
+        policy = out.setdefault('dns', {}).setdefault('nameserver-policy', {})
+        for domain, resolvers in fixed_dns.items(): policy.setdefault(domain, resolvers)
     if dns_domains:
         dns = out.setdefault('dns', {})
         resolvers = dns.get('direct-nameserver')
@@ -252,9 +277,12 @@ def shadowrocket_config(flat, omit_rule_types=(), daily=False):
         lines.append(rule)
     lines += ['', '[Host]']
     for domain, resolvers in dns.get('nameserver-policy', {}).items():
-        if not domain.startswith('+.') or len(resolvers) != 1: raise ToolError('Unsupported per-domain Shadowrocket DNS mapping.')
+        if not re.fullmatch(r'(?:\+\.)?[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+', domain) or len(resolvers) != 1: raise ToolError('Unsupported per-domain Shadowrocket DNS mapping.')
         server = 'server:' + dns_url(resolvers[0])
-        lines += [domain[2:] + ' = ' + server, '*.' + domain[2:] + ' = ' + server]
+        if domain.startswith('+.'):
+            lines += [domain[2:] + ' = ' + server, '*.' + domain[2:] + ' = ' + server]
+        else:
+            lines.append(domain + ' = ' + server)
     return '\n'.join(lines) + '\n'
 
 
@@ -278,6 +306,7 @@ def shadowrocket_daily(flat, policy, rule_files):
         raise ToolError('Daily mobile policy requires an explicit DIRECT final rule.')
     out['rules'] = list(rules)
     out['rule-providers'] = copy.deepcopy(policy.get('rule-providers', {}))
+    out['x-rule-provider-controls'] = copy.deepcopy(policy.get('x-rule-provider-controls', {}))
     out['proxy-groups'] = list(groups.values())
     out['dns'] = copy.deepcopy(policy['dns'])
     out = compile_clash(out, {}, rule_files)

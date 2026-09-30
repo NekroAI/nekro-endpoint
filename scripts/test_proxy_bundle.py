@@ -105,6 +105,43 @@ class BundleTests(unittest.TestCase):
         self.assertEqual(n['dns']['fake-ip-filter'],['+.nrd.nie.163.com','*.local','+.nexus.example'])
         self.assertEqual(r['dns']['fake-ip-filter'],['+.nrd.nie.163.com','*.local'])
 
+    def test_controlled_community_domains_generate_matching_dns_and_udp_guards(self):
+        m,s=fixture();m['rule-providers']={'claude':{'format':'yaml','behavior':'classical'}}
+        m['x-rule-provider-controls']={'claude':{'target':'TW-only','dns':['https://1.1.1.1/dns-query#TW-only'],'reject-udp443':True}}
+        m['rules']=['RULE-SET,claude,TW-only','MATCH,manual']
+        r=compile_clash(m,s,{'claude':'payload: ["DOMAIN-SUFFIX,clau.de", "DOMAIN,cdn.example.com"]'})
+        self.assertEqual(r['rules'][:4],[
+            'AND,((DOMAIN-SUFFIX,clau.de),(NETWORK,udp),(DST-PORT,443)),REJECT',
+            'DOMAIN-SUFFIX,clau.de,TW-only',
+            'AND,((DOMAIN,cdn.example.com),(NETWORK,udp),(DST-PORT,443)),REJECT',
+            'DOMAIN,cdn.example.com,TW-only'])
+        self.assertEqual(r['dns']['nameserver-policy']['+.clau.de'],['https://1.1.1.1/dns-query#TW-only'])
+        self.assertEqual(r['dns']['nameserver-policy']['cdn.example.com'],['https://1.1.1.1/dns-query#TW-only'])
+        mobile=shadowrocket_config(r)
+        self.assertIn('cdn.example.com = server:https://1.1.1.1/dns-query#proxy=TW-only',mobile)
+        self.assertNotIn('*.cdn.example.com =',mobile)
+        self.assertNotIn('x-rule-provider-controls',r)
+
+    def test_controlled_provider_rejects_wrong_target_and_unhandled_entries(self):
+        m,s=fixture();m['rule-providers']={'claude':{'format':'text','behavior':'classical'}}
+        m['x-rule-provider-controls']={'claude':{'target':'TW-only','dns':['https://1.1.1.1/dns-query#TW-only'],'reject-udp443':True}}
+        m['rules']=['RULE-SET,claude,manual','MATCH,manual']
+        with self.assertRaises(ToolError):compile_clash(m,s,{'claude':'DOMAIN-SUFFIX,claude.ai'})
+        m['rules'][0]='RULE-SET,claude,TW-only'
+        with self.assertRaises(ToolError):compile_clash(m,s,{'claude':'DOMAIN-KEYWORD,claude'})
+        m['x-rule-provider-controls']['claude']['dns']=['https://1.1.1.1/dns-query#manual']
+        with self.assertRaises(ToolError):compile_clash(m,s,{'claude':'DOMAIN-SUFFIX,claude.ai'})
+
+    def test_fixed_provider_dns_wins_domestic_derived_policy_but_keeps_explicit_override(self):
+        m,s=fixture();m['rule-providers']={n:{'format':'text','behavior':'classical'} for n in ['claude','cn']}
+        m['x-rule-provider-controls']={'claude':{'target':'TW-only','dns':['https://1.1.1.1/dns-query#TW-only'],'reject-udp443':True}}
+        m['x-direct-dns-from-rule-providers']=['cn'];m['dns']['direct-nameserver']=['https://223.5.5.5/dns-query#DIRECT']
+        m['rules']=['RULE-SET,claude,TW-only','RULE-SET,cn,DIRECT','MATCH,manual']
+        body='DOMAIN-SUFFIX,claude.ai\nDOMAIN-SUFFIX,clau.de'
+        r=compile_clash(m,s,{'claude':body,'cn':body})
+        self.assertEqual(r['dns']['nameserver-policy']['+.claude.ai'],m['dns']['nameserver-policy']['+.claude.ai'])
+        self.assertEqual(r['dns']['nameserver-policy']['+.clau.de'],['https://1.1.1.1/dns-query#TW-only'])
+
     def test_nikki_overlay_cannot_replace_business_groups(self):
         m,s=fixture();r=compile_clash(m,s,{})
         with self.assertRaises(ToolError):nikki_config(r,{'proxy-groups':[]})
