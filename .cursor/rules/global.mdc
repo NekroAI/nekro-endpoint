@@ -578,8 +578,6 @@ alwaysApply: true
 - 管理 API 接受有效会话或 `sec-` 管理密钥，仍执行原有所有权、角色与发布激活检查。`ep-` 是已发布端点访问密钥，不能管理平台。
 - 与本文历史描述不同，当前生成的管理密钥存于 `users.apiKey` 明文列；`platformApiKey` 和 PBKDF2 辅助函数不在此路径使用。勿将其描述为已实现哈希存储。
 - `scripts/epctl.py` 提供私有备份、拉取、差异预览、上传、草稿、发布与恢复；上传仅更改 config，默认预览，写入后回读验证。它不是 Worker 运行时代码。
-- `scripts/subscription_guard.py` 使用可选 PyYAML 检查 YAML/URI 订阅，拒绝仅引导节点或节点数异常下降；不负责模拟机场客户端或自动抓取。
-- `scripts/refresh_native.py` 可调用已安装的原生 Mihomo，以独立引导配置获取一个指定订阅并通过完整性检查；不启用TUN、不复制其他监听、不自动上传，失败不覆盖上次完整文件。
 - 详见 `docs/OPERATIONS.md`。真实账号、订阅原始导出与私钥存于仓库外，不得提交。
 - production 明确指向 `nekro-endpoint`。已关联 GitHub 的部署优先沿用 Workers Builds，不从本机额外发布未跟踪版本。
 
@@ -635,12 +633,6 @@ alwaysApply: true
 
 这些改进确保了 NekroEdge 既能提供出色的开发体验，又能满足生产环境的可维护性和扩展性需求。
 
-## Canonical proxy generation (2026-09-30)
+## 平台与个人运维边界
 
-`scripts/proxy_sync.py` orchestrates manual native source retrieval and guarded new-layout publication; `proxy_bundle.py` is the pure client compiler. Private metadata and raw URLs never enter this repo. See `docs/PROXY_SYNC.md` for source/adapter boundaries, unsupported semantics, journal recovery, and Shadowrocket device-verification limits. Keep legacy endpoints and running clients untouched. Native bootstrap-only acceptance is opt-in and restricted to stage one.
-
-Shadowrocket daily-use differences belong in the canonical master’s `x-shadowrocket` policy, not a separately edited rules file. The adapter expands mobile rule sources, limits visible groups, preserves Claude/Taiwan priority and requires DIRECT as the final rule. Do not propagate these mobile defaults to desktop/Nikki or reload the router during publication.
-
-Canonical domestic DNS mappings may be derived via `x-direct-dns-from-rule-providers`; explicit DNS exceptions win. Keep single-file output self-contained. Do not add unresolved rule-set DNS selectors or silently override fixed Claude DNS. Large flattened lists must fit EP/D1 storage limits.
-
-Community fixed-exit sets use `x-rule-provider-controls` in the master and mobile policy to keep routing, DNS and optional UDP/443 guards synchronized. Controls support literal DOMAIN/DOMAIN-SUFFIX only and must match their RULE-SET target. Keep local exceptions and community dependencies distinct; unsupported changes block publication. Mobile Host output distinguishes exact domains from suffixes.
+本项目是通用端点编排平台。鉴权、端点CRUD、发布与二维码分享属于平台；机场获取、代理配置转换、客户端适配、特定网络分流和定时汇聚属于外部运维工具。不要把某个账号的端点布局、家里云端口、Claude出口或客户端策略写成平台要求。二维码界面仅解释访问地址与权限，不按个人路径推断内容格式。

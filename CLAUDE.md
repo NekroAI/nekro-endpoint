@@ -11,9 +11,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - 管理鉴权现同时支持 `Authorization: Bearer` 的网页登录会话与 `sec-` 管理密钥；生成的管理密钥实际存于 `users.apiKey`（明文），不是未使用的 `platformApiKey` 哈希列。`ep-` 只用于已发布端点。
 - `/api/auth/me` 复用鉴权中间件；不要恢复输出 OAuth/session/API 密钥的调试日志。发布激活中间件必须注册在发布处理器之前。
-- `scripts/epctl.py` 是仓库外状态的 Python 管理客户端；`subscription_guard.py` 检查原生客户端导出的节点完整性；`refresh_native.py` 在隔离配置下调用本机 Mihomo 做一次性刷新，不接管系统网络。工具和私有数据路径规范见 `docs/OPERATIONS.md`。
+- `scripts/epctl.py` 是使用Python标准库的通用管理客户端，状态和凭据在仓库外；规范见 `docs/OPERATIONS.md`。
 - 生产部署优先沿用 Cloudflare Workers Builds 的 Git 集成。production Worker 名称显式为 `nekro-endpoint`，不要根据环境后缀另建 Worker。
-- `pnpm test:ci` 包含 Vitest 和 Python 工具测试；`pnpm typecheck` 使用根配置覆盖前后端。此仓库没有 `frontend/tsconfig.json`。
+- `pnpm test:ci` 只运行平台Vitest；可选`pnpm test:cli`检查通用CLI，使用Python标准库；`pnpm typecheck` 使用根配置覆盖前后端。此仓库没有 `frontend/tsconfig.json`。
 
 **NekroEndpoint** 是一个基于 Cloudflare Workers 构建的**端点编排平台**，允许用户在全球边缘节点上创建和管理 API 端点。
 
@@ -768,12 +768,6 @@ interface ApiResponse<T> {
 
 **重要提醒**：这是一个生产级的边缘端点编排平台，强调类型安全、开发体验和可维护性。遇到问题时，优先查阅 `src/routes/` 和 `frontend/src/hooks/` 中的现有模式，遵循既定架构。
 
-## Canonical proxy generation (2026-09-30)
+## 平台与个人运维边界
 
-`scripts/proxy_sync.py` orchestrates manual native source retrieval and guarded new-layout publication; `proxy_bundle.py` is the pure client compiler. Private metadata and raw URLs never enter this repo. See `docs/PROXY_SYNC.md` for source/adapter boundaries, unsupported semantics, journal recovery, and Shadowrocket device-verification limits. Keep legacy endpoints and running clients untouched. Native bootstrap-only acceptance is opt-in and restricted to stage one.
-
-Shadowrocket daily-use differences belong in the canonical master’s `x-shadowrocket` policy, not a separately edited rules file. The adapter expands mobile rule sources, limits visible groups, preserves Claude/Taiwan priority and requires DIRECT as the final rule. Do not propagate these mobile defaults to desktop/Nikki or reload the router during publication.
-
-Canonical domestic DNS mappings may be derived via `x-direct-dns-from-rule-providers`; explicit DNS exceptions win. Keep single-file output self-contained. Do not add unresolved rule-set DNS selectors or silently override fixed Claude DNS. Large flattened lists must fit EP/D1 storage limits.
-
-Community fixed-exit sets use `x-rule-provider-controls` in the master and mobile policy to keep routing, DNS and optional UDP/443 guards synchronized. Controls support literal DOMAIN/DOMAIN-SUFFIX only and must match their RULE-SET target. Keep local exceptions and community dependencies distinct; unsupported changes block publication. Mobile Host output distinguishes exact domains from suffixes.
+本项目是通用端点编排平台。鉴权、端点CRUD、发布与二维码分享属于平台；机场获取、代理配置转换、客户端适配、特定网络分流和定时汇聚属于外部运维工具。不要把某个账号的端点布局、家里云端口、Claude出口或客户端策略写成平台要求。二维码界面仅解释访问地址与权限，不按个人路径推断内容格式。
