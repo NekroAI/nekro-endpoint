@@ -151,7 +151,13 @@ def nikki_config(flat, overlay):
     if set(overlay) - allowed: raise ToolError('Unexpected Nikki overlay key.')
     for k, value in overlay.items():
         if k == 'rules-prepend': out['rules'] = value + out['rules']
-        elif k == 'dns': out.setdefault('dns', {}).update(value)
+        elif k == 'dns':
+            dns = out.setdefault('dns', {})
+            for field, setting in value.items():
+                if field == 'fake-ip-filter':
+                    dns[field] = list(dict.fromkeys(dns.get(field, []) + setting))
+                else:
+                    dns[field] = copy.deepcopy(setting)
         else: out[k] = copy.deepcopy(value)
     # Controller credentials stay in local Nikki UCI, not in the published profile.
     out['external-controller'] = '127.0.0.1:19090'
