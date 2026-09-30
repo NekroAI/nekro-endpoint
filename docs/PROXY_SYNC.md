@@ -44,3 +44,9 @@ Every run keeps private source responses, artifacts, validation logs and a repor
 - Shadowrocket's native naming/chain and DNS syntax references: [node producer implementation](https://github.com/sub-store-org/Sub-Store/blob/master/backend/src/core/proxy-utils/producers/shadowrocket.js), [configuration manual](https://github.com/LOWERTOP/Shadowrocket). Neither substitutes for device acceptance testing.
 
 Old client addresses remain independent and unchanged until the operator explicitly migrates them. Publishing artifacts does not imply any device has adopted them.
+
+## Shadowrocket daily-use policy
+
+An optional `x-shadowrocket` block in the canonical master defines a **mobile-only** `selective-direct` profile. It contains explicit rules, external rule-provider declarations, DNS choices, visible group order, group replacements and restricted health-test options. The compiler expands these dependencies into the companion config, prunes unreachable maintenance nodes/groups, and marks secondary groups hidden. Desktop and Nikki artifacts continue to use the main rules unchanged.
+
+The daily profile must end with DIRECT. Put LAN/captive-portal rules and narrowly scoped Claude/Taiwan rules before advertising and selected-service lists. An ad group can select REJECT or DIRECT for troubleshooting; switching it to DIRECT permits matching destinations directly, rather than reevaluating later rules. External source failures block publication and preserve the previous batch. The daily renderer accepts Shadowrocket IP-ASN/USER-AGENT rules and avoids emitting the version-sensitive bypass-system override. Domain-level blocking does not imply HTTPS interception or removal of in-stream video ads. Device acceptance remains required.

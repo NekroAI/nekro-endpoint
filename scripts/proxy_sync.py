@@ -4,6 +4,7 @@
 Default: preview. --apply publishes new-layout endpoints only; never reloads a client.
 """
 import argparse
+import concurrent.futures
 import contextlib
 import copy
 import datetime as dt
@@ -21,7 +22,7 @@ import yaml
 import epctl
 from epctl import ToolError, private_write, json_text
 from refresh_native import fetch_native
-from proxy_bundle import compile_clash, dump, nikki_config, shadowrocket_nodes, shadowrocket_config
+from proxy_bundle import compile_clash, dump, nikki_config, shadowrocket_nodes, shadowrocket_config, shadowrocket_daily
 
 DEFAULT_CONFIG = Path.home() / '.config/nekro-endpoint/proxy-sync.json'
 
@@ -95,6 +96,14 @@ def fetch_rule(spec, folder):
     if not text.strip() or text.lstrip().startswith('<'): raise ToolError('Rule response was empty/HTML.')
     private_write(folder, text)
     return text
+
+
+def fetch_rules(providers, folder):
+    def one(item):
+        name, spec = item
+        return name, fetch_rule(spec, folder / (hashlib.sha256(name.encode()).hexdigest()[:24] + '.txt'))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+        return dict(pool.map(one, providers.items()))
 
 
 def check_mihomo(binary, config, work, geo_file):
@@ -205,17 +214,22 @@ def sync(settings, apply=False):
             if len(matches) != 1: raise ToolError('Canonical bootstrap node selector must match exactly one node.')
             node = copy.deepcopy(matches[0]); node['name'] = entry['name']
             master.setdefault('proxies', []).append(node)
-        rule_files = {name: fetch_rule(spec, work / 'rules' / (hashlib.sha256(name.encode()).hexdigest()[:24] + '.txt')) for name, spec in master.get('rule-providers', {}).items()}
+        rule_files = fetch_rules(master.get('rule-providers', {}), work / 'rules')
         flat = compile_clash(master, sources, rule_files)
         overlay = yaml_read(Path(cfg['nikki_overlay']).expanduser().read_text())
         nikki = nikki_config(flat, overlay)
-        sr_nodes = shadowrocket_nodes(flat); sr_config = shadowrocket_config(flat, cfg.get("shadowrocket", {}).get("omit_rule_types", []))
+        mobile = flat
+        mobile_policy = master.get('x-shadowrocket')
+        if mobile_policy:
+            mobile_rules = fetch_rules(mobile_policy.get('rule-providers', {}), work / 'mobile-rules')
+            mobile = shadowrocket_daily(flat, mobile_policy, mobile_rules)
+        sr_nodes = shadowrocket_nodes(mobile); sr_config = shadowrocket_config(mobile, cfg.get("shadowrocket", {}).get("omit_rule_types", []), daily=bool(mobile_policy))
         check_mihomo(binary, flat, work / 'check-clash', cfg.get('geo_file'))
         check_mihomo(binary, nikki, work / 'check-nikki', cfg.get('geo_file'))
         contents = {cfg['sources'][name]['endpoint']: dump(data) for name, data in sources.items()}
         outputs = cfg['outputs']
         contents.update({outputs['clash']: dump(flat), outputs['nikki']: dump(nikki), outputs['shadowrocket_nodes']: dump(sr_nodes), outputs['shadowrocket_config']: sr_config})
-        report = {'batch': stamp, 'master_hash': sha(master_ep['config']['content']), 'sources': reports, 'outputs': {p: {'sha256': sha(c), 'bytes': len(c.encode())} for p, c in contents.items()}, 'shadowrocket_omitted_rules': [r for r in flat['rules'] if r.split(',')[0] in cfg.get('shadowrocket', {}).get('omit_rule_types', [])], 'apply': apply, 'validation': 'Mihomo checks passed; Shadowrocket syntax adapter checked, device import still required'}
+        report = {'batch': stamp, 'master_hash': sha(master_ep['config']['content']), 'sources': reports, 'outputs': {p: {'sha256': sha(c), 'bytes': len(c.encode())} for p, c in contents.items()}, 'shadowrocket_omitted_rules': [r for r in mobile['rules'] if r.split(',')[0] in cfg.get('shadowrocket', {}).get('omit_rule_types', [])], 'apply': apply, 'validation': 'Mihomo checks passed; Shadowrocket syntax adapter checked, device import still required'}
         for path, content in contents.items(): private_write(work / 'artifacts' / (path.strip('/').replace('/', '__') + '.txt'), content)
         private_write(work / 'report.json', json_text(report))
         print('Prepared batch:', work, flush=True)

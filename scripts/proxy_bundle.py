@@ -176,7 +176,7 @@ def shadowrocket_nodes(flat):
     return {'proxies': nodes}
 
 
-def shadowrocket_config(flat, omit_rule_types=()):
+def shadowrocket_config(flat, omit_rule_types=(), daily=False):
     """Companion config references names from the generated YAML node subscription."""
     def safe(value):
         value = str(value)
@@ -184,12 +184,17 @@ def shadowrocket_config(flat, omit_rule_types=()):
         return value
     def dns_url(value):
         url, sep, group = value.partition('#')
+        if value == 'system': return value
         if not url.startswith('https://'): raise ToolError('Shadowrocket adapter currently requires DoH DNS.')
         if not sep or group == 'DIRECT': return url
         return url + '#proxy=' + urllib.parse.quote(group, safe='')
     if set(omit_rule_types) - {'PROCESS-NAME'}: raise ToolError('Only explicitly inapplicable process rules may be omitted for iOS.')
     dns = flat.get('dns', {})
     general = ['[General]', 'bypass-system = false', 'skip-proxy = 127.0.0.1, localhost, *.local', 'ipv6 = false', 'dns-direct-fallback-proxy = false', 'close-if-proxy-chain-missing = true']
+    if daily:
+        general = [line for line in general if not line.startswith('bypass-system')]
+        general.append('private-ip-answer = true')
+        general[general.index('skip-proxy = 127.0.0.1, localhost, *.local')] = 'skip-proxy = 127.0.0.1, localhost, *.local, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, captive.apple.com'
     for source, target in [('nameserver', 'dns-server'), ('proxy-server-nameserver', 'proxy-dns-server'), ('direct-nameserver', 'direct-dns-server')]:
         if dns.get(source): general.append(target + ' = ' + ','.join(dns_url(v) for v in dns[source]))
     # Keep fallback bound to the same policy, rather than implicit system-DNS fallback.
@@ -198,16 +203,18 @@ def shadowrocket_config(flat, omit_rule_types=()):
     for g in flat['proxy-groups']:
         if g['type'] not in ('select', 'url-test', 'fallback'): raise ToolError('Unsupported Shadowrocket group type.')
         members = [safe(v) for v in g['proxies']]
-        options = []
+        options = ['hidden=1'] if g.get('hidden') else []
         if g['type'] == 'select': options.append('policy-select-name=' + members[0])
         else:
             options += ['url=' + safe(g.get('url', 'https://www.gstatic.com/generate_204')), 'interval=' + str(g.get('interval', 600)), 'tolerance=' + str(g.get('tolerance', 50))]
         lines.append(safe(g['name']) + ' = ' + ','.join([g['type']] + members + options))
     lines += ['', '[Rule]']
-    allowed = {'DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD', 'IP-CIDR', 'IP-CIDR6', 'GEOIP', 'DST-PORT', 'SRC-IP-CIDR', 'AND', 'OR', 'NOT', 'MATCH'}
+    allowed = {'DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD', 'IP-CIDR', 'IP-CIDR6', 'GEOIP', 'DST-PORT', 'SRC-IP-CIDR', 'IP-ASN', 'USER-AGENT', 'DOMAIN-WILDCARD', 'AND', 'OR', 'NOT', 'MATCH'}
     for rule in flat['rules']:
         if rule.split(',')[0] in omit_rule_types: continue
         if rule.split(',')[0] not in allowed: raise ToolError('Unsupported Shadowrocket rule type: ' + rule.split(',')[0])
+        if rule.startswith(('DOMAIN,', 'DOMAIN-SUFFIX,', 'DOMAIN-KEYWORD,', 'USER-AGENT,')) and rule.endswith(',no-resolve'):
+            rule = rule[:-11]
         rule = re.sub(r'\(NETWORK,(tcp|udp)\)', lambda m: '(PROTOCOL,' + m[1].upper() + ')', rule)
         if rule.startswith('MATCH,'): rule = 'FINAL,' + rule[6:]
         lines.append(rule)
@@ -217,3 +224,55 @@ def shadowrocket_config(flat, omit_rule_types=()):
         server = 'server:' + dns_url(resolvers[0])
         lines += [domain[2:] + ' = ' + server, '*.' + domain[2:] + ' = ' + server]
     return '\n'.join(lines) + '\n'
+
+
+def shadowrocket_daily(flat, policy, rule_files):
+    """Apply the mobile-only policy stored inside the canonical master.
+
+    Reuse compiled node definitions; never mutate desktop/router artifacts.
+    """
+    if policy.get('mode') != 'selective-direct':
+        raise ToolError('Unsupported Shadowrocket mobile policy mode.')
+    out = copy.deepcopy(flat)
+    groups = {g['name']: g for g in out['proxy-groups']}
+    for group in policy.get('groups', []):
+        groups[group['name']] = copy.deepcopy(group)
+    for name, options in policy.get('group-options', {}).items():
+        if name not in groups: raise ToolError('Unknown mobile group override: ' + name)
+        if set(options) - {'interval', 'tolerance', 'url', 'hidden'}: raise ToolError('Unsupported mobile group option.')
+        groups[name].update(options)
+    rules = policy.get('rules', [])
+    if not rules or rules[-1] != 'MATCH,DIRECT':
+        raise ToolError('Daily mobile policy requires an explicit DIRECT final rule.')
+    out['rules'] = list(rules)
+    out['rule-providers'] = copy.deepcopy(policy.get('rule-providers', {}))
+    out['proxy-groups'] = list(groups.values())
+    out['dns'] = copy.deepcopy(policy['dns'])
+    out = compile_clash(out, {}, rule_files)
+    # Keep only reachable groups/nodes; subscription-only bootstrap does not belong on phones.
+    groups = {g['name']: g for g in out['proxy-groups']}
+    nodes = {n['name']: n for n in out['proxies']}
+    reachable = set()
+    def visit(name):
+        if name in reachable or name in {'DIRECT', 'REJECT', 'REJECT-DROP'}: return
+        reachable.add(name)
+        if name in groups:
+            for child in groups[name]['proxies']: visit(child)
+        elif name in nodes:
+            if nodes[name].get('dialer-proxy'): visit(nodes[name]['dialer-proxy'])
+        else: raise ToolError('Unknown mobile dependency: ' + name)
+    visible = policy['visible-groups']
+    for name in visible: visit(name)
+    for rule in out['rules']:
+        parts = rule.split(',');visit(parts[-2] if parts[-1] == 'no-resolve' else parts[-1])
+    for values in out['dns'].get('nameserver-policy', {}).values():
+        for value in values:
+            if '#' in value: visit(value.split('#', 1)[1])
+    for field in ['nameserver', 'direct-nameserver', 'proxy-server-nameserver']:
+        for value in out['dns'].get(field, []):
+            if '#' in value: visit(value.split('#', 1)[1])
+    order = list(dict.fromkeys(visible + list(groups)))
+    out['proxy-groups'] = [dict(groups[n], hidden=n not in visible) for n in order if n in reachable]
+    out['proxies'] = [n for n in out['proxies'] if n['name'] in reachable]
+    validate_graph(out)
+    return out
