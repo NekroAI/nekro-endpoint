@@ -84,6 +84,20 @@ class BundleTests(unittest.TestCase):
         with self.assertRaises(ToolError):shadowrocket_config(r)
         self.assertNotIn('PROCESS-NAME',shadowrocket_config(r,['PROCESS-NAME']))
 
+    def test_domestic_rules_populate_dns_without_overwriting_exceptions(self):
+        m,s=fixture();m['rule-providers']={'cn':{'format':'text','behavior':'classical'}}
+        m['rules']=['DOMAIN-SUFFIX,claude.ai,TW-only','RULE-SET,cn,DIRECT','MATCH,manual']
+        m['x-direct-dns-from-rule-providers']=['cn']
+        m['dns']['direct-nameserver']=['https://223.5.5.5/dns-query#DIRECT']
+        r=compile_clash(m,s,{'cn':'DOMAIN-SUFFIX,claude.ai\nDOMAIN-SUFFIX,leigod.com\nDOMAIN,exact.example\nDOMAIN-KEYWORD,keyword'})
+        policy=r['dns']['nameserver-policy']
+        self.assertEqual(policy['+.claude.ai'],m['dns']['nameserver-policy']['+.claude.ai'])
+        self.assertEqual(policy['+.leigod.com'],m['dns']['direct-nameserver'])
+        self.assertEqual(policy['exact.example'],m['dns']['direct-nameserver'])
+        self.assertNotIn('keyword',policy)
+        self.assertEqual(r['rules'][0],'DOMAIN-SUFFIX,claude.ai,TW-only')
+        self.assertNotIn('x-direct-dns-from-rule-providers',r)
+
     def test_nikki_preserves_master_real_ip_exclusions(self):
         m,s=fixture();r=compile_clash(m,s,{})
         r['dns']['fake-ip-filter']=['+.nrd.nie.163.com','*.local']

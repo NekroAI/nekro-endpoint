@@ -54,3 +54,7 @@ The daily profile must end with DIRECT. Put LAN/captive-portal rules and narrowl
 Nikki overlays merge `dns.fake-ip-filter` exclusions with the canonical master instead of replacing them. This preserves application-specific real-IP exceptions (for example remote-control/STUN domains) while retaining LAN-specific exclusions. Process routing can protect desktop clients, but routers cannot identify a forwarded client application; domain/IP routing must also be verified on the router.
 
 Shadowrocket node subscriptions use a literal `proxies:` marker followed by JSON objects as YAML sequence items. Keep this wire format distinct from the fully quoted generic YAML emitter: client format detection may not accept quoted root keys even when the YAML is valid. JSON retains string-valued Reality IDs, Unicode labels and relay metadata. A successful HTTP/parse test does not replace actual iOS subscription-import verification.
+
+## Domestic direct DNS expansion
+
+The canonical master's optional `x-direct-dns-from-rule-providers` lists rule-provider IDs whose DIRECT domain entries should also populate `dns.nameserver-policy` using `direct-nameserver`. Exact DOMAIN and DOMAIN-SUFFIX entries are supported; keywords/IP rules are not converted to DNS patterns. Explicit DNS exceptions already in the master win, preserving Claude's fixed-exit resolver. The compiler expands these mappings into provider-free output, so clients do not retain a dangling `rule-set:` DNS selector. Rule placement in the master still determines traffic precedence.
