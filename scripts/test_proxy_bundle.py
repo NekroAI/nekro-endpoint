@@ -75,6 +75,13 @@ class BundleTests(unittest.TestCase):
         with self.assertRaises(ToolError):shadowrocket_config(r)
         self.assertNotIn('PROCESS-NAME',shadowrocket_config(r,['PROCESS-NAME']))
 
+    def test_nikki_preserves_master_real_ip_exclusions(self):
+        m,s=fixture();r=compile_clash(m,s,{})
+        r['dns']['fake-ip-filter']=['+.nrd.nie.163.com','*.local']
+        n=nikki_config(r,{'dns':{'fake-ip-filter':['*.local','+.nexus.example']}})
+        self.assertEqual(n['dns']['fake-ip-filter'],['+.nrd.nie.163.com','*.local','+.nexus.example'])
+        self.assertEqual(r['dns']['fake-ip-filter'],['+.nrd.nie.163.com','*.local'])
+
     def test_nikki_overlay_cannot_replace_business_groups(self):
         m,s=fixture();r=compile_clash(m,s,{})
         with self.assertRaises(ToolError):nikki_config(r,{'proxy-groups':[]})
