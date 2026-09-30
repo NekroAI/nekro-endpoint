@@ -182,6 +182,17 @@ def shadowrocket_nodes(flat):
     return {'proxies': nodes}
 
 
+def dump_shadowrocket_nodes(value):
+    """Keep the conventional subscription marker; JSON protects scalar types.
+
+    Some subscription detectors look for a literal proxies: prefix even though
+    quoted YAML keys are valid. Do not use the generic all-quoted YAML dumper.
+    """
+    if not isinstance(value.get('proxies'), list) or not value['proxies']:
+        raise ToolError('Shadowrocket subscription must contain nodes.')
+    return 'proxies:\n' + ''.join('  - ' + json.dumps(node, ensure_ascii=False, sort_keys=True, separators=(',', ':')) + '\n' for node in value['proxies'])
+
+
 def shadowrocket_config(flat, omit_rule_types=(), daily=False):
     """Companion config references names from the generated YAML node subscription."""
     def safe(value):
