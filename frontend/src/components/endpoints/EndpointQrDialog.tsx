@@ -24,6 +24,7 @@ export function EndpointQrDialog({ url, endpointPath, authenticated, onClose }: 
   const [image, setImage] = useState<{ source: string; data: string } | null>(null);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const isShadowrocketConfig = endpointPath.replace(/\/$/, "").endsWith("/shadowrocket/config");
 
   useEffect(() => {
     let cancelled = false;
@@ -73,7 +74,9 @@ export function EndpointQrDialog({ url, endpointPath, authenticated, onClose }: 
           ) : null}
         </Box>
         <Typography variant="body2" sx={{ mb: 1.5 }}>
-          在手机客户端中扫描。导入 Shadowrocket 订阅时，请使用首页的扫码按钮。
+          {isShadowrocketConfig
+            ? "这是分流与 DNS 配置，不包含订阅节点。请复制地址，在 Shadowrocket「配置」页添加并启用。首页订阅请使用对应的 /shadowrocket/nodes 端点。"
+            : "在手机客户端中扫描。Shadowrocket 首页用于导入节点订阅；配套分流配置请在「配置」页添加。"}
         </Typography>
         {authenticated && <Alert severity="warning">二维码包含访问密钥，请仅在自己的设备间使用，不要公开分享。</Alert>}
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1.5 }}>
