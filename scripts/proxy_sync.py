@@ -22,7 +22,7 @@ import yaml
 import epctl
 from epctl import ToolError, private_write, json_text
 from refresh_native import fetch_native
-from proxy_bundle import compile_clash, dump, nikki_config, shadowrocket_nodes, shadowrocket_config, shadowrocket_daily
+from proxy_bundle import compile_clash, dump, nikki_config, shadowrocket_nodes, shadowrocket_config, shadowrocket_daily, dump_shadowrocket_nodes
 
 DEFAULT_CONFIG = Path.home() / '.config/nekro-endpoint/proxy-sync.json'
 
@@ -228,7 +228,7 @@ def sync(settings, apply=False):
         check_mihomo(binary, nikki, work / 'check-nikki', cfg.get('geo_file'))
         contents = {cfg['sources'][name]['endpoint']: dump(data) for name, data in sources.items()}
         outputs = cfg['outputs']
-        contents.update({outputs['clash']: dump(flat), outputs['nikki']: dump(nikki), outputs['shadowrocket_nodes']: dump(sr_nodes), outputs['shadowrocket_config']: sr_config})
+        contents.update({outputs['clash']: dump(flat), outputs['nikki']: dump(nikki), outputs['shadowrocket_nodes']: dump_shadowrocket_nodes(sr_nodes), outputs['shadowrocket_config']: sr_config})
         report = {'batch': stamp, 'master_hash': sha(master_ep['config']['content']), 'sources': reports, 'outputs': {p: {'sha256': sha(c), 'bytes': len(c.encode())} for p, c in contents.items()}, 'shadowrocket_omitted_rules': [r for r in mobile['rules'] if r.split(',')[0] in cfg.get('shadowrocket', {}).get('omit_rule_types', [])], 'apply': apply, 'validation': 'Mihomo checks passed; Shadowrocket syntax adapter checked, device import still required'}
         for path, content in contents.items(): private_write(work / 'artifacts' / (path.strip('/').replace('/', '__') + '.txt'), content)
         private_write(work / 'report.json', json_text(report))

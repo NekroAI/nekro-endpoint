@@ -63,6 +63,15 @@ class BundleTests(unittest.TestCase):
         self.assertEqual(output[1]['reality-opts'],r['proxies'][1]['reality-opts'])
         self.assertEqual(output[1]['flow'],'xtls-rprx-vision')
 
+    def test_shadowrocket_wire_format_preserves_values_and_literal_marker(self):
+        import json, yaml
+        from proxy_bundle import dump_shadowrocket_nodes
+        value={'proxies':[{'name':'台湾 \"test\"', 'type':'vless', 'server':'example.com', 'port':443, 'uuid':'example', 'reality-opts':{'short-id':'12e34567'}, 'dialer-proxy':'入口'}]}
+        text=dump_shadowrocket_nodes(value)
+        self.assertTrue(text.startswith('proxies:\n  - {'))
+        self.assertEqual(yaml.safe_load(text),value)
+        self.assertEqual(json.loads(text.splitlines()[1][4:]),value['proxies'][0])
+
     def test_shadowrocket_logical_rules_and_dns(self):
         m,s=fixture();r=compile_clash(m,s,{});r['rules'].insert(0,'AND,((NETWORK,udp),(DST-PORT,443)),REJECT')
         output=shadowrocket_config(r)
