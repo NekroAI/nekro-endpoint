@@ -4,7 +4,7 @@ import { AuthGate } from "./AuthGate";
 import { CommandProvider, useRegisterCommands, type CommandItem } from "./commands";
 import { CommandPalette } from "./CommandPalette";
 import { Sidebar, TabBar } from "./Sidebar";
-import { SignalLine } from "./SignalLine";
+import { SignalLine, SignalLineInsetProvider } from "./SignalLine";
 import { NAV_ITEMS } from "./nav";
 import { useAuth } from "../hooks/useAuth";
 import { useAppTheme } from "../context/ThemeContextProvider";
@@ -16,19 +16,21 @@ export function AppShell() {
   return (
     <AuthGate>
       <CommandProvider>
-        <ShellCommands />
-        <div className="flex h-dvh overflow-hidden bg-field text-ink-1">
-          <Sidebar />
-          <main className="relative flex min-w-0 flex-1 flex-col">
-            <MobileHeader />
-            <div className="relative min-h-0 flex-1">
-              <Outlet />
-            </div>
-            <SignalLine className="bottom-[calc(56px+env(safe-area-inset-bottom))] md:bottom-0" />
-          </main>
-        </div>
-        <TabBar />
-        <CommandPalette />
+        <SignalLineInsetProvider>
+          <ShellCommands />
+          <div className="flex h-dvh overflow-hidden bg-field text-ink-1">
+            <Sidebar />
+            <main className="relative flex min-w-0 flex-1 flex-col">
+              <MobileHeader />
+              <div className="relative min-h-0 flex-1">
+                <Outlet />
+              </div>
+              <SignalLine className="bottom-[calc(56px+env(safe-area-inset-bottom))] md:bottom-0" />
+            </main>
+          </div>
+          <TabBar />
+          <CommandPalette />
+        </SignalLineInsetProvider>
       </CommandProvider>
     </AuthGate>
   );

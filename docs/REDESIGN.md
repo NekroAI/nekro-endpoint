@@ -554,7 +554,7 @@ export async function createEndpoint(ctx: ServiceContext, input: CreateEndpointI
 |---|---|---|
 | **P0 契约冻结** ✅ | 用 `@cloudflare/vitest-pool-workers` 为 1.1–1.3 的所有接口编写契约测试，覆盖状态码、信封、字段、错误文案、三种凭据、执行层的匹配与鉴权；修正 CLAUDE.md 和文档里的 `ep-` 传输方式 | `pnpm test:ci`、`pnpm test:cli` 全部通过；契约测试覆盖全部路由（97 个用例，2 个已知缺陷见 1.4） |
 | **P1 底座** ✅ | Tailwind v4、shadcn 原语、`tokens.css`、字体、类型字形、动效预设、Monaco 主题、AppShell、无闪烁主题脚本、旧路径重定向、类型化 API 层；与 MUI 共存 | 新外壳下有一个空白页能运行；旧页面不受影响；SSR 输出正常；`pnpm typecheck` 通过 |
-| **P2 端点工作区** | 列表视图（先保证功能对齐），Focus Sheet，地址主轴，内联设置，保存模型，新建流程，分享面板和通行卡；然后是星图视图 | 现有端点页的所有功能在新界面都能完成；`endpointShare` 测试通过；旧的 `/endpoints` 重定向到新地址 |
+| **P2 端点工作区** ✅ | 列表视图（先保证功能对齐），Focus Sheet，地址主轴，内联设置，保存模型，新建流程，分享面板和通行卡；然后是星图视图 | 现有端点页的所有功能在新界面都能完成；`endpointShare` 测试通过；旧的 `/endpoints` 重定向到新地址 |
 | **P3 访问与设置** | 权限组和通行卡墙，签发、吊销、删除流程；新增 `GET /api/permission-groups/{id}/endpoints`；设置页（账号、`sec-` 密钥、MCP 说明的占位） | 功能对齐；新接口有契约测试 |
 | **P4 其余页面** | 概览、管理后台（只读星图）、Init、Auth Callback、落地页、文档 | 所有旧路由都有新的对应页面或重定向 |
 | **P5 服务层与 MCP** | 抽取 `src/services/*`；先单独升级 `compatibility_date`，再引入 Agents SDK；`/mcp` | 契约测试零差异；用 MCP Inspector 调通全部工具 |

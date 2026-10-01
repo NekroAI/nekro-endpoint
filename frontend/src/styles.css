@@ -153,3 +153,32 @@
     transition-duration: 1ms !important;
   }
 }
+
+/* Namespace Map (features/endpoints/MapView.tsx) */
+.signal-map .react-flow__edge-path {
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+.signal-map .map-edge-route .react-flow__edge-path {
+  stroke: var(--route);
+  stroke-opacity: 0.6;
+  stroke-dasharray: 4 4;
+}
+.signal-map .react-flow__node {
+  cursor: default;
+}
+.signal-map .react-flow__pane {
+  cursor: grab;
+}
+.signal-map .react-flow__pane.dragging {
+  cursor: grabbing;
+}
+.signal-map .react-flow__attribution {
+  background: transparent;
+  font-size: 10px;
+  opacity: 0.45;
+  padding: 0 8px 8px;
+}
+.signal-map .react-flow__attribution a {
+  color: var(--ink-3);
+}

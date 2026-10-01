@@ -1,6 +1,5 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
-import unocss from "unocss/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "path";
 
@@ -19,7 +18,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     root: "frontend",
-    plugins: [react(), unocss(), tailwindcss()],
+    plugins: [react(), tailwindcss()],
     build: {
       outDir: "../dist/client",
       manifest: true,

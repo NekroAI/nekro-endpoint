@@ -5,13 +5,13 @@ import HomePage from "./pages/HomePage";
 import { Features } from "./pages/Features";
 import { DashboardPage } from "./pages/DashboardPage";
 import { AuthCallbackPage } from "./pages/AuthCallbackPage";
-import { EndpointsPage } from "./pages/EndpointsPage";
 import { PermissionGroupsPage } from "./pages/PermissionGroupsPage";
 import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
 import { InitPage } from "./pages/InitPage";
 import { DocsPage } from "./pages/DocsPage";
 import { AppShell } from "./app/AppShell";
 import { Placeholder } from "./app/Placeholder";
+import { EndpointsPage as SignalEndpointsPage } from "./features/endpoints/EndpointsPage";
 
 /**
  * 应用路由配置
@@ -32,7 +32,7 @@ export const AppRoutes = () => (
     {/* Signal 工作区（docs/REDESIGN.md §4） */}
     <Route path="/app" element={<AppShell />}>
       <Route index element={<Navigate to="endpoints" replace />} />
-      <Route path="endpoints/*" element={<Placeholder title="端点" />} />
+      <Route path="endpoints/*" element={<SignalEndpointsPage />} />
       <Route path="access" element={<Placeholder title="访问" />} />
       <Route path="overview" element={<Placeholder title="概览" />} />
       <Route path="settings" element={<Placeholder title="设置" />} />
@@ -42,7 +42,7 @@ export const AppRoutes = () => (
     {/* 旧版工作区布局（迁移完成后改为重定向） */}
     <Route element={<WorkspaceLayout />}>
       <Route path="/dashboard" element={<DashboardPage />} />
-      <Route path="/endpoints" element={<EndpointsPage />} />
+      <Route path="/endpoints" element={<Navigate to="/app/endpoints" replace />} />
       <Route path="/permissions" element={<PermissionGroupsPage />} />
       <Route path="/admin/users" element={<AdminUsersPage />} />
     </Route>

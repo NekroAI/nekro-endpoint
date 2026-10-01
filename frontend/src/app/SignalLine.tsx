@@ -1,7 +1,27 @@
 import { Sparkles } from "lucide-react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useCommands } from "./commands";
 import { Kbd } from "../ui/kbd";
 import { cn } from "../lib/cn";
+
+/**
+ * Pages with a right-hand panel (the endpoint Focus Sheet) reserve space so the
+ * Signal Line centres over the remaining area instead of covering the panel.
+ */
+const InsetContext = createContext<{ inset: number; setInset: (px: number) => void }>({ inset: 0, setInset: () => {} });
+
+export function SignalLineInsetProvider({ children }: { children: ReactNode }) {
+  const [inset, setInset] = useState(0);
+  return <InsetContext.Provider value={{ inset, setInset }}>{children}</InsetContext.Provider>;
+}
+
+export function useSignalLineInset(px: number) {
+  const { setInset } = useContext(InsetContext);
+  useEffect(() => {
+    setInset(px);
+    return () => setInset(0);
+  }, [px, setInset]);
+}
 
 /**
  * The always-present input at the bottom of the workspace. Until a model is
@@ -9,8 +29,13 @@ import { cn } from "../lib/cn";
  */
 export function SignalLine({ className }: { className?: string }) {
   const { setOpen } = useCommands();
+  const { inset } = useContext(InsetContext);
+  if (inset < 0) return null;
   return (
-    <div className={cn("pointer-events-none absolute inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-4", className)}>
+    <div
+      style={{ right: inset }}
+      className={cn("pointer-events-none absolute left-0 bottom-0 z-30 flex justify-center px-4 pb-4 transition-[right] duration-300", className)}
+    >
       <button
         type="button"
         onClick={() => setOpen(true)}
