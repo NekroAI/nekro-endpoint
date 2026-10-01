@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import unocss from "unocss/vite";
+import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "path";
 
 // https://vitejs.dev/config/
@@ -18,7 +19,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     root: "frontend",
-    plugins: [react(), unocss()],
+    plugins: [react(), unocss(), tailwindcss()],
     build: {
       outDir: "../dist/client",
       manifest: true,
@@ -55,6 +56,12 @@ export default defineConfig(({ mode }) => {
         "@emotion/styled",
         "react-i18next",
         "i18next",
+        "radix-ui",
+        /^@radix-ui\//,
+        "motion",
+        "sonner",
+        "cmdk",
+        "lucide-react",
       ],
     },
   };

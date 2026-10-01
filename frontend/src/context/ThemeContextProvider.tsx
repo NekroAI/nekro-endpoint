@@ -1,8 +1,16 @@
-import { createContext, useState, useMemo, useContext, ReactNode } from "react";
-import { ThemeProvider as MuiThemeProvider, createTheme, type PaletteMode } from "@mui/material";
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { ThemeProvider as MuiThemeProvider, type PaletteMode } from "@mui/material";
 import { lightTheme, darkTheme } from "../theme";
-import { useCallback } from "react";
+import { safeLocalStorage, isBrowser } from "../utils/storage";
 
+/**
+ * Single source of truth for the colour scheme.
+ *
+ * The Signal UI reads the scheme from CSS variables selected by
+ * <html data-theme>; this provider only owns the preference and keeps that
+ * attribute (set before paint by THEME_BOOT_SCRIPT) in sync. The MUI theme is
+ * provided for legacy pages until they are removed.
+ */
 type AppThemeContextType = {
   themeMode: PaletteMode;
   toggleTheme: () => void;
@@ -15,43 +23,31 @@ const AppThemeContext = createContext<AppThemeContextType>({
 
 export const useAppTheme = () => useContext(AppThemeContext);
 
-const isBrowser = typeof window !== "undefined";
+function readInitialMode(): PaletteMode {
+  if (!isBrowser) return "dark";
+  return document.documentElement.dataset.theme === "light" ? "light" : "dark";
+}
 
 export const AppThemeProvider = ({ children }: { children: ReactNode }) => {
-  const [themeMode, setThemeMode] = useState<PaletteMode>(() => {
-    if (!isBrowser) return "dark";
-    try {
-      const storedMode = localStorage.getItem("themeMode");
-      if (storedMode) {
-        return storedMode as PaletteMode;
-      }
-      return "dark"; // Default to dark mode
-    } catch (error) {
-      // If localStorage is not available (e.g., in SSR or private mode), default to dark
-      return "dark";
-    }
-  });
+  const [themeMode, setThemeMode] = useState<PaletteMode>(readInitialMode);
 
   const toggleTheme = useCallback(() => {
-    setThemeMode((prevMode: PaletteMode) => {
-      const newMode = prevMode === "light" ? "dark" : "light";
+    setThemeMode((previous) => {
+      const next = previous === "light" ? "dark" : "light";
       if (isBrowser) {
-        try {
-          localStorage.setItem("themeMode", newMode);
-        } catch (error) {
-          // Handle potential errors if localStorage is not available
-          console.error("Failed to save theme mode to localStorage", error);
-        }
+        document.documentElement.dataset.theme = next;
+        safeLocalStorage.setItem("themeMode", next);
       }
-      return newMode;
+      return next;
     });
   }, []);
 
-  const theme = useMemo(() => (themeMode === "light" ? lightTheme : darkTheme), [themeMode]);
+  const value = useMemo(() => ({ themeMode, toggleTheme }), [themeMode, toggleTheme]);
+  const muiTheme = themeMode === "light" ? lightTheme : darkTheme;
 
   return (
-    <AppThemeContext.Provider value={{ themeMode, toggleTheme }}>
-      <MuiThemeProvider theme={theme}>{children}</MuiThemeProvider>
+    <AppThemeContext.Provider value={value}>
+      <MuiThemeProvider theme={muiTheme}>{children}</MuiThemeProvider>
     </AppThemeContext.Provider>
   );
 };

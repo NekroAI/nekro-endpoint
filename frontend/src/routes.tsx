@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import App from "./App";
 import { WorkspaceLayout } from "./layouts/WorkspaceLayout";
 import HomePage from "./pages/HomePage";
@@ -10,6 +10,8 @@ import { PermissionGroupsPage } from "./pages/PermissionGroupsPage";
 import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
 import { InitPage } from "./pages/InitPage";
 import { DocsPage } from "./pages/DocsPage";
+import { AppShell } from "./app/AppShell";
+import { Placeholder } from "./app/Placeholder";
 
 /**
  * 应用路由配置
@@ -27,7 +29,17 @@ export const AppRoutes = () => (
     {/* 初始化页面（不需要布局） */}
     <Route path="/init" element={<InitPage />} />
 
-    {/* 工作区布局（专业工具页面） */}
+    {/* Signal 工作区（docs/REDESIGN.md §4） */}
+    <Route path="/app" element={<AppShell />}>
+      <Route index element={<Navigate to="endpoints" replace />} />
+      <Route path="endpoints/*" element={<Placeholder title="端点" />} />
+      <Route path="access" element={<Placeholder title="访问" />} />
+      <Route path="overview" element={<Placeholder title="概览" />} />
+      <Route path="settings" element={<Placeholder title="设置" />} />
+      <Route path="admin" element={<Placeholder title="管理" />} />
+    </Route>
+
+    {/* 旧版工作区布局（迁移完成后改为重定向） */}
     <Route element={<WorkspaceLayout />}>
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/endpoints" element={<EndpointsPage />} />

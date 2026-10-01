@@ -4,6 +4,7 @@ import { StaticRouter } from "react-router-dom/server";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppThemeProvider } from "./context/ThemeContextProvider";
 import { AppRoutes } from "./routes";
+import { SignalProviders } from "./app/providers";
 
 /**
  * 服务端渲染入口
@@ -26,7 +27,9 @@ export function render(path: string) {
       <QueryClientProvider client={queryClient}>
         <AppThemeProvider>
           <StaticRouter location={path}>
+            <SignalProviders>
             <AppRoutes />
+          </SignalProviders>
           </StaticRouter>
         </AppThemeProvider>
       </QueryClientProvider>

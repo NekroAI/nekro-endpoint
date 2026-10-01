@@ -1,0 +1,116 @@
+/*
+ * Signal design tokens (docs/REDESIGN.md §2).
+ *
+ * Components reference semantic tokens only. The theme is chosen by
+ * <html data-theme="dark|light">, set before hydration by the inline script in
+ * src/utils/htmlTemplate.ts. Never branch on the theme in component code.
+ */
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Deep Field: space, light, depth */
+  --bg: #0a0c10;
+  --bg-dot: rgb(255 255 255 / 0.045);
+  --bg-vignette: radial-gradient(1200px 600px at 70% -10%, rgb(80 227 194 / 0.07), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgb(155 92 255 / 0.07), transparent 60%);
+
+  --surface-0: rgb(255 255 255 / 0.015);
+  --surface-1: rgb(255 255 255 / 0.03);
+  --surface-2: rgb(255 255 255 / 0.055);
+  --surface-3: rgb(255 255 255 / 0.085);
+  --surface-solid: #11141a;
+  --surface-overlay: rgb(14 17 23 / 0.82);
+
+  --line: rgb(255 255 255 / 0.07);
+  --line-strong: rgb(255 255 255 / 0.13);
+  --line-highlight: rgb(255 255 255 / 0.1);
+
+  --ink-1: #eef1f6;
+  --ink-2: #b4bbc8;
+  --ink-3: #7c8494;
+  --ink-4: #4f5663;
+
+  --signal: #50e3c2;
+  --signal-ink: #04130f;
+  --signal-soft: rgb(80 227 194 / 0.12);
+  --signal-glow: 0 0 0 1px rgb(80 227 194 / 0.35), 0 0 18px rgb(80 227 194 / 0.35);
+
+  --pass: #9b5cff;
+  --pass-ink: #ffffff;
+  --pass-soft: rgb(155 92 255 / 0.14);
+  --pass-glow: 0 0 0 1px rgb(155 92 255 / 0.45), 0 0 18px rgb(155 92 255 / 0.3);
+
+  --route: #4a90e2;
+  --route-soft: rgb(74 144 226 / 0.14);
+
+  --caution: #f5b544;
+  --caution-soft: rgb(245 181 68 / 0.13);
+
+  --danger: #ff5c7a;
+  --danger-ink: #ffffff;
+  --danger-soft: rgb(255 92 122 / 0.13);
+
+  --focus: rgb(80 227 194 / 0.55);
+  --shadow-float: 0 24px 64px -16px rgb(0 0 0 / 0.65), 0 0 0 1px var(--line-strong);
+  --shadow-pop: 0 12px 32px -8px rgb(0 0 0 / 0.6), 0 0 0 1px var(--line-strong);
+  --blur: saturate(160%) blur(18px);
+
+  --brand-gradient: linear-gradient(135deg, #8a2be2 0%, #4a90e2 50%, #50e3c2 100%);
+
+  --monaco-theme: "signal-dark";
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Lab Paper: precise engineering drawing */
+  --bg: #f7f6f2;
+  --bg-dot: rgb(20 24 31 / 0.07);
+  --bg-vignette: radial-gradient(1200px 600px at 70% -10%, rgb(15 159 134 / 0.05), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgb(110 53 217 / 0.04), transparent 60%);
+
+  --surface-0: rgb(255 255 255 / 0.4);
+  --surface-1: #ffffff;
+  --surface-2: #fbfaf7;
+  --surface-3: #f0eee8;
+  --surface-solid: #ffffff;
+  --surface-overlay: rgb(255 255 255 / 0.9);
+
+  --line: rgb(20 24 31 / 0.09);
+  --line-strong: rgb(20 24 31 / 0.18);
+  --line-highlight: rgb(255 255 255 / 0.9);
+
+  --ink-1: #14181f;
+  --ink-2: #3d4452;
+  --ink-3: #6b7280;
+  --ink-4: #a0a5ae;
+
+  --signal: #0f9f86;
+  --signal-ink: #ffffff;
+  --signal-soft: rgb(15 159 134 / 0.1);
+  --signal-glow: 0 0 0 1px rgb(15 159 134 / 0.45), 0 0 12px rgb(15 159 134 / 0.18);
+
+  --pass: #6e35d9;
+  --pass-ink: #ffffff;
+  --pass-soft: rgb(110 53 217 / 0.09);
+  --pass-glow: 0 0 0 1px rgb(110 53 217 / 0.45), 0 0 12px rgb(110 53 217 / 0.15);
+
+  --route: #2f6fc0;
+  --route-soft: rgb(47 111 192 / 0.09);
+
+  --caution: #b7791f;
+  --caution-soft: rgb(183 121 31 / 0.1);
+
+  --danger: #d23a57;
+  --danger-ink: #ffffff;
+  --danger-soft: rgb(210 58 87 / 0.09);
+
+  --focus: rgb(15 159 134 / 0.5);
+  --shadow-float: 0 24px 64px -24px rgb(20 24 31 / 0.25), 0 0 0 1px var(--line-strong);
+  --shadow-pop: 0 12px 32px -12px rgb(20 24 31 / 0.22), 0 0 0 1px var(--line-strong);
+  --blur: saturate(140%) blur(14px);
+
+  --monaco-theme: "signal-paper";
+}

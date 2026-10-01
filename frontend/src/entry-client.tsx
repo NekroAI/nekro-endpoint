@@ -3,9 +3,11 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter as OriginalBrowserRouter } from "react-router-dom";
 import "uno.css";
+import "./styles.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppThemeProvider } from "./context/ThemeContextProvider";
 import { AppRoutes } from "./routes";
+import { SignalProviders } from "./app/providers";
 
 // CJS/ESM interop fix for react-router-dom
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -25,7 +27,9 @@ const AppComponent = (
     <QueryClientProvider client={queryClient}>
       <AppThemeProvider>
         <BrowserRouter>
-          <AppRoutes />
+          <SignalProviders>
+            <AppRoutes />
+          </SignalProviders>
         </BrowserRouter>
       </AppThemeProvider>
     </QueryClientProvider>

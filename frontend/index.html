@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="dark">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -56,6 +56,9 @@
       }
     }
     </script>
+
+    <!-- Theme: applied before first paint so SSR output never flashes (docs/REDESIGN.md §3.4) -->
+    <script>(function(){try{var m=localStorage.getItem('themeMode');if(m!=='light'&&m!=='dark'){m=m==='system'&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'}document.documentElement.dataset.theme=m}catch(e){document.documentElement.dataset.theme='dark'}})()</script>
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
