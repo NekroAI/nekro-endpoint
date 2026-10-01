@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "./app/AppShell";
 import { PageFallback } from "./app/PageFallback";
@@ -17,6 +17,17 @@ const OverviewPage = lazy(() => import("./features/overview/OverviewPage").then(
 const AdminPage = lazy(() => import("./features/admin/AdminPage").then((m) => ({ default: m.AdminPage })));
 
 const DemoRoot = lazy(() => import("./features/demo/DemoRoot").then((m) => ({ default: m.DemoRoot })));
+
+/**
+ * The demo only runs in the browser. Rendering the same fallback on the
+ * server and on the first client pass keeps a lazily loaded root from
+ * suspending during SSR (React #419 on hydration).
+ */
+function ClientOnly({ children }: { children: ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  return mounted ? <>{children}</> : <PageFallback />;
+}
 
 const page = (element: ReactNode) => <Suspense fallback={<PageFallback />}>{element}</Suspense>;
 
@@ -55,9 +66,11 @@ export const AppRoutes = () => (
     <Route
       path="/demo"
       element={
-        <Suspense fallback={<PageFallback />}>
-          <DemoRoot />
-        </Suspense>
+        <ClientOnly>
+          <Suspense fallback={<PageFallback />}>
+            <DemoRoot />
+          </Suspense>
+        </ClientOnly>
       }
     >
       {workspacePages}
