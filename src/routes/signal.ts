@@ -206,9 +206,11 @@ app.openapi(testConfigRoute, async (c) => {
   try {
     const result = await generateText({
       model: createModel(settings),
-      prompt: "Call the ping tool once.",
+      prompt: "This is a connectivity check. Call the ping tool now, with no arguments.",
       tools: { ping: tool({ description: "Connectivity check", inputSchema: z.object({}), execute: async () => "pong" }) },
-      toolChoice: "required",
+      // "auto", not "required": thinking/reasoning models reject a forced tool_choice
+      // ("Thinking mode does not support this tool_choice"). The chat itself uses auto too.
+      toolChoice: "auto",
       stopWhen: stepCountIs(1),
       abortSignal: AbortSignal.timeout(20_000),
     });

@@ -176,6 +176,48 @@ describe("model configuration (REDESIGN §5.6)", () => {
   });
 });
 
+describe("connection test", () => {
+  it("works with thinking models that reject a forced tool_choice", async () => {
+    await configure();
+    fetchMock
+      .get(LLM)
+      .intercept({ path: "/v1/chat/completions", method: "POST" })
+      .reply((request) => {
+        const body = JSON.parse(String(request.body));
+        if (body.tool_choice === "required" || typeof body.tool_choice === "object") {
+          return {
+            statusCode: 400,
+            data: JSON.stringify({ error: { message: "Thinking mode does not support this tool_choice" } }),
+          };
+        }
+        return {
+          statusCode: 200,
+          responseOptions: { headers: { "content-type": "application/json" } },
+          data: JSON.stringify({
+            id: "c1",
+            object: "chat.completion",
+            created: 1,
+            model: "m",
+            choices: [
+              {
+                index: 0,
+                finish_reason: "tool_calls",
+                message: {
+                  role: "assistant",
+                  content: null,
+                  tool_calls: [{ id: "call_ping", type: "function", function: { name: "ping", arguments: "{}" } }],
+                },
+              },
+            ],
+            usage: { prompt_tokens: 1, completion_tokens: 1 },
+          }),
+        };
+      });
+    const res = await api("/signal/config/test", { method: "POST", token: alice.apiKey });
+    expect(data(res)).toMatchObject({ ok: true, toolCalling: true });
+  });
+});
+
 describe("chat with approvals (REDESIGN §5.3–5.5)", () => {
   it("pauses writes for approval, then executes once approved", async () => {
     await configure();
