@@ -1,4 +1,15 @@
-import { ArrowRight, BookOpen, KeyRound, Lock, RotateCcw, ShieldCheck } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  Database,
+  ExternalLink,
+  KeyRound,
+  Lock,
+  Plug,
+  RotateCcw,
+  Scale,
+  ShieldCheck,
+} from "lucide-react";
 import { m as motion, useInView } from "motion/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
@@ -8,7 +19,10 @@ import { GitHubMark } from "../../design/github";
 import { TypeGlyph, typeMeta } from "../../design/glyphs";
 import { glide, ignite } from "../../design/motion";
 import { cn } from "../../lib/cn";
+import { spotlight } from "../../lib/spotlight";
 import { Button } from "../../ui/button";
+import { CopyButton } from "../../ui/copy-button";
+import { LICENSE, REPO_NAME, REPO_URL, repoFile } from "../../design/site";
 
 function useHost() {
   const [host, setHost] = useState("ep.nekro.ai");
@@ -23,6 +37,7 @@ export function LandingPage() {
       <Demo />
       <Capabilities />
       <AccessModel />
+      <OpenSource />
       <ClosingCta />
     </>
   );
@@ -62,13 +77,30 @@ function Hero() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <PrimaryCta />
+            <Button asChild size="lg" variant="secondary">
+              <a href={REPO_URL} target="_blank" rel="noreferrer">
+                <GitHubMark /> 开源仓库
+              </a>
+            </Button>
             <Button asChild size="lg" variant="ghost">
               <Link to="/docs">
-                <BookOpen /> 阅读文档
+                <BookOpen /> 文档
               </Link>
             </Button>
           </div>
-          <p className="mt-8 font-mono text-xs text-ink-4">Cloudflare Workers · D1 · 开源，可自托管</p>
+          <a
+            href={REPO_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="group mt-8 inline-flex items-center gap-2.5 text-xs text-ink-3 hover:text-ink-1"
+          >
+            <span className="inline-flex h-5 items-center rounded-full bg-signal-soft px-2 font-mono text-2xs font-medium text-signal">
+              {LICENSE}
+            </span>
+            开源，可部署在你自己的 Cloudflare 账号
+            <span className="hidden font-mono text-ink-4 group-hover:text-ink-2 sm:inline">{REPO_NAME}</span>
+            <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
+          </a>
         </motion.div>
         <SignalField />
       </div>
@@ -108,7 +140,15 @@ function SignalField() {
           transition={{ duration: 240, repeat: Infinity, ease: "linear" }}
         >
           {[80, 140, 200].map((r, index) => (
-            <circle key={r} cx={cx} cy={cy} r={r} fill="none" stroke="var(--line-strong)" strokeDasharray={index === 2 ? "2 6" : undefined} />
+            <circle
+              key={r}
+              cx={cx}
+              cy={cy}
+              r={r}
+              fill="none"
+              stroke="var(--line-strong)"
+              strokeDasharray={index === 2 ? "2 6" : undefined}
+            />
           ))}
         </motion.g>
         {ORBIT.map((node, index) => {
@@ -163,15 +203,24 @@ function SignalField() {
               <span
                 className={cn(
                   "relative flex items-center gap-1.5 rounded-full bg-surface-solid py-1 pr-2.5 pl-1.5 font-mono text-[11px] whitespace-nowrap",
-                  live ? "shadow-[0_0_0_1px_color-mix(in_srgb,var(--signal)_45%,transparent),0_0_18px_-4px_var(--signal)]" : "outline-1 outline-ink-3 outline-dashed",
+                  live
+                    ? "shadow-[0_0_0_1px_color-mix(in_srgb,var(--signal)_45%,transparent),0_0_18px_-4px_var(--signal)]"
+                    : "outline-1 outline-ink-3 outline-dashed",
                 )}
               >
                 {node.locked && <span className="absolute -inset-1 rounded-full shadow-[0_0_0_1.5px_var(--pass)]" />}
-                <span className={cn("grid size-4 place-items-center rounded-full", node.host || node.type === "proxy" ? "bg-route-soft text-route" : "bg-surface-3")}>
+                <span
+                  className={cn(
+                    "grid size-4 place-items-center rounded-full",
+                    node.host || node.type === "proxy" ? "bg-route-soft text-route" : "bg-surface-3",
+                  )}
+                >
                   <TypeGlyph type={node.type} className="size-2.5" />
                 </span>
                 {node.label}
-                <span className={cn("size-1.5 rounded-full", live ? "bg-signal" : "shadow-[inset_0_0_0_1px_var(--ink-3)]")} />
+                <span
+                  className={cn("size-1.5 rounded-full", live ? "bg-signal" : "shadow-[inset_0_0_0_1px_var(--ink-3)]")}
+                />
               </span>
               {index === 0 && (
                 <motion.span
@@ -247,11 +296,18 @@ function Demo() {
                 <span
                   className={cn(
                     "relative flex items-center gap-2 rounded-full bg-surface-solid py-1.5 pr-3 pl-2 font-mono text-xs transition-shadow duration-500",
-                    step >= 1 ? "shadow-[0_0_0_1px_color-mix(in_srgb,var(--signal)_50%,transparent),0_0_24px_-4px_var(--signal)]" : "outline-1 outline-ink-3 outline-dashed",
+                    step >= 1
+                      ? "shadow-[0_0_0_1px_color-mix(in_srgb,var(--signal)_50%,transparent),0_0_24px_-4px_var(--signal)]"
+                      : "outline-1 outline-ink-3 outline-dashed",
                   )}
                 >
                   <TypeGlyph type="static" className="size-3 text-ink-2" /> app.yaml
-                  <span className={cn("size-1.5 rounded-full transition-colors", step >= 1 ? "bg-signal" : "shadow-[inset_0_0_0_1px_var(--ink-3)]")} />
+                  <span
+                    className={cn(
+                      "size-1.5 rounded-full transition-colors",
+                      step >= 1 ? "bg-signal" : "shadow-[inset_0_0_0_1px_var(--ink-3)]",
+                    )}
+                  />
                 </span>
                 {step >= 1 &&
                   [0, 0.15].map((delay) => (
@@ -264,16 +320,25 @@ function Demo() {
                     />
                   ))}
               </div>
-              <span className={cn("mt-4 text-xs transition-colors", step >= 1 ? "text-signal" : "text-ink-4")}>{step >= 1 ? "已发布到边缘" : "草稿"}</span>
+              <span className={cn("mt-4 text-xs transition-colors", step >= 1 ? "text-signal" : "text-ink-4")}>
+                {step >= 1 ? "已发布到边缘" : "草稿"}
+              </span>
             </div>
           </DemoPane>
           {/* 3 · access */}
           <DemoPane index={2} step={step} title="访问" hint="任何 HTTP 客户端">
             <pre className="font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap">
               <span className="text-ink-4">$ </span>
-              <span className="text-ink-1">curl -H "X-Access-Key: ep-…" \{"\n"}  https://{host}/e/alice/configs/app.yaml</span>
+              <span className="text-ink-1">
+                curl -H "X-Access-Key: ep-…" \{"\n"} https://{host}/e/alice/configs/app.yaml
+              </span>
               {step >= 2 && (
-                <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="block">
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="block"
+                >
                   <span className="mt-2 block text-signal">200 OK · text/yaml</span>
                   <span className="text-ink-3">{content}</span>
                 </motion.span>
@@ -291,7 +356,19 @@ function Demo() {
   );
 }
 
-function DemoPane({ index, step, title, hint, children }: { index: number; step: number; title: string; hint: string; children: ReactNode }) {
+function DemoPane({
+  index,
+  step,
+  title,
+  hint,
+  children,
+}: {
+  index: number;
+  step: number;
+  title: string;
+  hint: string;
+  children: ReactNode;
+}) {
   const active = step === index;
   const done = step > index;
   return (
@@ -302,7 +379,12 @@ function DemoPane({ index, step, title, hint, children }: { index: number; step:
       )}
     >
       <div className="flex items-center gap-2 border-b border-line px-4 py-2.5 text-xs">
-        <span className={cn("grid size-5 place-items-center rounded-full font-mono text-2xs", done || active ? "bg-signal text-signal-ink" : "bg-surface-3 text-ink-3")}>
+        <span
+          className={cn(
+            "grid size-5 place-items-center rounded-full font-mono text-2xs",
+            done || active ? "bg-signal text-signal-ink" : "bg-surface-3 text-ink-3",
+          )}
+        >
           {index + 1}
         </span>
         <span className="font-medium text-ink-1">{title}</span>
@@ -317,7 +399,10 @@ function TypedText({ text }: { text: string }) {
   const [count, setCount] = useState(0);
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return setCount(text.length);
-    const timer = setInterval(() => setCount((value) => (value >= text.length ? (clearInterval(timer), value) : value + 1)), 22);
+    const timer = setInterval(
+      () => setCount((value) => (value >= text.length ? (clearInterval(timer), value) : value + 1)),
+      22,
+    );
     return () => clearInterval(timer);
   }, [text]);
   return (
@@ -346,9 +431,15 @@ function Capabilities() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-10% 0px" }}
               transition={{ ...glide, delay: index * 0.06 }}
-              className="rounded-lg bg-surface-0 p-6 shadow-[inset_0_0_0_1px_var(--line)]"
+              {...spotlight}
+              className="spotlight rounded-lg bg-surface-0 p-6 shadow-[inset_0_0_0_1px_var(--line)]"
             >
-              <span className={cn("grid size-10 place-items-center rounded-md", type === "static" ? "bg-surface-2 text-ink-1" : "bg-route-soft text-route")}>
+              <span
+                className={cn(
+                  "grid size-10 place-items-center rounded-md",
+                  type === "static" ? "bg-surface-2 text-ink-1" : "bg-route-soft text-route",
+                )}
+              >
                 <TypeGlyph type={type} className="size-5" />
               </span>
               <h3 className="mt-5 font-semibold">{typeMeta[type].label}端点</h3>
@@ -371,13 +462,18 @@ function AccessModel() {
     <section className="border-t border-line">
       <div className="mx-auto max-w-6xl px-4 py-24 md:px-8">
         <SectionHeading eyebrow="访问控制" title={<>把门关上，只把钥匙交给对的人</>}>
-          通行卡通过 <code className="font-mono text-ink-1">X-Access-Key</code> 请求头或 <code className="font-mono text-ink-1">access_key</code>{" "}
+          通行卡通过 <code className="font-mono text-ink-1">X-Access-Key</code> 请求头或{" "}
+          <code className="font-mono text-ink-1">access_key</code>{" "}
           参数携带，也可以生成二维码当面分享。管理密钥与通行卡严格分离，永远不会出现在分享链接里。
         </SectionHeading>
         <div className="grid items-stretch gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr]">
           {nodes.map((node, index) => (
             <div key={node.title} className="contents">
-              <div className="rounded-lg bg-surface-0 p-5 shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--pass)_30%,transparent)]">
+              <div
+                {...spotlight}
+                style={{ ["--spot-tint" as string]: "var(--pass)" }}
+                className="spotlight rounded-lg bg-surface-0 p-5 shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--pass)_30%,transparent)]"
+              >
                 <span className="text-pass [&_svg]:size-5">{node.icon}</span>
                 <h3 className="mt-3 font-medium">{node.title}</h3>
                 <p className="mt-1 text-sm text-ink-3">{node.body}</p>
@@ -395,17 +491,109 @@ function AccessModel() {
   );
 }
 
+const SELF_HOST = `git clone ${REPO_URL}.git
+cd nekro-endpoint && pnpm install
+pnpm dev`;
+
+function OpenSource() {
+  const points = [
+    { icon: <Scale />, title: `${LICENSE} 许可`, body: "代码完全公开，可以自由使用、修改和分发。" },
+    {
+      icon: <Database />,
+      title: "你的账号，你的数据",
+      body: "运行在你自己的 Workers 与 D1 上，不经过任何第三方服务。",
+    },
+    { icon: <ShieldCheck />, title: "接口有契约保护", body: "上百个契约测试冻结 API 行为，升级不会悄悄破坏你的集成。" },
+    { icon: <Plug />, title: "可编程", body: "REST API、命令行工具 epctl 和 MCP 服务，接入你自己的自动化。" },
+  ];
+  return (
+    <section className="border-t border-line">
+      <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-24 md:px-8 lg:grid-cols-[1fr_1.05fr]">
+        <div>
+          <SectionHeading eyebrow="开源 · 自托管" title="整个平台都是开源的">
+            Endpoints 不是一项托管服务，而是一套你可以完整拥有的软件：把它部署到自己的 Cloudflare
+            账号，几分钟就能拥有私有的端点平台。
+          </SectionHeading>
+          <ul className="-mt-2 grid gap-5 sm:grid-cols-2">
+            {points.map((point) => (
+              <li key={point.title} className="flex gap-3">
+                <span className="mt-0.5 shrink-0 text-signal [&_svg]:size-4">{point.icon}</span>
+                <span>
+                  <span className="block text-sm font-medium text-ink-1">{point.title}</span>
+                  <span className="mt-1 block text-xs leading-relaxed text-ink-3">{point.body}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-10% 0px" }}
+          transition={glide}
+          {...spotlight}
+          className="spotlight overflow-hidden rounded-lg bg-surface-0 shadow-[inset_0_0_0_1px_var(--line-strong)]"
+        >
+          <a
+            href={REPO_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="group flex items-center gap-3 border-b border-line px-5 py-4 hover:bg-surface-1"
+          >
+            <span className="grid size-9 place-items-center rounded-md bg-surface-2 text-ink-1 [&_svg]:size-5">
+              <GitHubMark />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate font-mono text-sm text-ink-1">{REPO_NAME}</span>
+              <span className="block text-xs text-ink-3">GitHub · {LICENSE} License</span>
+            </span>
+            <ExternalLink className="size-4 text-ink-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-ink-1" />
+          </a>
+          <div className="relative">
+            <pre className="scrollbar-thin overflow-x-auto p-5 pr-12 font-mono text-xs leading-loose">
+              {SELF_HOST.split("\n").map((line) => (
+                <span key={line} className="block">
+                  <span className="text-ink-4 select-none">$ </span>
+                  <span className="text-ink-1">{line}</span>
+                </span>
+              ))}
+            </pre>
+            <CopyButton value={SELF_HOST} label="复制命令" className="absolute top-3 right-3" />
+          </div>
+          <div className="flex flex-wrap gap-2 border-t border-line px-5 py-4">
+            <Button asChild size="sm" variant="primary">
+              <a href={REPO_URL} target="_blank" rel="noreferrer">
+                <GitHubMark /> 在 GitHub 上查看
+              </a>
+            </Button>
+            <Button asChild size="sm" variant="ghost">
+              <a href={repoFile("docs/DEPLOYMENT.md")} target="_blank" rel="noreferrer">
+                部署指南 <ArrowRight />
+              </a>
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
 function ClosingCta() {
   return (
     <section className="border-t border-line">
       <div className="mx-auto max-w-6xl px-4 py-24 text-center md:px-8">
         <BrandMark className="mx-auto size-10" />
-        <h2 className="mt-6 text-[clamp(26px,3.4vw,36px)] font-semibold tracking-tight">你的第一个端点，一分钟就能上线</h2>
+        <h2 className="mt-6 text-[clamp(26px,3.4vw,36px)] font-semibold tracking-tight">
+          你的第一个端点，一分钟就能上线
+        </h2>
         <p className="mt-3 text-sm text-ink-3">新账号由管理员激活后即可发布；在此之前可以先创建和编辑。</p>
-        <div className="mt-8 flex justify-center gap-3">
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
           <PrimaryCta size="md" />
-          <Button asChild variant="ghost">
-            <Link to="/docs">文档</Link>
+          <Button asChild variant="secondary">
+            <a href={REPO_URL} target="_blank" rel="noreferrer">
+              <GitHubMark /> 自己部署一套
+            </a>
           </Button>
         </div>
       </div>

@@ -13,7 +13,7 @@ export function PopoverContent({ className, sideOffset = 8, align = "center", ..
       <PopoverPrimitive.Content
         sideOffset={sideOffset}
         align={align}
-        className={cn("z-50 w-72 rounded-md p-3 glass shadow-pop data-[state=open]:animate-fade-in focus:outline-none", className)}
+        className={cn("z-50 w-72 rounded-md p-3 glass shadow-pop data-[state=open]:animate-pop-in focus:outline-none", className)}
         {...props}
       />
     </PopoverPrimitive.Portal>

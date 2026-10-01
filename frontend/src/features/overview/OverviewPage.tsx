@@ -1,4 +1,14 @@
-import { AlertTriangle, ArrowRight, CalendarClock, CircleSlash, KeyRound, Link2Off, Lock, Plus, ShieldAlert } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  CalendarClock,
+  CircleSlash,
+  KeyRound,
+  Link2Off,
+  Lock,
+  Plus,
+  ShieldAlert,
+} from "lucide-react";
 import { lazy, Suspense, useMemo, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { m as motion } from "motion/react";
@@ -8,6 +18,8 @@ import { useAuth } from "../../hooks/useAuth";
 import { glide } from "../../design/motion";
 import { TypeGlyph } from "../../design/glyphs";
 import { relativeTime } from "../../lib/format";
+import { spotlight } from "../../lib/spotlight";
+import { CountUp } from "../../ui/count-up";
 import { cn } from "../../lib/cn";
 import { Button } from "../../ui/button";
 import { Skeleton } from "../../ui/skeleton";
@@ -27,7 +39,14 @@ export function OverviewPage() {
   );
 }
 
-type Attention = { id: string; tone: "caution" | "danger" | "info"; icon: ReactNode; title: string; detail: string; to: string };
+type Attention = {
+  id: string;
+  tone: "caution" | "danger" | "info";
+  icon: ReactNode;
+  title: string;
+  detail: string;
+  to: string;
+};
 
 function Overview() {
   const { user } = useAuth();
@@ -163,8 +182,12 @@ function Overview() {
           <div className="grid grid-cols-2 gap-3">
             <Stat label="在线端点" value={counts.live} hint={`共 ${endpoints.length} 个`} />
             <Stat label="权限组" value={groups.length} hint={`${usableKeys.length} 张有效通行卡`} />
-            <Stat label="通行卡调用" value={totalUsage.toLocaleString("zh-CN")} hint="累计访问次数" />
-            <Stat label="受保护端点" value={endpoints.filter((endpoint) => endpoint.accessControl === "authenticated").length} hint="需要通行卡" />
+            <Stat label="通行卡调用" value={totalUsage} hint="累计访问次数" />
+            <Stat
+              label="受保护端点"
+              value={endpoints.filter((endpoint) => endpoint.accessControl === "authenticated").length}
+              hint="需要通行卡"
+            />
           </div>
           <section className="rounded-lg bg-surface-0 shadow-[inset_0_0_0_1px_var(--line)]">
             <h2 className="flex items-center gap-2 border-b border-line px-5 py-3 text-sm font-medium">
@@ -211,7 +234,10 @@ function Overview() {
         <ul className="divide-y divide-line">
           {recent.map((endpoint) => (
             <li key={endpoint.id}>
-              <Link to={`/app/endpoints${endpoint.path}`} className="flex items-center gap-3 px-5 py-2.5 hover:bg-surface-1">
+              <Link
+                to={`/app/endpoints${endpoint.path}`}
+                className="flex items-center gap-3 px-5 py-2.5 hover:bg-surface-1"
+              >
                 <TypeGlyph type={endpoint.type} className="size-4 text-ink-2" />
                 <span className="font-mono text-sm text-ink-1">{endpoint.path}</span>
                 <span className="hidden truncate text-xs text-ink-3 sm:inline">{endpoint.name}</span>
@@ -231,9 +257,11 @@ function Overview() {
 /** A plain stat tile: the number in body ink, the label muted (no chart needed). */
 function Stat({ label, value, hint }: { label: string; value: number | string; hint: string }) {
   return (
-    <div className="rounded-lg bg-surface-0 p-4 shadow-[inset_0_0_0_1px_var(--line)]">
+    <div {...spotlight} className="spotlight rounded-lg bg-surface-0 p-4 shadow-[inset_0_0_0_1px_var(--line)]">
       <div className="text-xs text-ink-3">{label}</div>
-      <div className="mt-1 font-mono text-xl font-semibold tracking-tight text-ink-1 tabular-nums">{value}</div>
+      <div className="mt-1 font-mono text-xl font-semibold tracking-tight text-ink-1 tabular-nums">
+        {typeof value === "number" ? <CountUp value={value} /> : value}
+      </div>
       <div className="mt-0.5 truncate text-2xs text-ink-4">{hint}</div>
     </div>
   );

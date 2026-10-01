@@ -11,6 +11,8 @@ import { DirectoryGlyph, TypeGlyph, typeMeta } from "../../design/glyphs";
 import { glide } from "../../design/motion";
 import { errorMessage } from "../../lib/api";
 import { absoluteTime, relativeTime } from "../../lib/format";
+import { spotlight } from "../../lib/spotlight";
+import { CountUp } from "../../ui/count-up";
 import { cn } from "../../lib/cn";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
@@ -48,7 +50,11 @@ function Admin() {
 
   return (
     <Page className="max-w-7xl">
-      <PageHeader eyebrow="管理" title="用户与审查" description="激活新用户以允许他们发布端点；必要时审查任何用户的端点内容并强制下线。" />
+      <PageHeader
+        eyebrow="管理"
+        title="用户与审查"
+        description="激活新用户以允许他们发布端点；必要时审查任何用户的端点内容并强制下线。"
+      />
       <Stats />
 
       <section className="mt-6 rounded-lg bg-surface-0 shadow-[inset_0_0_0_1px_var(--line)]">
@@ -107,7 +113,9 @@ function Admin() {
         )}
       </section>
 
-      <AnimatePresence>{reviewing && <ReviewSheet key={reviewing.id} member={reviewing} onClose={() => setReviewing(null)} />}</AnimatePresence>
+      <AnimatePresence>
+        {reviewing && <ReviewSheet key={reviewing.id} member={reviewing} onClose={() => setReviewing(null)} />}
+      </AnimatePresence>
     </Page>
   );
 }
@@ -123,9 +131,15 @@ function Stats() {
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
       {tiles.map(([label, value, hint]) => (
-        <div key={label} className="rounded-lg bg-surface-0 p-4 shadow-[inset_0_0_0_1px_var(--line)]">
+        <div
+          key={label}
+          {...spotlight}
+          className="spotlight rounded-lg bg-surface-0 p-4 shadow-[inset_0_0_0_1px_var(--line)]"
+        >
           <div className="text-xs text-ink-3">{label}</div>
-          <div className="mt-1 font-mono text-xl font-semibold text-ink-1 tabular-nums">{value ?? "–"}</div>
+          <div className="mt-1 font-mono text-xl font-semibold text-ink-1 tabular-nums">
+            {value === undefined ? "–" : <CountUp value={value} />}
+          </div>
           <div className="mt-0.5 text-2xs text-ink-4">{hint}</div>
         </div>
       ))}
@@ -179,7 +193,11 @@ function UserRow({ member, onReview }: { member: AdminUser; onReview: () => void
       <td className="px-5 py-2.5">
         <div className="flex items-center gap-3">
           <span className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-3 text-xs font-semibold text-ink-2">
-            {member.avatarUrl ? <img src={member.avatarUrl} alt="" className="size-full object-cover" /> : member.username[0]?.toUpperCase()}
+            {member.avatarUrl ? (
+              <img src={member.avatarUrl} alt="" className="size-full object-cover" />
+            ) : (
+              member.username[0]?.toUpperCase()
+            )}
           </span>
           <div className="min-w-0">
             <div className="truncate text-ink-1">
@@ -244,7 +262,13 @@ function ReviewSheet({ member, onClose }: { member: AdminUser; onClose: () => vo
 
   return (
     <>
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 bg-[rgb(0_0_0/0.4)]" onClick={onClose} />
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-40 bg-[rgb(0_0_0/0.4)]"
+        onClick={onClose}
+      />
       <motion.aside
         role="dialog"
         aria-label={`${member.username} 的端点`}
@@ -292,7 +316,11 @@ function ReviewSheet({ member, onClose }: { member: AdminUser; onClose: () => vo
                     className="flex h-10 w-full items-center gap-2 rounded-sm pr-3 text-left enabled:hover:bg-surface-2"
                     style={{ paddingLeft: 12 + depth * 20 }}
                   >
-                    {node.endpoint ? <TypeGlyph type={node.endpoint.type} className="size-4 text-ink-2" /> : <DirectoryGlyph className="size-4 text-ink-4" />}
+                    {node.endpoint ? (
+                      <TypeGlyph type={node.endpoint.type} className="size-4 text-ink-2" />
+                    ) : (
+                      <DirectoryGlyph className="size-4 text-ink-4" />
+                    )}
                     <span className={cn("font-mono text-sm", node.endpoint ? "text-ink-1" : "text-ink-3")}>
                       {node.segment}
                       {!node.endpoint && "/"}
@@ -338,8 +366,18 @@ function ReviewDetail({ endpoint, username }: { endpoint: EndpointView; username
   };
 
   const isText = endpoint.type === "static" || endpoint.type === "script";
-  const text = endpoint.type === "static" ? (endpoint.config as StaticConfig).content : endpoint.type === "script" ? (endpoint.config as ScriptConfig).code : JSON.stringify(endpoint.config, null, 2);
-  const language = endpoint.type === "static" ? languageForContentType((endpoint.config as StaticConfig).contentType ?? "") : endpoint.type === "script" ? "javascript" : "json";
+  const text =
+    endpoint.type === "static"
+      ? (endpoint.config as StaticConfig).content
+      : endpoint.type === "script"
+        ? (endpoint.config as ScriptConfig).code
+        : JSON.stringify(endpoint.config, null, 2);
+  const language =
+    endpoint.type === "static"
+      ? languageForContentType((endpoint.config as StaticConfig).contentType ?? "")
+      : endpoint.type === "script"
+        ? "javascript"
+        : "json";
 
   return (
     <div className="flex h-full flex-col">

@@ -71,6 +71,8 @@
 
   --animate-ghost: ghost 1.6s ease-in-out infinite;
   --animate-fade-in: fade-in 160ms var(--ease-glide);
+  --animate-pop-in: pop-in 220ms var(--ease-glide);
+  --animate-rise-in: rise-in 260ms var(--ease-glide);
 
   @keyframes ghost {
     0%,
@@ -87,6 +89,27 @@
     }
     to {
       opacity: 1;
+    }
+  }
+  /* Uses the individual scale/translate properties so it composes with Tailwind's translate utilities. */
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      scale: 0.97;
+    }
+    to {
+      opacity: 1;
+      scale: 1;
+    }
+  }
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      translate: 0 6px;
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
     }
   }
 }
@@ -134,6 +157,49 @@
   color: transparent;
 }
 
+/*
+ * Pointer spotlight: a soft light and a lit edge that follow the cursor.
+ * Position comes from --spot-x/--spot-y (lib/spotlight.ts); the tint from
+ * --spot-tint (defaults to signal; pass-related surfaces use --pass).
+ */
+@utility spotlight {
+  position: relative;
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 320ms var(--ease-glide);
+  }
+  &::before {
+    background: radial-gradient(
+      320px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+      color-mix(in srgb, var(--spot-tint, var(--signal)) 9%, transparent),
+      transparent 70%
+    );
+  }
+  &::after {
+    padding: 1px;
+    background: radial-gradient(
+      200px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+      color-mix(in srgb, var(--spot-tint, var(--signal)) 55%, transparent),
+      transparent 70%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+  &:hover::before,
+  &:hover::after {
+    opacity: 1;
+  }
+}
+
 @utility scrollbar-thin {
   scrollbar-width: thin;
   scrollbar-color: var(--line-strong) transparent;
@@ -160,7 +226,37 @@
   stroke-dasharray: 4 4;
 }
 .signal-map .react-flow__node {
+  cursor: pointer;
+}
+.signal-map .react-flow__node-origin,
+.signal-map .react-flow__node-host {
   cursor: default;
+}
+/* Hover trace: the route from the origin to the hovered node lights up and draws in. */
+.signal-map .react-flow__edge-path {
+  transition:
+    stroke 240ms var(--ease-glide),
+    stroke-width 240ms var(--ease-glide);
+}
+.signal-map .map-edge-trace .react-flow__edge-path {
+  stroke: var(--signal);
+  stroke-width: 1.5;
+  stroke-dasharray: 1200;
+  animation: trace-draw 520ms var(--ease-glide) both;
+}
+.signal-map .map-edge-route.map-edge-trace .react-flow__edge-path {
+  stroke: var(--route);
+  stroke-opacity: 1;
+  stroke-dasharray: 4 4;
+  animation: none;
+}
+@keyframes trace-draw {
+  from {
+    stroke-dashoffset: 1200;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 .signal-map .react-flow__pane {
   cursor: grab;

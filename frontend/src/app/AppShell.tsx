@@ -1,4 +1,4 @@
-import { Outlet, useNavigate } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { BookOpen, LogOut, Moon, Sun } from "lucide-react";
 import { AuthGate } from "./AuthGate";
 import { CommandProvider, useRegisterCommands, type CommandItem } from "./commands";
@@ -25,9 +25,9 @@ export function AppShell() {
               <Sidebar />
               <main className="relative flex min-w-0 flex-1 flex-col">
                 <MobileHeader />
-                <div className="relative min-h-0 flex-1">
+                <SectionTransition>
                   <Outlet />
-                </div>
+                </SectionTransition>
                 <SignalLine className="bottom-[calc(56px+env(safe-area-inset-bottom))] md:bottom-0" />
               </main>
             </div>
@@ -40,12 +40,22 @@ export function AppShell() {
   );
 }
 
+/** Content rises in when switching sections; moving within a section stays still. */
+function SectionTransition({ children }: { children: React.ReactNode }) {
+  const section = useLocation().pathname.split("/")[2] ?? "";
+  return (
+    <div key={section} className="relative min-h-0 flex-1 animate-rise-in">
+      {children}
+    </div>
+  );
+}
+
 function MobileHeader() {
   return (
     <header className="flex h-12 shrink-0 items-center justify-between border-b border-line px-4 md:hidden">
-      <span className="flex items-center gap-2 font-mono text-sm font-semibold">
+      <Link to="/" className="flex items-center gap-2 font-mono text-sm font-semibold" aria-label="Endpoints 首页">
         <BrandMark className="size-5" /> Endpoints
-      </span>
+      </Link>
       <UserMenu side="bottom">
         <button type="button" aria-label="账户菜单">
           <Avatar />

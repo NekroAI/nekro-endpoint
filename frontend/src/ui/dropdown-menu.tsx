@@ -7,7 +7,7 @@ export const DropdownMenuTrigger = Menu.Trigger;
 export const DropdownMenuGroup = Menu.Group;
 
 export const menuSurface =
-  "z-50 min-w-44 rounded-md p-1 glass shadow-pop data-[state=open]:animate-fade-in focus:outline-none";
+  "z-50 min-w-44 rounded-md p-1 glass shadow-pop data-[state=open]:animate-pop-in focus:outline-none";
 export const menuItem = [
   "relative flex h-8 cursor-default items-center gap-2 rounded-sm px-2 text-sm text-ink-2 outline-none select-none",
   "data-[highlighted]:bg-surface-3 data-[highlighted]:text-ink-1 data-[disabled]:opacity-40",

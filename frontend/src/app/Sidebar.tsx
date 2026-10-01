@@ -1,4 +1,4 @@
-import { NavLink, useMatch } from "react-router-dom";
+import { Link, NavLink, useMatch } from "react-router-dom";
 import { m as motion } from "motion/react";
 import { BookOpen, Moon, PanelLeftClose, PanelLeftOpen, Search, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -69,7 +69,12 @@ function RailLink({ item, expanded }: { item: NavItem; expanded: boolean }) {
             className="absolute top-2 bottom-2 -left-2.5 w-0.5 rounded-full bg-signal shadow-signal"
           />
         )}
-        <Icon className={cn("size-[18px] shrink-0", isActive && "text-signal")} />
+        <Icon
+          className={cn(
+            "size-[18px] shrink-0 transition-[scale] duration-200 group-hover:scale-110",
+            isActive && "text-signal",
+          )}
+        />
         {expanded && <span className="truncate">{label}</span>}
       </NavLink>
     </Tooltip>
@@ -94,7 +99,13 @@ export function Sidebar() {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
-      if (event.key !== "[" || event.metaKey || event.ctrlKey || target?.closest("input, textarea, [contenteditable], .monaco-editor")) return;
+      if (
+        event.key !== "[" ||
+        event.metaKey ||
+        event.ctrlKey ||
+        target?.closest("input, textarea, [contenteditable], .monaco-editor")
+      )
+        return;
       toggle();
     };
     window.addEventListener("keydown", onKey);
@@ -110,10 +121,12 @@ export function Sidebar() {
       transition={glide}
       className="relative z-20 hidden h-full shrink-0 flex-col border-r border-line bg-surface-0 px-2.5 py-3 md:flex"
     >
-      <NavLink to="/app" className="mb-5 flex h-9 items-center gap-2.5 rounded-sm px-1.5" aria-label="Endpoints">
-        <BrandMark className="size-6 shrink-0" />
-        {expanded && <span className="font-mono text-sm font-semibold tracking-tight">Endpoints</span>}
-      </NavLink>
+      <Tooltip content={expanded ? null : "返回网站首页"} side="right">
+        <Link to="/" className="mb-5 flex h-9 items-center gap-2.5 rounded-sm px-1.5" aria-label="Endpoints 首页">
+          <BrandMark className="size-6 shrink-0" />
+          {expanded && <span className="font-mono text-sm font-semibold tracking-tight">Endpoints</span>}
+        </Link>
+      </Tooltip>
 
       <nav className="grid gap-0.5" aria-label="主导航">
         {items.map((item) => (
@@ -191,7 +204,10 @@ export function TabBar() {
           key={to}
           to={to}
           className={({ isActive }) =>
-            cn("flex flex-1 flex-col items-center justify-center gap-0.5 text-2xs", isActive ? "text-signal" : "text-ink-3")
+            cn(
+              "flex flex-1 flex-col items-center justify-center gap-0.5 text-2xs",
+              isActive ? "text-signal" : "text-ink-3",
+            )
           }
         >
           <Icon className="size-5" />

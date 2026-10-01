@@ -1,4 +1,17 @@
-import { Ban, ChevronRight, Copy, RotateCcw, Eye, EyeOff, KeyRound, MoreHorizontal, Pencil, Plus, Trash2, Users } from "lucide-react";
+import {
+  Ban,
+  ChevronRight,
+  Copy,
+  RotateCcw,
+  Eye,
+  EyeOff,
+  KeyRound,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Trash2,
+  Users,
+} from "lucide-react";
 import { AnimatePresence, m as motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -7,6 +20,7 @@ import { Page, PageHeader } from "../../app/Page";
 import { useRegisterCommands } from "../../app/commands";
 import { TypeGlyph } from "../../design/glyphs";
 import { glide } from "../../design/motion";
+import { spotlight } from "../../lib/spotlight";
 import { errorMessage } from "../../lib/api";
 import { absoluteTime, maskKey, relativeTime } from "../../lib/format";
 import { cn } from "../../lib/cn";
@@ -119,14 +133,20 @@ function GroupCard({ group, selected }: { group: PermissionGroup; selected: bool
     <Link
       to={`/app/access/${group.id}`}
       aria-current={selected ? "page" : undefined}
+      {...spotlight}
+      style={{ ["--spot-tint" as string]: "var(--pass)" }}
       className={cn(
-        "group relative grid gap-2 rounded-md p-4 transition-[background-color,box-shadow]",
-        selected ? "bg-pass-soft shadow-[inset_0_0_0_1px_var(--pass)]" : "bg-surface-1 shadow-[inset_0_0_0_1px_var(--line)] hover:bg-surface-2",
+        "spotlight group relative grid gap-2 rounded-md p-4 transition-[background-color,box-shadow]",
+        selected
+          ? "bg-pass-soft shadow-[inset_0_0_0_1px_var(--pass)]"
+          : "bg-surface-1 shadow-[inset_0_0_0_1px_var(--line)] hover:bg-surface-2",
       )}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="truncate font-medium text-ink-1">{group.name}</span>
-        <ChevronRight className={cn("size-4 shrink-0 text-ink-4 transition-transform", selected && "translate-x-0.5 text-pass")} />
+        <ChevronRight
+          className={cn("size-4 shrink-0 text-ink-4 transition-transform", selected && "translate-x-0.5 text-pass")}
+        />
       </div>
       {group.description && <p className="line-clamp-2 text-xs text-ink-3">{group.description}</p>}
       <div className="flex gap-4 text-xs text-ink-3">
@@ -151,14 +171,20 @@ function GroupDetail({ group }: { group: PermissionGroup }) {
   const sorted = useMemo(() => {
     const rank: Record<KeyStatus, number> = { expiring: 0, active: 1, expired: 2, revoked: 3 };
     return [...(keys ?? [])].sort(
-      (a, b) => rank[keyStatus(a)] - rank[keyStatus(b)] || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      (a, b) =>
+        rank[keyStatus(a)] - rank[keyStatus(b)] || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
   }, [keys]);
   const inactive = sorted.filter((key) => ["expired", "revoked"].includes(keyStatus(key))).length;
   const visible = showInactive ? sorted : sorted.filter((key) => !["expired", "revoked"].includes(keyStatus(key)));
 
   return (
-    <motion.section initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={glide} className="grid min-w-0 gap-6">
+    <motion.section
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={glide}
+      className="grid min-w-0 gap-6"
+    >
       <GroupHeader group={group} />
 
       <div className="rounded-lg bg-surface-0 shadow-[inset_0_0_0_1px_var(--line)]">
@@ -185,7 +211,13 @@ function GroupDetail({ group }: { group: PermissionGroup }) {
         </div>
         <AnimatePresence initial={false}>
           {issuing && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={glide} className="overflow-hidden px-5 pt-4">
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={glide}
+              className="overflow-hidden px-5 pt-4"
+            >
               <IssueForm
                 groupIds={[group.id]}
                 groupName={() => group.name}
@@ -219,7 +251,11 @@ function GroupDetail({ group }: { group: PermissionGroup }) {
             <KeyTable keys={visible} groupName={group.name} />
           )}
           {inactive > 0 && (
-            <button type="button" onClick={() => setShowInactive(!showInactive)} className="mt-4 text-xs text-ink-3 hover:text-ink-1">
+            <button
+              type="button"
+              onClick={() => setShowInactive(!showInactive)}
+              className="mt-4 text-xs text-ink-3 hover:text-ink-1"
+            >
               {showInactive ? "隐藏" : "显示"} {inactive} 张已过期或已吊销的通行卡
             </button>
           )}
@@ -422,13 +458,22 @@ function PassTile({ accessKey, groupName }: { accessKey: AccessKey; groupName: s
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.97 }}
       transition={glide}
+      {...spotlight}
+      style={{ ["--spot-tint" as string]: "var(--pass)" }}
       className={cn(
-        "relative grid gap-3 overflow-hidden rounded-md p-4",
-        live ? "bg-surface-1 shadow-[inset_0_0_0_1px_var(--line-strong)]" : "bg-surface-0 opacity-70 shadow-[inset_0_0_0_1px_var(--line)]",
+        "spotlight relative grid gap-3 overflow-hidden rounded-md p-4",
+        live
+          ? "bg-surface-1 shadow-[inset_0_0_0_1px_var(--line-strong)]"
+          : "bg-surface-0 opacity-70 shadow-[inset_0_0_0_1px_var(--line)]",
         status === "expiring" && "shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--caution)_55%,transparent)]",
       )}
     >
-      {live && <span aria-hidden className="pointer-events-none absolute -top-10 -right-10 size-28 rounded-full bg-pass-soft blur-2xl" />}
+      {live && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -top-10 -right-10 size-28 rounded-full bg-pass-soft blur-2xl"
+        />
+      )}
       <div className="relative flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="truncate text-sm font-medium text-ink-1">{accessKey.description || "未命名通行卡"}</div>
@@ -440,16 +485,34 @@ function PassTile({ accessKey, groupName }: { accessKey: AccessKey; groupName: s
         </div>
       </div>
       <div className="relative flex items-center gap-1 rounded-sm bg-surface-0 py-1 pr-1 pl-2.5 font-mono text-xs shadow-[inset_0_0_0_1px_var(--line)]">
-        <span className={cn("min-w-0 flex-1 truncate", shown ? "text-pass" : "text-ink-2")}>{shown ? accessKey.keyValue : maskKey(accessKey.keyValue)}</span>
-        <Button size="icon-sm" variant="ghost" aria-label={shown ? "隐藏密钥" : "显示密钥"} onClick={() => setShown(!shown)}>
+        <span className={cn("min-w-0 flex-1 truncate", shown ? "text-pass" : "text-ink-2")}>
+          {shown ? accessKey.keyValue : maskKey(accessKey.keyValue)}
+        </span>
+        <Button
+          size="icon-sm"
+          variant="ghost"
+          aria-label={shown ? "隐藏密钥" : "显示密钥"}
+          onClick={() => setShown(!shown)}
+        >
           {shown ? <EyeOff /> : <Eye />}
         </Button>
-        <Button size="icon-sm" variant="ghost" aria-label="复制密钥" onClick={() => void copyText(accessKey.keyValue, "密钥已复制")}>
+        <Button
+          size="icon-sm"
+          variant="ghost"
+          aria-label="复制密钥"
+          onClick={() => void copyText(accessKey.keyValue, "密钥已复制")}
+        >
           <Copy />
         </Button>
       </div>
       <dl className="relative grid grid-cols-3 gap-2 text-2xs">
-        <Stat label="有效期" value={accessKey.expiresAt ? (status === "expired" ? "已过期" : `${relativeTime(accessKey.expiresAt)}`) : "永久"} tone={status === "expiring" ? "caution" : undefined} />
+        <Stat
+          label="有效期"
+          value={
+            accessKey.expiresAt ? (status === "expired" ? "已过期" : `${relativeTime(accessKey.expiresAt)}`) : "永久"
+          }
+          tone={status === "expiring" ? "caution" : undefined}
+        />
         <Stat label="使用" value={`${accessKey.usageCount} 次`} />
         <Stat label="最近使用" value={accessKey.lastUsedAt ? relativeTime(accessKey.lastUsedAt) : "从未"} />
       </dl>
@@ -496,7 +559,9 @@ function KeyTable({ keys, groupName }: { keys: AccessKey[]; groupName: string })
                 </td>
                 <td className="py-2.5 text-xs text-ink-3">{key.expiresAt ? absoluteTime(key.expiresAt) : "永久"}</td>
                 <td className="py-2.5 text-right font-mono text-xs text-ink-2">{key.usageCount}</td>
-                <td className="py-2.5 pl-4 text-xs text-ink-3">{key.lastUsedAt ? relativeTime(key.lastUsedAt) : "从未"}</td>
+                <td className="py-2.5 pl-4 text-xs text-ink-3">
+                  {key.lastUsedAt ? relativeTime(key.lastUsedAt) : "从未"}
+                </td>
                 <td className="py-2.5 pr-3">
                   <KeyMenu accessKey={key} />
                 </td>
@@ -526,7 +591,9 @@ function GroupEndpoints({ group }: { group: PermissionGroup }) {
           <Skeleton className="h-8" />
         </div>
       ) : !endpoints?.length ? (
-        <p className="px-5 py-6 text-sm text-ink-3">还没有端点使用这个权限组。在端点的「设置」中把它设为受保护并选择本组。</p>
+        <p className="px-5 py-6 text-sm text-ink-3">
+          还没有端点使用这个权限组。在端点的「设置」中把它设为受保护并选择本组。
+        </p>
       ) : (
         <ul className="divide-y divide-line">
           {endpoints.map((endpoint) => (
@@ -552,7 +619,15 @@ function GroupEndpoints({ group }: { group: PermissionGroup }) {
 }
 
 /** Shown right after issuing: the full key with the prominent copy action. */
-function KeyReveal({ accessKey, groupName, onClose }: { accessKey: AccessKey | null; groupName: string; onClose: () => void }) {
+function KeyReveal({
+  accessKey,
+  groupName,
+  onClose,
+}: {
+  accessKey: AccessKey | null;
+  groupName: string;
+  onClose: () => void;
+}) {
   const [flipped, setFlipped] = useState(false);
   useEffect(() => {
     if (!accessKey) return;
@@ -579,7 +654,8 @@ function KeyReveal({ accessKey, groupName, onClose }: { accessKey: AccessKey | n
             </motion.div>
           </div>
           <p className="text-xs text-ink-3">
-            把密钥交给对方，通过 <code className="font-mono">X-Access-Key</code> 请求头或 <code className="font-mono">access_key</code> 参数访问。也可以在端点的「分享」中生成带二维码的通行卡。
+            把密钥交给对方，通过 <code className="font-mono">X-Access-Key</code> 请求头或{" "}
+            <code className="font-mono">access_key</code> 参数访问。也可以在端点的「分享」中生成带二维码的通行卡。
           </p>
           <DialogFooter>
             <Button variant="ghost" onClick={onClose}>
@@ -630,7 +706,13 @@ function CreateGroupDialog({ open, onOpenChange }: { open: boolean; onOpenChange
           }}
         >
           <Field label="名称">
-            <Input autoFocus value={name} maxLength={100} onChange={(event) => setName(event.target.value)} placeholder="VIP 客户" />
+            <Input
+              autoFocus
+              value={name}
+              maxLength={100}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="VIP 客户"
+            />
           </Field>
           <Field label="说明" hint="可选">
             <Textarea value={description} maxLength={500} onChange={(event) => setDescription(event.target.value)} />
@@ -658,7 +740,9 @@ function EmptyGroups({ onCreate }: { onCreate: () => void }) {
         <KeyRound className="size-6 text-pass" />
       </div>
       <h2 className="font-semibold">还没有权限组</h2>
-      <p className="mt-2 max-w-sm text-sm text-ink-3">创建一个权限组，签发通行卡，再把端点设为受保护，只有持卡人才能访问。</p>
+      <p className="mt-2 max-w-sm text-sm text-ink-3">
+        创建一个权限组，签发通行卡，再把端点设为受保护，只有持卡人才能访问。
+      </p>
       <Button className="mt-6" variant="pass" onClick={onCreate}>
         <Plus /> 新建权限组
       </Button>

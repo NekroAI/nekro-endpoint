@@ -6,6 +6,7 @@ import { BrandMark } from "../../design/brand";
 import { GitHubMark } from "../../design/github";
 import { cn } from "../../lib/cn";
 import { Button } from "../../ui/button";
+import { REPO_URL } from "../../design/site";
 
 /** Public pages: landing, docs, auth callback. */
 export function SiteLayout() {
@@ -27,7 +28,7 @@ export function SiteLayout() {
             <a href="/doc" className="hover:text-ink-1">
               API 参考
             </a>
-            <a href="https://github.com/NekroAI/nekro-endpoint" target="_blank" rel="noreferrer" className="hover:text-ink-1">
+            <a href={REPO_URL} target="_blank" rel="noreferrer" className="hover:text-ink-1">
               GitHub
             </a>
           </span>
@@ -47,12 +48,27 @@ function SiteHeader() {
           <BrandMark className="size-5" /> Endpoints
         </Link>
         <nav className="flex items-center gap-1 text-sm">
-          <NavLink to="/docs" className={({ isActive }) => cn("rounded-sm px-2.5 py-1.5 text-ink-3 hover:text-ink-1", isActive && "text-ink-1")}>
+          <NavLink
+            to="/docs"
+            className={({ isActive }) =>
+              cn("rounded-sm px-2.5 py-1.5 text-ink-3 hover:text-ink-1", isActive && "text-ink-1")
+            }
+          >
             文档
           </NavLink>
         </nav>
         <div className="ml-auto flex items-center gap-2">
-          <Button size="icon" variant="ghost" aria-label={themeMode === "dark" ? "切换到亮色" : "切换到暗色"} onClick={toggleTheme}>
+          <Button asChild variant="ghost" className="hidden sm:inline-flex">
+            <a href={REPO_URL} target="_blank" rel="noreferrer">
+              <GitHubMark /> GitHub
+            </a>
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-label={themeMode === "dark" ? "切换到亮色" : "切换到暗色"}
+            onClick={toggleTheme}
+          >
             {themeMode === "dark" ? <Sun /> : <Moon />}
           </Button>
           {isLoading ? (

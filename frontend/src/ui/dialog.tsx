@@ -24,7 +24,7 @@ export function DialogContent({ className, children, title, description, hideClo
       <DialogPrimitive.Content
         className={cn(
           "fixed top-1/2 left-1/2 z-50 grid w-[min(520px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 gap-4",
-          "rounded-lg bg-surface-solid p-5 shadow-float data-[state=open]:animate-fade-in focus:outline-none",
+          "rounded-lg bg-surface-solid p-5 shadow-float data-[state=open]:animate-pop-in focus:outline-none",
           className,
         )}
         {...props}

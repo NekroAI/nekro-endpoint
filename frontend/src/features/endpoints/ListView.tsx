@@ -150,10 +150,19 @@ export function ListView() {
             style={{ paddingLeft: 8 + depth * 20 }}
           >
             {selected && (
-              <motion.span layoutId="list-selected" transition={glide} className="absolute top-2 bottom-2 left-0 w-0.5 rounded-full bg-signal shadow-signal" />
+              <motion.span
+                layoutId="list-selected"
+                transition={glide}
+                className="absolute top-2 bottom-2 left-0 w-0.5 rounded-full bg-signal shadow-signal"
+              />
             )}
             {dropHere && (
-              <span className={cn("absolute right-2 left-2 h-0.5 rounded-full bg-signal", dropTarget.after ? "-bottom-px" : "-top-px")} />
+              <span
+                className={cn(
+                  "absolute right-2 left-2 h-0.5 rounded-full bg-signal",
+                  dropTarget.after ? "-bottom-px" : "-top-px",
+                )}
+              />
             )}
             <button
               type="button"
@@ -163,7 +172,10 @@ export function ListView() {
                 event.stopPropagation();
                 toggle(node.path);
               }}
-              className={cn("grid size-5 shrink-0 place-items-center rounded-sm text-ink-4 hover:text-ink-1", !hasChildren && "invisible")}
+              className={cn(
+                "grid size-5 shrink-0 place-items-center rounded-sm text-ink-4 hover:text-ink-1",
+                !hasChildren && "invisible",
+              )}
             >
               <ChevronRight className={cn("size-3.5 transition-transform duration-200", open && "rotate-90")} />
             </button>
@@ -171,7 +183,12 @@ export function ListView() {
             {endpoint ? (
               <TypeGlyph
                 type={endpoint.type}
-                className={cn("size-4 shrink-0", endpoint.type === "proxy" || endpoint.type === "dynamicProxy" ? "text-route" : "text-ink-2")}
+                className={cn(
+                  "size-4 shrink-0 transition-[color,scale] duration-200 group-hover:scale-110",
+                  endpoint.type === "proxy" || endpoint.type === "dynamicProxy"
+                    ? "text-route"
+                    : "text-ink-2 group-hover:text-ink-1",
+                )}
               />
             ) : (
               <DirectoryGlyph className="size-4 shrink-0 text-ink-4" />
@@ -254,7 +271,9 @@ export function EmptyNamespace() {
         <span className="size-3 rounded-full shadow-[inset_0_0_0_1.5px_var(--ink-3)]" />
       </div>
       <h2 className="text-lg font-semibold">布下第一个信号点</h2>
-      <p className="mt-2 max-w-sm text-sm text-ink-3">端点是你在边缘发布的一个地址：托管一段配置，或把请求转发到任何地方。</p>
+      <p className="mt-2 max-w-sm text-sm text-ink-3">
+        端点是你在边缘发布的一个地址：托管一段配置，或把请求转发到任何地方。
+      </p>
       <button
         type="button"
         onClick={() => openCreate()}
