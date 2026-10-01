@@ -18,6 +18,8 @@ import * as drizzleSchema from "./db/schema";
 
 import api from "./routes/api";
 import execution from "./routes/execution";
+import mcp from "./routes/mcp";
+import signal from "./routes/signal";
 import { Bindings } from "./types";
 
 const app = new OpenAPIHono<{ Bindings: Bindings }>();
@@ -34,6 +36,12 @@ app.use(
 
 // API routes
 app.route("/api", api);
+
+// Signal Line: model configuration and agent chat (additive; docs/REDESIGN.md §5)
+app.route("/api/signal", signal);
+
+// MCP server (additive; docs/REDESIGN.md §5.8)
+app.route("/mcp", mcp);
 
 // Endpoint execution layer (with DB middleware)
 app.use("/e/*", async (c, next) => {

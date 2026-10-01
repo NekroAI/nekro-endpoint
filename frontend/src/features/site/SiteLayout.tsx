@@ -24,6 +24,9 @@ export function SiteLayout() {
             <Link to="/docs" className="hover:text-ink-1">
               文档
             </Link>
+            <a href="/doc" className="hover:text-ink-1">
+              API 参考
+            </a>
             <a href="https://github.com/NekroAI/nekro-endpoint" target="_blank" rel="noreferrer" className="hover:text-ink-1">
               GitHub
             </a>

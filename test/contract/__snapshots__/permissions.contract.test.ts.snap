@@ -57,6 +57,17 @@ exports[`access keys > cannot list or create keys in another user's group 2`] = 
 }
 `;
 
+exports[`access keys > cannot update another user's key 1`] = `
+{
+  "body": {
+    "message": "无权操作此密钥",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 403,
+}
+`;
+
 exports[`access keys > creates a key and returns it once with 201 1`] = `
 {
   "body": {
@@ -201,6 +212,30 @@ exports[`access keys > revokes a key 1`] = `
 {
   "body": {
     "message": "访问密钥已撤销",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`access keys > updates a key 1`] = `
+{
+  "body": {
+    "data": {
+      "key": {
+        "createdAt": "<date>",
+        "description": "renamed",
+        "expiresAt": null,
+        "id": "key_alice",
+        "isActive": true,
+        "keyValue": "ep-11111111111111111111111111111111",
+        "lastUsedAt": null,
+        "permissionGroupId": "group_alice_vip",
+        "usageCount": 0,
+      },
+    },
+    "message": "访问密钥更新成功",
     "success": true,
   },
   "contentType": "application/json; charset=UTF-8",

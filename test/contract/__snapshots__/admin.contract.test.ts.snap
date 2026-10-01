@@ -1,5 +1,55 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`OpenAPI > serves the document at /api/doc 1`] = `
+[
+  "DELETE /api/access-keys/{id}",
+  "DELETE /api/admin/users/{id}",
+  "DELETE /api/endpoints/{id}",
+  "DELETE /api/permission-groups/{id}",
+  "DELETE /api/signal/config",
+  "DELETE /api/signal/platform-config",
+  "GET /api/admin/endpoints/{id}",
+  "GET /api/admin/stats",
+  "GET /api/admin/users",
+  "GET /api/admin/users/{userId}/endpoints",
+  "GET /api/auth/github",
+  "GET /api/auth/github/callback",
+  "GET /api/auth/me",
+  "GET /api/endpoints",
+  "GET /api/endpoints/{id}",
+  "GET /api/features",
+  "GET /api/init/check",
+  "GET /api/init/users",
+  "GET /api/permission-groups",
+  "GET /api/permission-groups/{groupId}/keys",
+  "GET /api/permission-groups/{id}",
+  "GET /api/permission-groups/{id}/endpoints",
+  "GET /api/signal/actions",
+  "GET /api/signal/config",
+  "PATCH /api/access-keys/{id}",
+  "PATCH /api/endpoints/{id}",
+  "PATCH /api/endpoints/{id}/move",
+  "PATCH /api/features/{key}",
+  "PATCH /api/permission-groups/{id}",
+  "POST /api/access-keys/{id}/revoke",
+  "POST /api/admin/endpoints/{id}/force-unpublish",
+  "POST /api/admin/users/{id}/activate",
+  "POST /api/admin/users/{id}/deactivate",
+  "POST /api/auth/logout",
+  "POST /api/auth/regenerate-key",
+  "POST /api/endpoints",
+  "POST /api/endpoints/reorder",
+  "POST /api/endpoints/{id}/publish",
+  "POST /api/endpoints/{id}/unpublish",
+  "POST /api/init/set-admin",
+  "POST /api/permission-groups",
+  "POST /api/permission-groups/{groupId}/keys",
+  "POST /api/signal/config/test",
+  "PUT /api/signal/config",
+  "PUT /api/signal/platform-config",
+]
+`;
+
 exports[`admin (REDESIGN §1.2) > activates and deactivates 1`] = `
 {
   "body": {

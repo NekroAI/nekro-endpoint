@@ -198,7 +198,7 @@ function DirNode({ data }: NodeProps<Node<DirData>>) {
 }
 
 function EndpointNode({ data }: NodeProps<Node<EndpointData>>) {
-  const { select, selectedPath } = useWorkspace();
+  const { select, selectedPath, ghostKinds } = useWorkspace();
   const { data: groups = [] } = useGroups();
   const zoom = useZoom();
   const { endpoint, node } = data;
@@ -208,6 +208,7 @@ function EndpointNode({ data }: NodeProps<Node<EndpointData>>) {
   const rings = endpoint.accessControl === "authenticated" ? Math.max(1, Math.min(endpoint.groups.length, 3)) : 0;
   const compact = zoom < 0.55 && !selected;
   const groupNames = endpoint.groups.map((id) => groups.find((group) => group.id === id)?.name ?? "未知组");
+  const ghost = endpoint.ghost ? "create" : ghostKinds.get(node.path);
 
   return (
     <Tooltip content={compact ? `${endpoint.path} · ${endpoint.name}` : null}>
@@ -215,7 +216,7 @@ function EndpointNode({ data }: NodeProps<Node<EndpointData>>) {
         type="button"
         onClick={(event) => {
           event.stopPropagation();
-          void select(node.path);
+          if (!endpoint.ghost) void select(node.path);
         }}
         aria-label={`${endpoint.name}，${endpoint.path}`}
         aria-current={selected || undefined}
@@ -228,6 +229,10 @@ function EndpointNode({ data }: NodeProps<Node<EndpointData>>) {
           selected && "scale-110 shadow-[0_0_0_2px_var(--signal),0_0_28px_-2px_var(--signal)]",
           compact && "p-1.5",
           dimmed && "opacity-20",
+          ghost === "create" && "animate-ghost shadow-none outline-1 outline-signal outline-dashed",
+          ghost === "update" && "animate-ghost shadow-[0_0_0_2px_var(--signal)]",
+          ghost === "publish" && "animate-ghost shadow-[0_0_0_2px_var(--signal),0_0_28px_var(--signal)]",
+          ghost === "delete" && "animate-ghost shadow-[0_0_0_2px_var(--danger)] line-through",
         )}
       >
         {Array.from({ length: rings }, (_, index) => (

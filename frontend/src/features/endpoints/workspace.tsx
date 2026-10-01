@@ -7,6 +7,8 @@ import { safeLocalStorage } from "../../utils/storage";
 import { useEndpointList } from "./api";
 import { statusOf, type EndpointStatus, type EndpointView } from "./model";
 import { buildNamespace, findNode, type NamespaceNode } from "./namespace";
+import { useOptionalSignal } from "../signal/SignalProvider";
+import type { Ghost } from "../signal/tools";
 
 export type ViewMode = "map" | "list";
 export type SheetTab = "content" | "settings" | "share";
@@ -44,6 +46,8 @@ type Workspace = {
   closeCreate: () => void;
   highlightGroup: string | null;
   setHighlightGroup: (group: string | null) => void;
+  /** Pending Signal changes to existing endpoints, by path. */
+  ghostKinds: Map<string, Ghost["kind"]>;
 };
 
 const WorkspaceContext = createContext<Workspace | null>(null);
@@ -72,7 +76,34 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const confirm = useConfirm();
 
   const endpoints = useMemo(() => data ?? [], [data]);
-  const namespace = useMemo(() => buildNamespace(endpoints), [endpoints]);
+  const signal = useOptionalSignal();
+  const ghosts = signal?.ghosts;
+
+  // Planned endpoints appear in the namespace as ghosts until they are created.
+  const ghostKinds = useMemo(() => new Map((ghosts ?? []).filter((ghost) => ghost.kind !== "create").map((ghost) => [ghost.path, ghost.kind])), [ghosts]);
+  const namespace = useMemo(() => {
+    const planned = (ghosts ?? [])
+      .filter((ghost) => ghost.kind === "create" && !endpoints.some((endpoint) => endpoint.path === ghost.path))
+      .map(
+        (ghost): EndpointView => ({
+          id: `ghost:${ghost.path}`,
+          path: ghost.path,
+          name: "待创建",
+          type: "static",
+          config: { content: "", contentType: "text/plain" },
+          accessControl: "public",
+          groups: [],
+          enabled: true,
+          isPublished: false,
+          sortOrder: Number.MAX_SAFE_INTEGER,
+          parentId: null,
+          createdAt: "",
+          updatedAt: "",
+          ghost: "create",
+        }),
+      );
+    return buildNamespace([...endpoints, ...planned]);
+  }, [endpoints, ghosts]);
 
   // The URL is the source of truth for the selection: /app/endpoints/<path>.
   const selectedPath = useMemo(() => {
@@ -80,7 +111,13 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     return rest && rest !== "/" ? rest.replace(/\/$/, "") : "";
   }, [location.pathname]);
   const selectedNode = findNode(namespace, selectedPath);
-  const selectedEndpoint = selectedNode?.endpoint;
+  const selectedEndpoint = selectedNode?.endpoint?.ghost ? undefined : selectedNode?.endpoint;
+
+  // Tell Signal what the user is looking at, so "this endpoint" resolves.
+  const setSignalContext = signal?.setContext;
+  useEffect(() => {
+    setSignalContext?.({ path: selectedEndpoint?.path, page: "端点" });
+  }, [setSignalContext, selectedEndpoint?.path]);
   const tab = (params.get("tab") as SheetTab | null) ?? "content";
 
   const dirty = useRef(false);
@@ -175,6 +212,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     closeCreate: () => setCreatePrefix(null),
     highlightGroup,
     setHighlightGroup,
+    ghostKinds,
   };
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 }

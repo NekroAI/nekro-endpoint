@@ -35,6 +35,12 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false,
         },
+        // MCP server (src/routes/mcp.ts), so the URL shown in settings works in dev too.
+        "/mcp": {
+          target: `http://${API_HOST}:${API_PORT}`,
+          changeOrigin: true,
+          secure: false,
+        },
       },
     },
 

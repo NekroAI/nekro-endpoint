@@ -23,6 +23,7 @@ export default defineWorkersConfig(async () => {
               APP_BASE_URL: "https://ep.test",
               GITHUB_CLIENT_ID: "test-client-id",
               GITHUB_CLIENT_SECRET: "test-client-secret",
+              AI_CONFIG_SECRET: "contract-test-secret",
             },
           },
         },

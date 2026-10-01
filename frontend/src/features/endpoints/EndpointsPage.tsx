@@ -36,7 +36,7 @@ export function EndpointsPage() {
 
 function Workspace() {
   const { endpoints, isLoading, error, view, selectedNode, selectedPath } = useWorkspace();
-  const sheetOpen = Boolean(selectedPath && selectedNode);
+  const sheetOpen = Boolean(selectedPath && selectedNode && !selectedNode.endpoint?.ghost);
   const aside = useRef<HTMLElement>(null);
   const [inset, setInset] = useState(0);
 

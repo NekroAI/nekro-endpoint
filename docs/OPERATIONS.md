@@ -26,6 +26,10 @@ The credential is entered without echo and saved to `~/.config/nekro-endpoint/cr
 
 The client identifies itself as `NekroEndpoint-Admin/0.1`. Cloudflare may reject a generic Python User-Agent before an API request reaches the application. Distinguish such access-denied responses from application 401s; use an explicitly allowed management client or adjust the owner's policy, not repeated requests with random browser identities.
 
+## MCP alternative
+
+The same management credential also works with the platform's MCP server at `/mcp` (stateless Streamable HTTP). MCP clients get list/read tools that run immediately and write/publish/delete tools that are annotated for confirmation. Tool output masks `ep-` and `sec-` keys. `epctl` remains the scriptable, diff-first workflow; use MCP for interactive work from an AI client.
+
 ## Download, edit, preview and upload
 
 ```bash

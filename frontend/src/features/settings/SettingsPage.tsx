@@ -13,14 +13,16 @@ import { useConfirm } from "../../ui/confirm";
 import { CopyButton } from "../../ui/copy-button";
 import { Segmented } from "../../ui/segmented";
 import { toast } from "../../ui/toaster";
+import { SignalSettings } from "../signal/SignalSettings";
 
 export function SettingsPage() {
   return (
     <Page className="max-w-4xl">
-      <PageHeader eyebrow="设置" title="账号与偏好" description="管理你的账号、用于自动化的管理密钥，以及界面外观。" />
+      <PageHeader eyebrow="设置" title="账号与偏好" description="管理你的账号、自动化凭据、Signal 智能助手与界面外观。" />
       <div className="grid gap-6">
         <AccountSection />
         <ManagementKeySection />
+        <SignalSettings />
         <AppearanceSection />
         <CliSection />
       </div>

@@ -117,6 +117,18 @@ npx wrangler d1 create your-prod-db-name
 pnpm db:migrate:prod
 ```
 
+`0002` 迁移只新增 `ai_provider_configs` 与 `agent_actions` 两张表，不修改现有表。
+
+### 4. 启用 Signal 智能助手（可选）
+
+Signal 使用用户自带的模型，其 API Key 以 AES-GCM 加密保存，密钥来自 Worker secret：
+
+```bash
+wrangler secret put AI_CONFIG_SECRET --env production   # 任意足够长的随机字符串
+```
+
+未设置时，Signal 相关接口返回 503，界面底部输入条保持命令面板模式，其余功能不受影响。更换该 secret 会使已保存的模型 Key 无法解密，需要用户重新填写。MCP 服务（`/mcp`）不依赖这个 secret。
+
 ## 🌐 Cloudflare Pages 部署
 
 ### 方式一：通过 Dashboard 部署

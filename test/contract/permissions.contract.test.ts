@@ -81,16 +81,33 @@ describe("access keys", () => {
     await contract(api(`/permission-groups/${BOB_GROUP}/keys`, { method: "POST", ...auth.aliceKey, body: {} }));
   });
 
-  // KNOWN DEFECT: the handler uses a relational query (`with`) but the schema
-  // declares no relations, so PATCH /access-keys/{id} always answers 500.
-  // When fixed, replace it.fails with it and add the cross-user 404 check.
-  it.fails("updates a key", async () => {
-    const res = await api("/access-keys/key_alice", {
+  // Fixed in the redesign (was a 500 for every key: relational query without relations).
+  it("updates a key", async () => {
+    const res = await contract(
+      api("/access-keys/key_alice", {
+        method: "PATCH",
+        ...auth.aliceKey,
+        body: { description: "renamed", isActive: true },
+      }),
+    );
+    expect(res.status).toBe(200);
+  });
+
+  it("can reactivate a revoked key", async () => {
+    const res = await api("/access-keys/key_alice_revoked", {
       method: "PATCH",
       ...auth.aliceKey,
-      body: { description: "renamed", isActive: true },
+      body: { isActive: true },
     });
     expect(res.status).toBe(200);
+    expect(data<{ key: { isActive: boolean } }>(res).key.isActive).toBe(true);
+  });
+
+  it("cannot update another user's key", async () => {
+    expect(
+      (await contract(api("/access-keys/key_bob", { method: "PATCH", ...auth.aliceKey, body: { description: "x" } })))
+        .status,
+    ).toBe(403);
   });
 
   it("revokes a key", async () => {

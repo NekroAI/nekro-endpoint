@@ -13,7 +13,7 @@ import {
   MoveEndpointSchema,
   ReorderEndpointsSchema,
   EndpointListResponseSchema,
-  EndpointTreeResponseSchema,
+  EndpointPathTreeResponseSchema,
   EndpointDetailResponseSchema,
   EndpointSuccessResponseSchema,
   EndpointQuerySchema,
@@ -48,7 +48,7 @@ const listEndpointsRoute = createRoute({
     200: {
       content: {
         "application/json": {
-          schema: z.union([EndpointListResponseSchema, EndpointTreeResponseSchema]),
+          schema: z.union([EndpointListResponseSchema, EndpointPathTreeResponseSchema]),
         },
       },
       description: "成功返回端点列表",

@@ -197,9 +197,6 @@ app.openapi(updateAccessKeyRoute, async (c): Promise<any> => {
   // 验证密钥是否存在且属于当前用户
   const key = await db.query.accessKeys.findFirst({
     where: eq(accessKeys.id, id),
-    with: {
-      permissionGroup: true,
-    },
   });
 
   if (!key) {

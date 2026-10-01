@@ -107,6 +107,15 @@ export function useRevokeKey() {
   });
 }
 
+export function useUpdateKey() {
+  const invalidate = useInvalidateAccess();
+  return useMutation({
+    mutationFn: async ({ id, ...input }: { id: string; description?: string; isActive?: boolean }) =>
+      request(`/access-keys/${encodeURIComponent(id)}`, { method: "PATCH", body: input }),
+    onSuccess: invalidate,
+  });
+}
+
 export function useDeleteKey() {
   const invalidate = useInvalidateAccess();
   return useMutation({

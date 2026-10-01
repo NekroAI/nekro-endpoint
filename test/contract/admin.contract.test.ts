@@ -62,10 +62,8 @@ describe("features", () => {
 });
 
 describe("OpenAPI", () => {
-  // KNOWN DEFECT: z.lazy in EndpointTreeNodeSchema makes document generation
-  // throw, so /api/doc and /doc return 500 in production. When fixed, replace
-  // it.fails with it and review the written operation list.
-  it.fails("serves the document at /api/doc", async () => {
+  // Fixed in the redesign (z.lazy in the tree schema made generation throw).
+  it("serves the document at /api/doc", async () => {
     const res = await api("/doc");
     expect(res.status).toBe(200);
     const doc = res.body as { openapi: string; paths: Record<string, Record<string, unknown>> };

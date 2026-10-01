@@ -16,7 +16,7 @@ export function Field({ label, hint, error, className, children, aside }: FieldP
   const id = useId();
   const describedBy = error || hint ? `${id}-desc` : undefined;
   return (
-    <div className={cn("grid gap-1.5", className)}>
+    <div className={cn("grid content-start gap-1.5", className)}>
       <div className="flex items-baseline justify-between gap-2">
         <label htmlFor={id} className="text-xs font-medium text-ink-2">
           {label}

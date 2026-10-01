@@ -53,7 +53,11 @@ export function FocusSheet() {
   if (!selectedNode || !selectedPath) return null;
   return (
     <div className="flex h-full min-h-0 flex-col bg-surface-solid">
-      {selectedNode.endpoint ? <EndpointSheet listed={selectedNode.endpoint} /> : <DirectoryPanel node={selectedNode} />}
+      {selectedNode.endpoint && !selectedNode.endpoint.ghost ? (
+        <EndpointSheet listed={selectedNode.endpoint} />
+      ) : (
+        <DirectoryPanel node={selectedNode} />
+      )}
     </div>
   );
 }

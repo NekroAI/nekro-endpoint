@@ -1,4 +1,4 @@
-import { Ban, ChevronRight, Copy, Eye, EyeOff, KeyRound, MoreHorizontal, Pencil, Plus, Trash2, Users } from "lucide-react";
+import { Ban, ChevronRight, Copy, RotateCcw, Eye, EyeOff, KeyRound, MoreHorizontal, Pencil, Plus, Trash2, Users } from "lucide-react";
 import { AnimatePresence, m as motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -39,6 +39,7 @@ import {
   useGroups,
   useRevokeKey,
   useUpdateGroup,
+  useUpdateKey,
 } from "./api";
 import { keyStatus, keyStatusLabel, type KeyStatus } from "./keyStatus";
 
@@ -342,7 +343,7 @@ function useKeyActions(accessKey: AccessKey) {
     revoke: async () => {
       const ok = await confirm({
         title: "吊销这张通行卡？",
-        description: `「${accessKey.description || maskKey(accessKey.keyValue)}」将立即无法访问任何端点。吊销后无法恢复，可以重新签发。`,
+        description: `「${accessKey.description || maskKey(accessKey.keyValue)}」将立即无法访问任何端点。之后可以在菜单中重新启用。`,
         confirmLabel: "吊销",
         tone: "danger",
       });
@@ -370,6 +371,7 @@ function useKeyActions(accessKey: AccessKey) {
 
 function KeyMenu({ accessKey }: { accessKey: AccessKey }) {
   const actions = useKeyActions(accessKey);
+  const update = useUpdateKey();
   const status = keyStatus(accessKey);
   return (
     <DropdownMenu>
@@ -382,7 +384,21 @@ function KeyMenu({ accessKey }: { accessKey: AccessKey }) {
         <DropdownMenuItem onSelect={() => void copyText(accessKey.keyValue, "密钥已复制")}>
           <Copy /> 复制密钥
         </DropdownMenuItem>
-        {status !== "revoked" && (
+        {status === "revoked" ? (
+          <DropdownMenuItem
+            onSelect={() =>
+              update.mutate(
+                { id: accessKey.id, isActive: true },
+                {
+                  onSuccess: () => toast.success("通行卡已重新启用"),
+                  onError: (error) => toast.error("启用失败", { description: errorMessage(error) }),
+                },
+              )
+            }
+          >
+            <RotateCcw /> 重新启用
+          </DropdownMenuItem>
+        ) : (
           <DropdownMenuItem tone="danger" onSelect={() => void actions.revoke()}>
             <Ban /> 吊销
           </DropdownMenuItem>

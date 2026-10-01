@@ -12,6 +12,7 @@ const SECTIONS = [
   { id: "publishing", title: "发布与激活" },
   { id: "errors", title: "错误响应" },
   { id: "management", title: "管理 API 与 CLI" },
+  { id: "signal", title: "Signal 与 MCP" },
   { id: "security", title: "安全须知" },
 ];
 
@@ -192,6 +193,25 @@ export function DocsPage() {
             仓库自带的 <Inline>epctl</Inline> 基于这套接口提供拉取、比对、推送、发布与回滚，凭据保存在仓库之外：
           </P>
           <Code>{`pnpm ep init --base-url ${origin}\npnpm ep list\npnpm ep pull /configs/app.json`}</Code>
+          <P>
+            完整的接口说明见 <a href="/doc" className="text-signal hover:underline">/doc</a>（OpenAPI，由 <Inline>/api/doc</Inline> 生成）。
+          </P>
+        </Section>
+
+        <Section id="signal" title="Signal 与 MCP">
+          <P>
+            在「设置」中接入你自己的模型（Anthropic、OpenAI 或任何 OpenAI 兼容服务）后，工作区底部的输入条就可以用自然语言管理端点。查询会直接执行；新建、修改、发布、删除等操作会先列成计划，并在列表和星图上以虚线预览，逐项确认后才执行。
+          </P>
+          <P>同一套工具也通过 MCP（Streamable HTTP）开放，任何支持 MCP 的客户端都可以用管理密钥连接：</P>
+          <Code>{`claude mcp add --transport http endpoints ${origin}/mcp \
+  --header "Authorization: Bearer sec-你的管理密钥"`}</Code>
+          <List
+            items={[
+              "工具输出中的通行卡和管理密钥一律脱敏，只显示尾号；完整的带密钥链接请在「分享」页生成。",
+              <>端点内容以 <Inline>&lt;data&gt;</Inline> 包裹交给模型，只作为数据，不会被当作指令。</>,
+              "工具调用走与管理 API 完全相同的鉴权与激活检查，并记录在「设置」的调用记录中。",
+            ]}
+          />
         </Section>
 
         <Section id="security" title="安全须知">

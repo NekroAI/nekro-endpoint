@@ -1,6 +1,6 @@
 # NekroEndpoint 重构实现方案：Signal
 
-> 状态：实施中 · 2026-10-01 · P0 已完成
+> 状态：已完成 · 2026-10-01 · P0–P7 全部完成
 > 品牌：仓库、Worker、域名保持 `nekro-endpoint` 不变；界面不再强调 NekroEndpoint，产品显示名统一为 **Endpoints**。
 > 范围：前端整体重构（视觉、交互、信息架构），新增自然语言 Agent「Signal Line」与 MCP 接入。
 > 硬约束：**现有密钥、现有接口、现有响应格式全部保持兼容**，有外部系统依赖它们。
@@ -86,12 +86,12 @@ GET    /api/doc（OpenAPI）               GET  /doc（Swagger UI）
 - **快照变化就意味着外部兼容被破坏。** 只有在有意修改接口并经过评审时，才可以用 `-u` 更新快照。
 - 已知缺陷用 `it.fails` 标出：现在会失败所以测试通过；修好后它会转为失败，提醒把它改成正式契约。
 
-| 缺陷 | 现象 | 原因 |
-|---|---|---|
-| OpenAPI 文档 | 生产环境 `/api/doc` 和 `/doc` 返回 500 | `EndpointTreeNodeSchema` 使用了 `z.lazy`，生成器不支持 |
-| 更新访问密钥 | `PATCH /api/access-keys/{id}` 对任何密钥都返回 500 | 处理器用了关系查询 `with`，但 schema 没有声明 relations |
+| 缺陷 | 现象 | 原因 | 状态 |
+|---|---|---|---|
+| OpenAPI 文档 | 生产环境 `/api/doc` 和 `/doc` 返回 500 | `EndpointTreeNodeSchema` 使用了 `z.lazy`，生成器不支持；且两种树结构共用了一个错误的 schema | ✅ 已修复，接口清单已冻结为快照 |
+| 更新访问密钥 | `PATCH /api/access-keys/{id}` 对任何密钥都返回 500 | 处理器用了关系查询 `with`，但 schema 没有声明 relations | ✅ 已修复，已转为正式契约 |
 
-这两个缺陷安排在 P5（服务层抽取）中修复：修好的接口只会从 500 变成可用，不影响外部调用方。
+修好的接口只是从 500 变成可用，不影响外部调用方。
 
 ### 1.5 前端 URL
 
@@ -420,6 +420,16 @@ export async function api<T extends z.ZodTypeAny>(path: string, schema: T, init?
 
 ## 5. Signal Line：自然语言 Agent
 
+> **实现决策（2026-10，以本节为准，下面 5.1–5.9 的原始方案保留作对照）**
+>
+> 1. **工具不抽服务层，而是在进程内调用冻结的 REST 接口。** `src/agent/platform.ts` 以用户自己的 `sec-` 管理密钥调用 `api.request()`，走与外部客户端完全相同的中间件、归属校验和激活检查。行为由契约测试覆盖，避免了大规模改写冻结路由的风险。约束：`src/routes/api.ts` 不得引入 `src/agent/*`。
+> 2. **Signal 对话是无状态的。** `POST /api/signal/chat` 使用 AI SDK 7 的 `streamText`，对话历史由客户端 `useChat` 保存，审批通过 `toolApproval`（只读工具 `not-applicable`，其余 `user-approval`）与 `lastAssistantMessageIsCompleteWithApprovalResponses` 完成。不使用 Durable Objects，不需要升级 `compatibility_date`，也就不需要 WebSocket 票据（5.7 作废）。
+> 3. **MCP 服务端自行实现。** `src/agent/mcp.ts` 实现无状态 Streamable HTTP（JSON 响应）下的 `initialize`、`ping`、`tools/list`、`tools/call`。官方 SDK 会在加载时引入 ajv，在 workerd 中无法加载，而且会显著增大 Worker。
+> 4. **模型服务商**：Anthropic、OpenAI、OpenAI 兼容（Base URL 必填）。暂不接入 Workers AI，以免新增生产绑定。
+> 5. **限额**：每次对话最多 12 步、最近 40 条消息。按用户的分钟级限流尚未实现，属于后续工作。
+>
+> 涉及的代码：`src/agent/{platform,tools,redact,audit,crypto,models,mcp}.ts`、`src/routes/{signal,mcp}.ts`、`frontend/src/features/signal/*`；测试：`test/contract/{mcp,signal}.contract.test.ts`。
+
 ### 5.1 架构
 
 ```
@@ -557,8 +567,8 @@ export async function createEndpoint(ctx: ServiceContext, input: CreateEndpointI
 | **P2 端点工作区** ✅ | 列表视图（先保证功能对齐），Focus Sheet，地址主轴，内联设置，保存模型，新建流程，分享面板和通行卡；然后是星图视图 | 现有端点页的所有功能在新界面都能完成；`endpointShare` 测试通过；旧的 `/endpoints` 重定向到新地址 |
 | **P3 访问与设置** ✅ | 权限组和通行卡墙，签发、吊销、删除流程；新增 `GET /api/permission-groups/{id}/endpoints`；设置页（账号、`sec-` 密钥、MCP 说明的占位） | 功能对齐；新接口有契约测试 |
 | **P4 其余页面** ✅ | 概览、管理后台（只读星图）、Init、Auth Callback、落地页、文档 | 所有旧路由都有新的对应页面或重定向 |
-| **P5 服务层与 MCP** | 抽取 `src/services/*`；先单独升级 `compatibility_date`，再引入 Agents SDK；`/mcp` | 契约测试零差异；用 MCP Inspector 调通全部工具 |
-| **P6 Signal Line** | `SignalAgent`、票据鉴权、BYO 模型配置和加密、计划卡与幽灵节点、确认流程、审计表、限额 | 能用一句话完成「新建、关联权限组、签发密钥」；明文密钥不出现在模型请求里（用测试断言） |
+| **P5 工具层与 MCP** ✅（见 §5 实现决策） | 抽取 `src/services/*`；先单独升级 `compatibility_date`，再引入 Agents SDK；`/mcp` | 契约测试零差异；用 MCP Inspector 调通全部工具 |
+| **P6 Signal Line** ✅ | `SignalAgent`、票据鉴权、BYO 模型配置和加密、计划卡与幽灵节点、确认流程、审计表、限额 | 能用一句话完成「新建、关联权限组、签发密钥」；明文密钥不出现在模型请求里（用测试断言） |
 | **P7 收尾** ✅（提前到 P5 之前完成） | 移除 MUI、emotion、UnoCSS、framer-motion；清理 `ssr.noExternal`；更新 CLAUDE.md、`.cursor/rules/global.mdc`、`docs/THEMING.md`、`docs/API_GUIDE.md`、`docs/PROJECT_STRUCTURE.md` | 依赖里不再有 MUI；首屏 JS 达到预算 |
 
 P0 → P1 → P2 必须按顺序。实际执行时 P7 提前到 P4 之后完成：页面全部替换后即移除 MUI，避免两套样式长期共存。P3 和 P4 可以并行。P5 依赖 P0。P6 依赖 P2（星图）和 P5。

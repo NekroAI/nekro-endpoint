@@ -34,6 +34,8 @@ export type EndpointView<T extends EndpointType = EndpointType> = {
   parentId: string | null;
   createdAt: string;
   updatedAt: string;
+  /** A Signal plan step that has not run yet (docs/REDESIGN.md §5.4); never sent to the API. */
+  ghost?: "create";
 };
 
 export type EndpointWire = {

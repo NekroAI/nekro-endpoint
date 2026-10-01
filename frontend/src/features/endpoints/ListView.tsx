@@ -21,7 +21,7 @@ function nodeVisible(node: NamespaceNode, visible: (endpoint: EndpointView) => b
 }
 
 export function ListView() {
-  const { namespace, visible, filtersActive, selectedPath, select, highlightGroup } = useWorkspace();
+  const { namespace, visible, filtersActive, selectedPath, select, highlightGroup, ghostKinds } = useWorkspace();
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const reorder = useReorderEndpoints();
   const [dragging, setDragging] = useState<string | null>(null);
@@ -104,6 +104,7 @@ export function ListView() {
         const open = filtersActive || !collapsed.has(node.path);
         const dimmed = highlightGroup && !(endpoint?.groups.includes(highlightGroup) ?? false);
         const dropHere = dropTarget?.path === node.path;
+        const ghost = endpoint?.ghost ? "create" : ghostKinds.get(node.path);
         return (
           <div
             key={node.path}
@@ -116,9 +117,9 @@ export function ListView() {
             aria-selected={selected}
             aria-expanded={hasChildren ? open : undefined}
             tabIndex={selected || (!selectedPath && index === 0) ? 0 : -1}
-            onClick={() => void select(node.path)}
+            onClick={() => !endpoint?.ghost && void select(node.path)}
             onKeyDown={(event) => onKeyDown(event, index, row)}
-            draggable={Boolean(endpoint) && !filtersActive}
+            draggable={Boolean(endpoint) && !endpoint?.ghost && !filtersActive}
             onDragStart={(event) => {
               setDragging(node.path);
               event.dataTransfer.effectAllowed = "move";
@@ -141,6 +142,10 @@ export function ListView() {
               selected ? "bg-surface-2" : "hover:bg-surface-1",
               dimmed && "opacity-35",
               dragging === node.path && "opacity-40",
+              ghost === "create" && "animate-ghost outline-1 -outline-offset-1 outline-signal outline-dashed",
+              ghost === "update" && "animate-ghost shadow-[inset_0_0_0_1px_var(--signal)]",
+              ghost === "publish" && "animate-ghost shadow-[inset_0_0_0_1px_var(--signal),0_0_16px_-6px_var(--signal)]",
+              ghost === "delete" && "animate-ghost bg-danger-soft",
             )}
             style={{ paddingLeft: 8 + depth * 20 }}
           >
@@ -190,7 +195,12 @@ export function ListView() {
               )}
             </div>
 
-            {endpoint && <RowMeta endpoint={endpoint} />}
+            {ghost && (
+              <Badge tone={ghost === "delete" ? "danger" : "signal"} className="shrink-0">
+                {{ create: "待创建", update: "待修改", publish: "待发布", delete: "待删除" }[ghost]}
+              </Badge>
+            )}
+            {endpoint && !endpoint.ghost && <RowMeta endpoint={endpoint} />}
 
             {endpoint && !filtersActive && (
               <GripVertical className="size-3.5 shrink-0 text-ink-4 opacity-0 group-hover:opacity-100" aria-hidden />

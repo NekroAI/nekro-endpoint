@@ -10,27 +10,31 @@ import { useAuth } from "../hooks/useAuth";
 import { useAppTheme } from "../context/ThemeContextProvider";
 import { Avatar, UserMenu } from "./UserMenu";
 import { BrandMark } from "../design/brand";
+import { SignalProvider } from "../features/signal/SignalProvider";
+import { Sparkles } from "lucide-react";
 
 /** The /app workspace: rail + content + Signal Line (docs/REDESIGN.md §4.2). */
 export function AppShell() {
   return (
     <AuthGate>
       <CommandProvider>
-        <SignalLineInsetProvider>
-          <ShellCommands />
-          <div className="flex h-dvh overflow-hidden bg-field text-ink-1">
-            <Sidebar />
-            <main className="relative flex min-w-0 flex-1 flex-col">
-              <MobileHeader />
-              <div className="relative min-h-0 flex-1">
-                <Outlet />
-              </div>
-              <SignalLine className="bottom-[calc(56px+env(safe-area-inset-bottom))] md:bottom-0" />
-            </main>
-          </div>
-          <TabBar />
-          <CommandPalette />
-        </SignalLineInsetProvider>
+        <SignalProvider>
+          <SignalLineInsetProvider>
+            <ShellCommands />
+            <div className="flex h-dvh overflow-hidden bg-field text-ink-1">
+              <Sidebar />
+              <main className="relative flex min-w-0 flex-1 flex-col">
+                <MobileHeader />
+                <div className="relative min-h-0 flex-1">
+                  <Outlet />
+                </div>
+                <SignalLine className="bottom-[calc(56px+env(safe-area-inset-bottom))] md:bottom-0" />
+              </main>
+            </div>
+            <TabBar />
+            <CommandPalette />
+          </SignalLineInsetProvider>
+        </SignalProvider>
       </CommandProvider>
     </AuthGate>
   );
@@ -73,6 +77,15 @@ function ShellCommands() {
       keywords: ["theme", "dark", "light", "主题"],
       icon: themeMode === "dark" ? Sun : Moon,
       run: toggleTheme,
+    },
+    {
+      id: "signal:setup",
+      group: "偏好",
+      label: "配置 Signal 智能助手",
+      hint: "接入你自己的模型",
+      keywords: ["ai", "model", "模型", "signal"],
+      icon: Sparkles,
+      run: () => navigate("/app/settings#signal"),
     },
     { id: "logout", group: "账户", label: "退出登录", icon: LogOut, run: logout },
   ];
