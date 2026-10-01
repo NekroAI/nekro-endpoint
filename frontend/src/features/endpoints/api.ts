@@ -35,8 +35,6 @@ function useInvalidate() {
   return (endpoint?: EndpointView) => {
     void client.invalidateQueries({ queryKey: endpointKeys.list() });
     if (endpoint) client.setQueryData(endpointKeys.detail(endpoint.id), endpoint);
-    // Legacy pages share the backend; keep their caches honest too.
-    void client.invalidateQueries({ queryKey: ["endpoints"] });
   };
 }
 

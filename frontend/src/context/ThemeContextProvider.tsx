@@ -1,22 +1,21 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { ThemeProvider as MuiThemeProvider, type PaletteMode } from "@mui/material";
-import { lightTheme, darkTheme } from "../theme";
 import { safeLocalStorage, isBrowser } from "../utils/storage";
 
 /**
  * Single source of truth for the colour scheme.
  *
- * The Signal UI reads the scheme from CSS variables selected by
- * <html data-theme>; this provider owns the preference ("dark" | "light" |
- * "system", stored as `themeMode`) and keeps that attribute (set before paint
- * by THEME_BOOT_SCRIPT) in sync. The MUI theme is provided for legacy pages
- * until they are removed.
+ * Components read colours from CSS variables selected by <html data-theme>
+ * (design/tokens.css); this provider owns the preference ("dark" | "light" |
+ * "system", stored as `themeMode`) and keeps that attribute — set before
+ * first paint by THEME_BOOT_SCRIPT — in sync. Only libraries that cannot read
+ * CSS variables (Monaco, sonner) consume `themeMode`.
  */
-export type ThemePreference = PaletteMode | "system";
+export type ThemeMode = "dark" | "light";
+export type ThemePreference = ThemeMode | "system";
 
 type AppThemeContextType = {
   /** The resolved scheme currently on screen. */
-  themeMode: PaletteMode;
+  themeMode: ThemeMode;
   preference: ThemePreference;
   setPreference: (preference: ThemePreference) => void;
   toggleTheme: () => void;
@@ -31,7 +30,7 @@ const AppThemeContext = createContext<AppThemeContextType>({
 
 export const useAppTheme = () => useContext(AppThemeContext);
 
-const systemMode = (): PaletteMode =>
+const systemMode = (): ThemeMode =>
   isBrowser && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
 
 function readPreference(): ThemePreference {
@@ -41,7 +40,7 @@ function readPreference(): ThemePreference {
 
 export const AppThemeProvider = ({ children }: { children: ReactNode }) => {
   const [preference, setPreferenceState] = useState<ThemePreference>(() => (isBrowser ? readPreference() : "dark"));
-  const [themeMode, setThemeMode] = useState<PaletteMode>(() =>
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() =>
     isBrowser && document.documentElement.dataset.theme === "light" ? "light" : "dark",
   );
 
@@ -71,11 +70,6 @@ export const AppThemeProvider = ({ children }: { children: ReactNode }) => {
     () => ({ themeMode, preference, setPreference, toggleTheme }),
     [themeMode, preference, setPreference, toggleTheme],
   );
-  const muiTheme = themeMode === "light" ? lightTheme : darkTheme;
 
-  return (
-    <AppThemeContext.Provider value={value}>
-      <MuiThemeProvider theme={muiTheme}>{children}</MuiThemeProvider>
-    </AppThemeContext.Provider>
-  );
+  return <AppThemeContext.Provider value={value}>{children}</AppThemeContext.Provider>;
 };

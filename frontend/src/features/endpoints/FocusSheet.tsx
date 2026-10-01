@@ -14,7 +14,7 @@ import {
   Undo2,
   X,
 } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m as motion } from "motion/react";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { DirectoryGlyph, TypeGlyph, typeMeta } from "../../design/glyphs";

@@ -559,9 +559,9 @@ export async function createEndpoint(ctx: ServiceContext, input: CreateEndpointI
 | **P4 其余页面** ✅ | 概览、管理后台（只读星图）、Init、Auth Callback、落地页、文档 | 所有旧路由都有新的对应页面或重定向 |
 | **P5 服务层与 MCP** | 抽取 `src/services/*`；先单独升级 `compatibility_date`，再引入 Agents SDK；`/mcp` | 契约测试零差异；用 MCP Inspector 调通全部工具 |
 | **P6 Signal Line** | `SignalAgent`、票据鉴权、BYO 模型配置和加密、计划卡与幽灵节点、确认流程、审计表、限额 | 能用一句话完成「新建、关联权限组、签发密钥」；明文密钥不出现在模型请求里（用测试断言） |
-| **P7 收尾** | 移除 MUI、emotion、UnoCSS、framer-motion；清理 `ssr.noExternal`；更新 CLAUDE.md、`.cursor/rules/global.mdc`、`docs/THEMING.md`、`docs/API_GUIDE.md`、`docs/PROJECT_STRUCTURE.md` | 依赖里不再有 MUI；首屏 JS 达到预算 |
+| **P7 收尾** ✅（提前到 P5 之前完成） | 移除 MUI、emotion、UnoCSS、framer-motion；清理 `ssr.noExternal`；更新 CLAUDE.md、`.cursor/rules/global.mdc`、`docs/THEMING.md`、`docs/API_GUIDE.md`、`docs/PROJECT_STRUCTURE.md` | 依赖里不再有 MUI；首屏 JS 达到预算 |
 
-P0 → P1 → P2 必须按顺序。P3 和 P4 可以并行。P5 依赖 P0。P6 依赖 P2（星图）和 P5。
+P0 → P1 → P2 必须按顺序。实际执行时 P7 提前到 P4 之后完成：页面全部替换后即移除 MUI，避免两套样式长期共存。P3 和 P4 可以并行。P5 依赖 P0。P6 依赖 P2（星图）和 P5。
 
 ---
 
@@ -589,7 +589,8 @@ P0 → P1 → P2 必须按顺序。P3 和 P4 可以并行。P5 依赖 P0。P6 �
 | 密钥明文存储 | `sec-` 和 `ep-` 都是明文，列表接口也返回明文 | 本方案不改；哈希化会破坏契约，需要另立方案并设计过渡期 |
 | 代理转发 `Authorization` | 两种代理都会把客户端的 `Authorization` 头转发给上游 | 已冻结为当前行为。若要改为不转发，需另立方案并评估外部调用方 |
 | 执行层全表扫描密钥 | `/e/*` 每次请求都读取全部有效密钥 | 不属于本方案范围，可以另立性能方案（行为不变的前提下改成按组查询） |
-| 两套样式共存 | P1–P6 期间包体积会变大 | P7 统一清理；期间旧页面按需加载 |
+| 两套样式共存 | 已解决：P4 之后即移除 MUI / emotion / UnoCSS | 首屏 JS 164 KB（gzip），工作区页面按路由拆分 |
+| 首页未 SSR（已有问题） | `dist/client/index.html` 开发模板被静态资源层直接返回给 `/` | 已设置 `assets.html_handling: "none"`，`/` 由 Worker SSR |
 | Workers AI 的工具调用质量 | 比主流商业模型弱 | 只作为兜底，界面标注「基础模式」 |
 
 ---

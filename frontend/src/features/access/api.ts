@@ -46,8 +46,6 @@ function useInvalidateAccess() {
   const client = useQueryClient();
   return () => {
     void client.invalidateQueries({ queryKey: accessKeys.all });
-    void client.invalidateQueries({ queryKey: ["permissionGroups"] });
-    void client.invalidateQueries({ queryKey: ["accessKeys"] });
   };
 }
 

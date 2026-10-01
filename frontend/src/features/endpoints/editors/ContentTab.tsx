@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m as motion } from "motion/react";
 import type { DynamicProxyConfig, ProxyConfig, ScriptConfig, StaticConfig } from "../../../../../common/types";
 import { useUpdateEndpoint } from "../api";
 import type { EndpointView } from "../model";

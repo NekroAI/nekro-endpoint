@@ -1,4 +1,4 @@
-import { motion } from "motion/react";
+import { m as motion } from "motion/react";
 import { useId, type ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { snap } from "../design/motion";

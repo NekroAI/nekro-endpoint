@@ -13,6 +13,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `/api/auth/me` 复用鉴权中间件；不要恢复输出 OAuth/session/API 密钥的调试日志。发布激活中间件必须注册在发布处理器之前。
 - `scripts/epctl.py` 是使用Python标准库的通用管理客户端，状态和凭据在仓库外；规范见 `docs/OPERATIONS.md`。
 - 生产部署优先沿用 Cloudflare Workers Builds 的 Git 集成。production Worker 名称显式为 `nekro-endpoint`，不要根据环境后缀另建 Worker。
+- 2026-10 前端已整体重构为 Signal 设计（`docs/REDESIGN.md`）：Tailwind v4 + Radix（`frontend/src/ui/`）+ motion，MUI/emotion/UnoCSS 已移除。工作区在 `/app/*`，旧路径只做重定向；界面显示名为 Endpoints，仓库与部署名不变。
+- 静态资源设置了 `html_handling: "none"`，`/` 由 Worker SSR，而非 `dist/client/index.html` 开发模板。
 - `pnpm test:ci` 运行平台单元测试和 API 契约测试（`pnpm test:contract`：在 workerd + 真实 D1 中冻结 `/api/*`、`/e/*` 的外部行为，规范见 `docs/REDESIGN.md` §1）；修改接口导致快照变化即视为破坏外部兼容，除非有意为之并经评审；可选`pnpm test:cli`检查通用CLI，使用Python标准库；`pnpm typecheck` 使用根配置覆盖前后端。此仓库没有 `frontend/tsconfig.json`。
 
 **NekroEndpoint** 是一个基于 Cloudflare Workers 构建的**端点编排平台**，允许用户在全球边缘节点上创建和管理 API 端点。
@@ -39,7 +41,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### 技术栈
 
 - **后端**：Hono (OpenAPI)、Cloudflare Workers、Cloudflare D1 (SQLite)
-- **前端**：React 18、Material-UI、Monaco Editor、React Router、Vite
+- **前端**：React 18、Tailwind CSS v4、Radix UI（shadcn 风格原语）、motion、@xyflow/react（命名空间星图）、Monaco Editor、React Router、TanStack Query、Vite
 - **数据库 ORM**：Drizzle ORM
 - **类型安全**：Zod（验证）、TypeScript
 - **认证**：GitHub OAuth + 会话管理
@@ -225,16 +227,9 @@ export function useEndpoints() {
 
 #### 添加新页面的步骤
 
-1. 创建页面组件：`frontend/src/pages/NewPage.tsx`
-2. 在 `frontend/src/routes.tsx` 中导入并添加路由：
-
-```typescript
-import NewPage from './pages/NewPage';
-
-<Route path="new-page" element={<NewPage />} />
-```
-
-3. **完成** —— 无需修改任何入口文件
+1. 在 `frontend/src/features/<功能>/` 下创建页面组件（工作区页面用 `app/Page.tsx` 的 `Page` 与 `PageHeader`）
+2. 在 `frontend/src/routes.tsx` 中注册：工作区页面挂在 `/app` 下并用 `lazy` 按路由拆分；公开页面挂在 `SiteLayout` 下并保持同步导入，以便完整 SSR
+3. **完成** —— 无需修改任何入口文件。改动已有路径时，旧路径必须保留为 `<Navigate>` 重定向
 
 ### 4. 数据库 Schema 与迁移
 
@@ -272,32 +267,17 @@ pnpm db:migrate         # 本地
 pnpm db:migrate:prod    # 生产
 ```
 
-### 5. 主题系统（Material-UI）
+### 5. 设计系统（Signal）
 
-**集中化主题管理**：所有主题定义在 `frontend/src/theme/index.ts`
+**令牌单一来源**：`frontend/src/design/tokens.css`（暗色 Deep Field / 亮色 Lab Paper），在 `frontend/src/styles.css` 中映射为 Tailwind 主题（`bg-surface-1`、`text-ink-2`、`text-signal`、`bg-pass-soft` 等）。
 
 #### 规则
 
-1. **定义自定义主题属性**：在 `theme/types.ts` 中扩展 MUI 主题类型
-2. **集中配置**：所有主题相关样式在 `lightTheme` 和 `darkTheme` 中定义
-3. **禁止条件判断**：组件**不允许**使用 `theme.palette.mode === 'dark'` 这样的条件
-4. **正确方式**：直接使用预定义的主题属性，如 `theme.pageBackground`
-
-#### 使用方法
-
-```typescript
-import { useAppTheme } from '@/context/ThemeContextProvider';
-
-function MyComponent() {
-  const { theme, toggleTheme } = useAppTheme();
-
-  return (
-    <Box sx={{ backgroundColor: theme.pageBackground }}>
-      {/* 正确：使用主题属性 */}
-    </Box>
-  );
-}
-```
+1. **只用语义令牌**：组件不得硬编码颜色，也**不得判断当前主题**；明暗切换只靠 `<html data-theme>` 选择 CSS 变量。唯一例外是无法读取 CSS 变量的第三方库（Monaco、sonner），通过 `useAppTheme().themeMode` 传参。
+2. **语义色有含义**：`signal` = 公开/已发布，`pass` = 鉴权/通行卡/权限组，`route` = 代理与上游，`caution`/`danger` = 注意/破坏性操作。品牌渐变只用于品牌标识、通行卡和落地页。
+3. **原语在 `frontend/src/ui/`**：基于 Radix 的 Button、Dialog、DropdownMenu、Select、Tabs、Switch、Segmented、Field 等。新组件优先复用，确认操作用 `useConfirm()`，提示用 `toast`。
+4. **动效**：预设在 `design/motion.ts`；只表达状态变化，不做持续循环的装饰动画；组件从 `motion/react` 导入 `m as motion`（`LazyMotion strict` 会拒绝完整版 `motion`）。
+5. **主题偏好**：`useAppTheme()` 提供 `preference`（dark/light/system）与 `setPreference`；首屏主题由 `src/utils/htmlTemplate.ts` 的 `THEME_BOOT_SCRIPT` 在 hydrate 前写入，避免闪烁。
 
 ### 6. 认证与权限系统
 
@@ -417,22 +397,20 @@ const api = new OpenAPIHono().use("*", dbMiddleware).route("/features", feature)
 // ...其他路由
 ```
 
-#### Step 5：创建前端 Hook（`frontend/src/hooks/useFeature.ts`）
+#### Step 5：创建前端数据 Hook（`frontend/src/features/<功能>/api.ts`）
 
 ```typescript
-import { useMutation, useQuery } from "@tanstack/react-query";
-import type { Feature, CreateFeatureInput } from "../../../common/types";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { Feature, CreateFeatureInput } from "../../../../common/types";
+import { requestData } from "../../lib/api";
 
 export function useCreateFeature() {
+  const client = useQueryClient();
   return useMutation({
-    mutationFn: async (data: CreateFeatureInput) => {
-      const response = await fetch(`${getApiBase()}/features`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      return response.json() as Promise<ApiResponse<Feature>>;
-    },
+    // requestData 自动携带会话、解析 { success, data } 信封，失败时抛出 ApiError
+    mutationFn: (input: CreateFeatureInput) =>
+      requestData<{ feature: Feature }>("/features", { method: "POST", body: input }),
+    onSuccess: () => client.invalidateQueries({ queryKey: ["signal", "features"] }),
   });
 }
 ```
@@ -441,27 +419,7 @@ export function useCreateFeature() {
 
 #### 关键配置（`frontend/vite.config.mts`）
 
-**必须**在 `ssr.noExternal` 中显式声明需要 SSR 处理的库：
-
-```typescript
-export default defineConfig({
-  ssr: {
-    noExternal: [
-      "react-router-dom",
-      "@mui/material",
-      "@mui/system",
-      "@mui/icons-material",
-      "@emotion/react",
-      "@emotion/styled",
-      "react-i18next",
-      "i18next",
-      // 所有 React 生态库都需要添加
-    ],
-  },
-});
-```
-
-**原因**：Cloudflare Workers 环境与 Node.js 不同，React 生态库必须被 Vite 处理才能在 SSR 中正常工作。
+`ssr.noExternal` 列出需要被 Vite 打进 SSR 包的 React UI 库（当前为 react-router-dom、radix-ui、motion、sonner、cmdk、lucide-react）。新增在 SSR 路径上渲染的 React 库时加入此列表；只在客户端懒加载的库（Monaco、@xyflow/react）无需加入。
 
 #### Assets Binding（`wrangler.jsonc`）
 
@@ -470,6 +428,7 @@ export default defineConfig({
   "assets": {
     "binding": "ASSETS",
     "directory": "./dist/client",
+    "html_handling": "none",
   },
 }
 ```
@@ -508,11 +467,11 @@ export default defineConfig({
 - 无子节点的端点（叶子节点）：仅配置自己的内容
 - 类型只是端点的属性，与树结构无关
 
-#### 前端实现
+#### 前端实现（`frontend/src/features/endpoints/`）
 
-- 使用 `@mui/x-tree-view` 组件（已添加依赖）
-- 右键菜单：新建子端点、删除、发布/取消发布
-- 配合 Monaco Editor 编辑端点内容
+- 命名空间由**路径前缀**推导（`namespace.ts`），目录是路径段而不是端点；列表视图（`ListView`）与星图视图（`MapView`，@xyflow/react + d3-hierarchy 放射布局）共享选中与筛选状态
+- 选中状态由 URL 决定：`/app/endpoints/<端点路径>?tab=content|settings|share`
+- Focus Sheet 中编辑内容（草稿 + ⌘S 保存）、设置与分享；列表/创建/更新返回的 `config` 是 JSON 字符串、详情返回对象，统一在 `model.ts` 的 `toView` 中解析
 
 ### 10. 权限组与访问密钥系统
 
@@ -586,15 +545,7 @@ export default defineConfig({
 
 ### 添加新页面
 
-1. 创建 `frontend/src/pages/NewPage.tsx`
-2. 在 `frontend/src/routes.tsx` 中导入并添加路由：
-
-```typescript
-import NewPage from './pages/NewPage';
-<Route path="new-page" element={<NewPage />} />
-```
-
-3. 完成（自动支持 SSR 和 CSR）
+见上文「统一路由系统」：页面放在 `frontend/src/features/<功能>/`，在 `frontend/src/routes.tsx` 注册。数据请求统一用 `frontend/src/lib/api.ts` 的 `request` / `requestData`。
 
 ### 保护路由（需要认证）
 
@@ -663,7 +614,7 @@ ENCRYPTION_KEY=your_encryption_key
 2. **统一路由**：始终使用 `frontend/src/routes.tsx` 定义路由
 3. **Schema 优先**：先在 `common/validators/` 定义 Zod Schema，再实现 API
 4. **禁止直接操作 DOM**：使用 React 声明式编程（入口文件除外）
-5. **使用主题属性**：禁止 `theme.palette.mode` 条件判断，使用预定义属性
+5. **使用设计令牌**：只用 `design/tokens.css` 的语义令牌，禁止在组件中判断主题
 6. **类型导入**：从 `common/types/` 导入类型，从 `common/validators/` 导入 Schema
 7. **统一响应格式**：
 
@@ -686,7 +637,7 @@ interface ApiResponse<T> {
 2. ❌ 使用废弃的 `site.bucket` 配置
 3. ❌ 在前端 hooks 中重复定义类型
 4. ❌ 硬编码 API 基础路径（使用 `getApiBase()`）
-5. ❌ 遗漏 `ssr.noExternal` 声明
+5. ❌ 遗漏 `ssr.noExternal` 声明；在客户端代码中运行时引入 `common/validators`（会把 zod 与 OpenAPI 生成器打进前端包，只用 `import type`）
 6. ❌ 跳过 Schema 生成直接修改数据库
 7. ❌ 阻止未激活用户创建/编辑端点（仅限制发布）
 
@@ -753,7 +704,9 @@ interface ApiResponse<T> {
 - **数据库 Schema**：`src/db/schema.ts` - 数据库结构唯一定义
 - **路由配置**：`frontend/src/routes.tsx` - 统一路由定义
 - **认证 Hook**：`frontend/src/hooks/useAuth.ts` - 认证状态管理
-- **主题配置**：`frontend/src/theme/index.ts` - 亮/暗主题定义
+- **设计令牌**：`frontend/src/design/tokens.css` - 亮/暗主题与语义色
+- **工作区外壳**：`frontend/src/app/AppShell.tsx` - 侧栏、命令面板、Signal Line
+- **契约测试**：`test/contract/` - `/api/*` 与 `/e/*` 的兼容性快照
 - **Wrangler 配置**：`wrangler.jsonc` - Cloudflare Workers 配置
 - **Vite 配置**：`frontend/vite.config.mts` - 前端构建配置
 - **设计文档**：`.cursor/trace/design.md` - 产品设计总规范
@@ -767,7 +720,7 @@ interface ApiResponse<T> {
 
 ---
 
-**重要提醒**：这是一个生产级的边缘端点编排平台，强调类型安全、开发体验和可维护性。遇到问题时，优先查阅 `src/routes/` 和 `frontend/src/hooks/` 中的现有模式，遵循既定架构。
+**重要提醒**：这是一个生产级的边缘端点编排平台，强调类型安全、开发体验和可维护性。遇到问题时，优先查阅 `src/routes/` 和 `frontend/src/features/` 中的现有模式，遵循既定架构。
 
 ## 平台与个人运维边界
 

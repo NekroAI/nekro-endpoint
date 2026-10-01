@@ -3,13 +3,8 @@
 @import "tailwindcss";
 @import "./design/tokens.css";
 
-/*
- * Tailwind scans these sources for class names. The legacy MUI pages are
- * excluded so their sx props never leak into the generated CSS.
- */
+/* Tailwind scans the frontend sources for class names. */
 @source "./";
-@source not "./pages";
-@source not "./components";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 

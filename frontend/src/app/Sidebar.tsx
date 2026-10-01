@@ -1,5 +1,5 @@
 import { NavLink, useMatch } from "react-router-dom";
-import { motion } from "motion/react";
+import { m as motion } from "motion/react";
 import { BookOpen, Moon, PanelLeftClose, PanelLeftOpen, Search, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import { NAV_ITEMS, type NavItem } from "./nav";

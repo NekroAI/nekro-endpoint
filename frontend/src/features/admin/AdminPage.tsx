@@ -1,5 +1,5 @@
 import { ArrowLeft, Lock, MoreHorizontal, Search, ShieldCheck, Trash2, Undo2, X } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m as motion } from "motion/react";
 import { useDeferredValue, useMemo, useState } from "react";
 import { useHotkey } from "../../lib/hotkeys";
 import { Navigate } from "react-router-dom";

@@ -1,5 +1,5 @@
 import { CalendarClock, Download, ExternalLink, KeyRound, Link2, Plus, RefreshCw, Rocket, Power } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m as motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import type { AccessKey } from "../../../../common/types";
 import { buildEndpointAccessUrl, isShareableAccessKey } from "../../utils/endpointShare";

@@ -1,4 +1,4 @@
-import { motion, useMotionTemplate, useMotionValue, useSpring, useTransform } from "motion/react";
+import { m as motion, useMotionTemplate, useMotionValue, useSpring, useTransform } from "motion/react";
 import { useEffect, useState, type PointerEvent } from "react";
 import { createEndpointQr } from "../../utils/endpointShare";
 import { BrandMark } from "../../design/brand";

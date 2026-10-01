@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { motion } from "motion/react";
+import { m as motion } from "motion/react";
 import { useAuth } from "../hooks/useAuth";
 import { BrandMark } from "../design/brand";
 import { GitHubMark } from "../design/github";

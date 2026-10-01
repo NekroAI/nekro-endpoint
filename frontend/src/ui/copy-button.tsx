@@ -1,5 +1,5 @@
 import { Check, Copy } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m as motion } from "motion/react";
 import { useState } from "react";
 import { Button, type ButtonProps } from "./button";
 import { toast } from "./toaster";

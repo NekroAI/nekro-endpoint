@@ -1,15 +1,22 @@
+import { lazy, Suspense, type ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "./app/AppShell";
-import { EndpointsPage } from "./features/endpoints/EndpointsPage";
-import { AccessPage } from "./features/access/AccessPage";
-import { SettingsPage } from "./features/settings/SettingsPage";
-import { OverviewPage } from "./features/overview/OverviewPage";
-import { AdminPage } from "./features/admin/AdminPage";
+import { PageFallback } from "./app/PageFallback";
 import { SiteLayout } from "./features/site/SiteLayout";
 import { LandingPage } from "./features/site/LandingPage";
 import { DocsPage } from "./features/site/DocsPage";
 import { AuthCallbackPage } from "./features/site/AuthCallbackPage";
 import { InitPage } from "./features/site/InitPage";
+
+// Workspace pages are auth-gated (SSR renders the shell skeleton), so they are
+// split per route; public pages stay eager for complete server rendering.
+const EndpointsPage = lazy(() => import("./features/endpoints/EndpointsPage").then((m) => ({ default: m.EndpointsPage })));
+const AccessPage = lazy(() => import("./features/access/AccessPage").then((m) => ({ default: m.AccessPage })));
+const SettingsPage = lazy(() => import("./features/settings/SettingsPage").then((m) => ({ default: m.SettingsPage })));
+const OverviewPage = lazy(() => import("./features/overview/OverviewPage").then((m) => ({ default: m.OverviewPage })));
+const AdminPage = lazy(() => import("./features/admin/AdminPage").then((m) => ({ default: m.AdminPage })));
+
+const page = (element: ReactNode) => <Suspense fallback={<PageFallback />}>{element}</Suspense>;
 
 /**
  * 应用路由配置
@@ -28,12 +35,12 @@ export const AppRoutes = () => (
     {/* 工作区 */}
     <Route path="/app" element={<AppShell />}>
       <Route index element={<Navigate to="endpoints" replace />} />
-      <Route path="endpoints/*" element={<EndpointsPage />} />
-      <Route path="access" element={<AccessPage />} />
-      <Route path="access/:groupId" element={<AccessPage />} />
-      <Route path="overview" element={<OverviewPage />} />
-      <Route path="settings" element={<SettingsPage />} />
-      <Route path="admin" element={<AdminPage />} />
+      <Route path="endpoints/*" element={page(<EndpointsPage />)} />
+      <Route path="access" element={page(<AccessPage />)} />
+      <Route path="access/:groupId" element={page(<AccessPage />)} />
+      <Route path="overview" element={page(<OverviewPage />)} />
+      <Route path="settings" element={page(<SettingsPage />)} />
+      <Route path="admin" element={page(<AdminPage />)} />
     </Route>
 
     {/* 公开页面 */}

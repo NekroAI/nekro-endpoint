@@ -1,7 +1,7 @@
 import { AlertTriangle, ArrowRight, CalendarClock, CircleSlash, KeyRound, Link2Off, Lock, Plus, ShieldAlert } from "lucide-react";
 import { lazy, Suspense, useMemo, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "motion/react";
+import { m as motion } from "motion/react";
 import type { DynamicProxyConfig } from "../../../../common/types";
 import { Page } from "../../app/Page";
 import { useAuth } from "../../hooks/useAuth";

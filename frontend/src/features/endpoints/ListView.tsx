@@ -1,6 +1,6 @@
 import { ChevronRight, GripVertical, Lock, Plus } from "lucide-react";
 import { useMemo, useRef, useState, type DragEvent, type KeyboardEvent } from "react";
-import { motion } from "motion/react";
+import { m as motion } from "motion/react";
 import { DirectoryGlyph, TypeGlyph } from "../../design/glyphs";
 import { relativeTime, absoluteTime } from "../../lib/format";
 import { cn } from "../../lib/cn";

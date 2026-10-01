@@ -1,5 +1,5 @@
 import { AlertTriangle, Filter, List, Orbit, Plus, Search, Share2, X } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m as motion } from "motion/react";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import type { EndpointType } from "../../../../common/types";
 import { useSignalLineInset } from "../../app/SignalLine";

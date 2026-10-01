@@ -1,5 +1,5 @@
 import { ArrowRight, BookOpen, KeyRound, Lock, RotateCcw, ShieldCheck } from "lucide-react";
-import { motion, useInView } from "motion/react";
+import { m as motion, useInView } from "motion/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";

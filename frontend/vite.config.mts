@@ -46,22 +46,8 @@ export default defineConfig(({ mode }) => {
     },
 
     ssr: {
-      noExternal: [
-        "react-router-dom",
-        "@mui/material",
-        "@mui/system",
-        "@mui/icons-material",
-        "@emotion/react",
-        "@emotion/styled",
-        "react-i18next",
-        "i18next",
-        "radix-ui",
-        /^@radix-ui\//,
-        "motion",
-        "sonner",
-        "cmdk",
-        "lucide-react",
-      ],
+      // Bundle the React UI libraries into the SSR build so they run in workerd.
+      noExternal: ["react-router-dom", "radix-ui", /^@radix-ui\//, "motion", "sonner", "cmdk", "lucide-react"],
     },
   };
 });

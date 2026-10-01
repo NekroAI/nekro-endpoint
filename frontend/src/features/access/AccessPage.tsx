@@ -1,5 +1,5 @@
 import { Ban, ChevronRight, Copy, Eye, EyeOff, KeyRound, MoreHorizontal, Pencil, Plus, Trash2, Users } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m as motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import type { AccessKey, PermissionGroup } from "../../../../common/types";

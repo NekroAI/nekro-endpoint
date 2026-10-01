@@ -40,20 +40,13 @@ pnpm preview      # 预览构建结果
 your-project/
 ├── 📁 frontend/              # 前端应用
 │   ├── 📁 src/
-│   │   ├── 📁 components/    # 可复用组件
-│   │   │   ├── Header.tsx    # 网站头部
-│   │   │   ├── Footer.tsx    # 网站底部
-│   │   │   └── Navbar.tsx    # 导航栏
-│   │   ├── 📁 context/       # React Context
-│   │   │   └── ThemeContextProvider.tsx  # 主题状态管理
-│   │   ├── 📁 pages/         # 页面组件
-│   │   │   ├── HomePage.tsx  # 首页
-│   │   │   └── Features.tsx  # 功能页面
-│   │   ├── 📁 theme/         # 主题配置
-│   │   │   ├── index.ts      # 主题定义
-│   │   │   └── types.ts      # 主题类型
-│   │   ├── 📁 assets/        # 静态资源
-│   │   ├── 📄 App.tsx        # 应用主布局
+│   │   ├── 📁 app/           # 工作区外壳、命令面板、导航（nav.ts）
+│   │   ├── 📁 design/        # 设计令牌（tokens.css）、字形、动效
+│   │   ├── 📁 ui/            # Radix 原语
+│   │   ├── 📁 features/      # 按功能划分的页面与数据 hooks
+│   │   ├── 📁 context/       # 主题偏好
+│   │   ├── 📄 routes.tsx     # 唯一路由定义
+│   │   ├── 📄 styles.css     # Tailwind 入口
 │   │   ├── 📄 entry-client.tsx  # 客户端入口
 │   │   └── 📄 entry-server.tsx  # SSR 入口
 │   ├── 📄 index.html         # HTML 模板
@@ -166,58 +159,38 @@ return (
 #### 创建页面组件
 
 ```typescript
-// frontend/src/pages/AboutPage.tsx
-import { Typography, Container } from '@mui/material';
+// frontend/src/features/about/AboutPage.tsx
+import { Page, PageHeader } from "../../app/Page";
 
-export default function AboutPage() {
+export function AboutPage() {
   return (
-    <Container maxWidth="md">
-      <Typography variant="h3" component="h1" gutterBottom>
-        关于我们
-      </Typography>
-      <Typography variant="body1">
-        这里是关于页面内容...
-      </Typography>
-    </Container>
+    <Page>
+      <PageHeader title="关于" description="这里是关于页面内容。" />
+    </Page>
   );
 }
 ```
 
 #### 添加路由 (统一配置)
 
-现在只需要在一个地方添加路由：
+只需要在 `frontend/src/routes.tsx` 一处注册。公开页面挂在 `SiteLayout` 下；工作区页面挂在 `/app` 下，并用 `lazy` 按路由拆分：
 
 ```typescript
 // frontend/src/routes.tsx
-import AboutPage from './pages/AboutPage';
+const AboutPage = lazy(() => import("./features/about/AboutPage").then((m) => ({ default: m.AboutPage })));
 
-export const AppRoutes = () => (
-  <Routes>
-    <Route path="/" element={<App />}>
-      <Route index element={<HomePage />} />
-      <Route path="features" element={<Features />} />
-      <Route path="about" element={<AboutPage />} />  {/* 在这里添加新路由 */}
-    </Route>
-  </Routes>
-);
+<Route path="/app" element={<AppShell />}>
+  <Route path="about" element={page(<AboutPage />)} />
+</Route>
 ```
 
 #### 更新导航
 
+工作区侧栏的导航项集中定义在 `frontend/src/app/nav.ts` 的 `NAV_ITEMS` 中，添加一项即可同时出现在侧栏、手机底部标签栏和 ⌘K 命令面板：
+
 ```typescript
-// frontend/src/App.tsx
-<Button
-  component={RouterLink}
-  to="/about"
-  sx={{
-    my: 2,
-    color: "inherit",
-    display: "block",
-    fontWeight: location.pathname === "/about" ? "bold" : "normal",
-  }}
->
-  关于我们
-</Button>
+// frontend/src/app/nav.ts
+{ to: "/app/about", label: "关于", icon: Info, hint: "项目信息" },
 ```
 
 ### 3. 环境变量配置
@@ -272,14 +245,7 @@ export default defineConfig({
   },
   // SSR 配置
   ssr: {
-    noExternal: [
-      "react-router-dom",
-      "@mui/material",
-      "@mui/system",
-      "@mui/icons-material",
-      "@emotion/react",
-      "@emotion/styled",
-    ],
+    noExternal: ["react-router-dom", "radix-ui", /^@radix-ui\//, "motion", "sonner", "cmdk", "lucide-react"],
   },
 });
 ```
@@ -378,7 +344,7 @@ ls -la .wrangler/state/v3/d1/
 
 ```typescript
 // 使用 React.lazy 进行代码分割
-const AboutPage = React.lazy(() => import('./pages/AboutPage'));
+const AboutPage = React.lazy(() => import('./features/about/AboutPage').then((m) => ({ default: m.AboutPage })));
 
 // 在路由中使用 Suspense
 <Route
