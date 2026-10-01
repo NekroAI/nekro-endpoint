@@ -3,6 +3,7 @@ import {
   ReactFlow,
   ReactFlowProvider,
   Handle,
+  PanOnScrollMode,
   Position,
   useReactFlow,
   useStore,
@@ -12,7 +13,8 @@ import {
 } from "@xyflow/react";
 import { hierarchy, tree } from "d3-hierarchy";
 import { Lock, Maximize, Minus, Plus } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { m as motion } from "motion/react";
 import { BrandMark } from "../../design/brand";
 import { TypeGlyph } from "../../design/glyphs";
 import { cn } from "../../lib/cn";
@@ -28,8 +30,26 @@ import { useWorkspace } from "./workspace";
  * prefixes fanning out radially, proxies wired to their upstream host.
  */
 type OriginData = { label: string };
-type DirData = { node: NamespaceNode };
-type EndpointData = { node: NamespaceNode; endpoint: EndpointView };
+type DirData = { node: NamespaceNode; depth: number };
+type EndpointData = { node: NamespaceNode; endpoint: EndpointView; depth: number };
+
+/** Paths from the origin to the hovered node, lit up as a trace. */
+const TraceContext = createContext<Set<string>>(new Set());
+
+const chainOf = (path: string | null) => {
+  const chain = new Set<string>();
+  if (!path) return chain;
+  const parts = path.split("/").filter(Boolean);
+  parts.forEach((_, index) => chain.add(`/${parts.slice(0, index + 1).join("/")}`));
+  return chain;
+};
+
+/** Signal propagation: nodes surface ring by ring from the origin, once. */
+const surface = (depth: number) => ({
+  initial: { opacity: 0, scale: 0.7 },
+  animate: { opacity: 1, scale: 1 },
+  transition: { type: "spring" as const, stiffness: 260, damping: 24, delay: 0.1 + depth * 0.09 },
+});
 type HostData = { host: string };
 
 type MapNode =
@@ -51,7 +71,10 @@ function layout(root: NamespaceNode, username: string) {
 
   const nodes: MapNode[] = [];
   const edges: Edge[] = [];
-  const polar = (angle: number, r: number) => ({ x: r * Math.cos(angle - Math.PI / 2), y: r * Math.sin(angle - Math.PI / 2) });
+  const polar = (angle: number, r: number) => ({
+    x: r * Math.cos(angle - Math.PI / 2),
+    y: r * Math.sin(angle - Math.PI / 2),
+  });
 
   h.each((point) => {
     const { x: angle = 0, y: r = 0 } = point as unknown as { x: number; y: number };
@@ -60,18 +83,35 @@ function layout(root: NamespaceNode, username: string) {
     if (point.depth === 0) {
       nodes.push({ id, type: "origin", position, data: { label: `/e/${username}` }, selectable: false });
     } else if (point.data.endpoint) {
-      nodes.push({ id, type: "endpoint", position, data: { node: point.data, endpoint: point.data.endpoint } });
+      nodes.push({
+        id,
+        type: "endpoint",
+        position,
+        data: { node: point.data, endpoint: point.data.endpoint, depth: point.depth },
+      });
       const host = proxyTargetHost(point.data.endpoint);
       if (host) {
         const hostId = `host:${id}`;
-        nodes.push({ id: hostId, type: "host", position: polar(angle, r + HOST_OFFSET), data: { host }, selectable: false });
+        nodes.push({
+          id: hostId,
+          type: "host",
+          position: polar(angle, r + HOST_OFFSET),
+          data: { host },
+          selectable: false,
+        });
         edges.push({ id: `e:${hostId}`, source: id, target: hostId, type: "straight", className: "map-edge-route" });
       }
     } else {
-      nodes.push({ id, type: "dir", position, data: { node: point.data } });
+      nodes.push({ id, type: "dir", position, data: { node: point.data, depth: point.depth } });
     }
     if (point.parent) {
-      edges.push({ id: `e:${id}`, source: point.parent.data.path || "__origin", target: id, type: "straight", className: "map-edge" });
+      edges.push({
+        id: `e:${id}`,
+        source: point.parent.data.path || "__origin",
+        target: id,
+        type: "straight",
+        className: "map-edge",
+      });
     }
   });
   return { nodes, edges };
@@ -90,7 +130,17 @@ export default function MapView({ mini = false }: { mini?: boolean }) {
 
 function MapCanvas({ mini }: { mini: boolean }) {
   const { namespace, username, select, selectedPath } = useWorkspace();
-  const { nodes, edges } = useMemo(() => layout(namespace, username), [namespace, username]);
+  const { nodes, edges: baseEdges } = useMemo(() => layout(namespace, username), [namespace, username]);
+  const [hovered, setHovered] = useState<string | null>(null);
+  const trace = useMemo(() => chainOf(hovered), [hovered]);
+  const edges = useMemo(
+    () =>
+      baseEdges.map((edge) => {
+        const lit = trace.has(edge.target) || (hovered !== null && edge.target === `host:${hovered}`);
+        return lit ? { ...edge, className: `${edge.className} map-edge-trace` } : edge;
+      }),
+    [baseEdges, trace, hovered],
+  );
   const flow = useReactFlow();
   const container = useRef<HTMLDivElement>(null);
 
@@ -119,24 +169,40 @@ function MapCanvas({ mini }: { mini: boolean }) {
 
   return (
     <div ref={container} className="signal-map relative h-full w-full">
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        nodeTypes={nodeTypes}
-        nodeOrigin={[0.5, 0.5]}
-        fitView
-        fitViewOptions={{ padding: 0.18 }}
-        minZoom={mini ? 0.5 : 0.2}
-        maxZoom={2.2}
-        nodesDraggable={false}
-        nodesConnectable={false}
-        nodesFocusable={false}
-        edgesFocusable={false}
-        elementsSelectable={false}
-        onPaneClick={() => void select("")}
-        attributionPosition="bottom-left"
-        aria-label="命名空间星图"
-      />
+      <TraceContext.Provider value={trace}>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          nodeOrigin={[0.5, 0.5]}
+          fitView
+          fitViewOptions={{ padding: 0.18 }}
+          minZoom={mini ? 0.5 : 0.2}
+          maxZoom={2.2}
+          nodesDraggable={false}
+          nodesConnectable={false}
+          nodesFocusable={false}
+          edgesFocusable={false}
+          elementsSelectable={false}
+          // Trackpads: two-finger scroll pans, pinch zooms (macOS sends pinch as ctrl+wheel).
+          panOnScroll
+          panOnScrollMode={PanOnScrollMode.Free}
+          panOnScrollSpeed={1}
+          zoomOnScroll={false}
+          zoomOnPinch
+          // Non-interactive nodes get pointer-events: none in React Flow, so
+          // selection must go through onNodeClick rather than handlers inside nodes.
+          onNodeClick={(_, node) => {
+            if (node.type === "dir") void select(node.id);
+            if (node.type === "endpoint" && !(node.data as EndpointData).endpoint.ghost) void select(node.id);
+          }}
+          onPaneClick={() => void select("")}
+          onNodeMouseEnter={(_, node) => (node.type === "endpoint" || node.type === "dir") && setHovered(node.id)}
+          onNodeMouseLeave={() => setHovered(null)}
+          attributionPosition="bottom-left"
+          aria-label="命名空间星图"
+        />
+      </TraceContext.Provider>
       {!mini && <MapControls />}
       {!mini && <Legend />}
     </div>
@@ -172,33 +238,32 @@ function OriginNode({ data }: NodeProps<Node<OriginData>>) {
 }
 
 function DirNode({ data }: NodeProps<Node<DirData>>) {
-  const { select, selectedPath } = useWorkspace();
+  const { selectedPath } = useWorkspace();
+  const traced = useContext(TraceContext).has(data.node.path);
   const dimmed = useDimmed(undefined, data.node);
   const selected = selectedPath === data.node.path;
   return (
-    <button
+    <motion.button
+      {...surface(data.depth)}
       type="button"
-      onClick={(event) => {
-        event.stopPropagation();
-        void select(data.node.path);
-      }}
       aria-label={`目录 ${data.node.path}，${data.node.count} 个端点`}
       className={cn(
-        "flex items-center gap-1.5 rounded-full bg-surface-solid px-2.5 py-1 font-mono text-xs whitespace-nowrap text-ink-3 transition-opacity",
+        "flex items-center gap-1.5 rounded-full bg-surface-solid px-2.5 py-1 font-mono text-xs whitespace-nowrap text-ink-3 transition-[opacity,color,box-shadow] duration-200",
         "shadow-[0_0_0_1px_var(--line)] hover:text-ink-1",
         selected && "text-ink-1 shadow-[0_0_0_1px_var(--ink-3)]",
+        traced && "text-ink-1 shadow-[0_0_0_1px_color-mix(in_srgb,var(--signal)_60%,transparent)]",
         dimmed && "opacity-25",
       )}
     >
       {data.node.segment}/<span className="text-2xs text-ink-4">{data.node.count}</span>
       <Handle type="target" position={Position.Top} className={hidden} />
       <Handle type="source" position={Position.Bottom} className={hidden} />
-    </button>
+    </motion.button>
   );
 }
 
 function EndpointNode({ data }: NodeProps<Node<EndpointData>>) {
-  const { select, selectedPath, ghostKinds } = useWorkspace();
+  const { selectedPath, ghostKinds } = useWorkspace();
   const { data: groups = [] } = useGroups();
   const zoom = useZoom();
   const { endpoint, node } = data;
@@ -212,18 +277,16 @@ function EndpointNode({ data }: NodeProps<Node<EndpointData>>) {
 
   return (
     <Tooltip content={compact ? `${endpoint.path} · ${endpoint.name}` : null}>
-      <button
+      <motion.button
+        {...surface(data.depth)}
         type="button"
-        onClick={(event) => {
-          event.stopPropagation();
-          if (!endpoint.ghost) void select(node.path);
-        }}
         aria-label={`${endpoint.name}，${endpoint.path}`}
         aria-current={selected || undefined}
         className={cn(
           "group relative flex items-center gap-2 rounded-full bg-surface-solid py-1.5 pr-3 pl-2 whitespace-nowrap transition-[opacity,transform,box-shadow] duration-200",
-          "shadow-[0_0_0_1px_var(--line-strong)] hover:-translate-y-px",
-          status === "live" && "shadow-[0_0_0_1px_color-mix(in_srgb,var(--signal)_45%,transparent),0_0_18px_-4px_var(--signal)]",
+          "shadow-[0_0_0_1px_var(--line-strong)] hover:-translate-y-0.5 hover:shadow-[0_0_0_1px_var(--signal),0_0_22px_-4px_var(--signal),0_8px_20px_-8px_rgb(0_0_0/0.5)]",
+          status === "live" &&
+            "shadow-[0_0_0_1px_color-mix(in_srgb,var(--signal)_45%,transparent),0_0_18px_-4px_var(--signal)]",
           status === "draft" && "shadow-none outline-1 outline-offset-0 outline-ink-3 outline-dashed",
           status === "disabled" && "opacity-60",
           selected && "scale-110 shadow-[0_0_0_2px_var(--signal),0_0_28px_-2px_var(--signal)]",
@@ -246,14 +309,20 @@ function EndpointNode({ data }: NodeProps<Node<EndpointData>>) {
         <span
           className={cn(
             "grid size-5 place-items-center rounded-full",
-            endpoint.type === "proxy" || endpoint.type === "dynamicProxy" ? "bg-route-soft text-route" : "bg-surface-3 text-ink-1",
+            endpoint.type === "proxy" || endpoint.type === "dynamicProxy"
+              ? "bg-route-soft text-route"
+              : "bg-surface-3 text-ink-1",
           )}
         >
           <TypeGlyph type={endpoint.type} className="size-3" />
         </span>
         {!compact && (
           <>
-            <span className={cn("font-mono text-xs text-ink-1", status === "disabled" && "line-through decoration-ink-4")}>{node.segment}</span>
+            <span
+              className={cn("font-mono text-xs text-ink-1", status === "disabled" && "line-through decoration-ink-4")}
+            >
+              {node.segment}
+            </span>
             <StatusDot status={status} className="size-1.5" />
             {zoom > 1.1 && (
               <span className="flex items-center gap-1 text-2xs text-ink-3">
@@ -270,7 +339,7 @@ function EndpointNode({ data }: NodeProps<Node<EndpointData>>) {
         )}
         <Handle type="target" position={Position.Top} className={hidden} />
         <Handle type="source" position={Position.Bottom} className={hidden} />
-      </button>
+      </motion.button>
     </Tooltip>
   );
 }
@@ -297,7 +366,12 @@ function MapControls() {
     <div className="absolute top-3 right-3 flex items-center gap-0.5 rounded-md p-0.5 glass shadow-pop">
       {buttons.map(({ label, icon: Icon, run }) => (
         <Tooltip key={label} content={label}>
-          <button type="button" aria-label={label} onClick={() => void run()} className="grid size-7 place-items-center rounded-sm text-ink-3 hover:bg-surface-3 hover:text-ink-1">
+          <button
+            type="button"
+            aria-label={label}
+            onClick={() => void run()}
+            className="grid size-7 place-items-center rounded-sm text-ink-3 hover:bg-surface-3 hover:text-ink-1"
+          >
             <Icon className="size-3.5" />
           </button>
         </Tooltip>

@@ -4,6 +4,7 @@ import type { EndpointType } from "../../../../common/types";
 import { TypeGlyph, typeMeta } from "../../design/glyphs";
 import { errorMessage } from "../../lib/api";
 import { cn } from "../../lib/cn";
+import { spotlight } from "../../lib/spotlight";
 import { Button } from "../../ui/button";
 import { Dialog, DialogContent, DialogFooter } from "../../ui/dialog";
 import { Field } from "../../ui/field";
@@ -20,7 +21,10 @@ const TYPES: EndpointType[] = ["static", "proxy", "dynamicProxy", "script"];
 
 function suggestName(path: string) {
   const last = path.split("/").filter(Boolean).pop() ?? "";
-  return last.replace(/\.[a-z0-9]+$/i, "").replace(/[-_]+/g, " ").trim();
+  return last
+    .replace(/\.[a-z0-9]+$/i, "")
+    .replace(/[-_]+/g, " ")
+    .trim();
 }
 
 export function CreateEndpointDialog() {
@@ -50,7 +54,9 @@ export function CreateEndpointDialog() {
 
   const normalized = normalizePath(path);
   const pathError = validatePath(normalized, (candidate) => endpoints.some((endpoint) => endpoint.path === candidate));
-  const parentDynamic = endpoints.find((endpoint) => endpoint.type === "dynamicProxy" && normalized.startsWith(`${endpoint.path}/`));
+  const parentDynamic = endpoints.find(
+    (endpoint) => endpoint.type === "dynamicProxy" && normalized.startsWith(`${endpoint.path}/`),
+  );
   const finalName = (nameTouched ? name : name || suggestName(normalized)).trim();
   const groupError = access === "authenticated" && selectedGroups.length === 0 ? "至少选择一个权限组" : null;
   const errors = {
@@ -82,7 +88,11 @@ export function CreateEndpointDialog() {
 
   return (
     <Dialog open={open} onOpenChange={(next) => !next && closeCreate()}>
-      <DialogContent title="新建端点" description="新端点以草稿创建，发布前不会对外可见。" className="w-[min(640px,calc(100vw-32px))]">
+      <DialogContent
+        title="新建端点"
+        description="新端点以草稿创建，发布前不会对外可见。"
+        className="w-[min(640px,calc(100vw-32px))]"
+      >
         <form
           className="grid gap-5"
           onSubmit={(event) => {
@@ -103,12 +113,18 @@ export function CreateEndpointDialog() {
                   aria-checked={active}
                   disabled={soon}
                   onClick={() => setType(candidate)}
+                  {...spotlight}
                   className={cn(
-                    "group relative flex gap-3 rounded-md p-3 text-left transition-[background-color,box-shadow] disabled:cursor-not-allowed disabled:opacity-45",
-                    active ? "bg-signal-soft shadow-[inset_0_0_0_1px_var(--signal)]" : "bg-surface-1 shadow-[inset_0_0_0_1px_var(--line)] hover:bg-surface-2",
+                    "spotlight group relative flex gap-3 rounded-md p-3 text-left transition-[background-color,box-shadow] disabled:cursor-not-allowed disabled:opacity-45",
+                    active
+                      ? "bg-signal-soft shadow-[inset_0_0_0_1px_var(--signal)]"
+                      : "bg-surface-1 shadow-[inset_0_0_0_1px_var(--line)] hover:bg-surface-2",
                   )}
                 >
-                  <TypeGlyph type={candidate} className={cn("mt-0.5 size-4 shrink-0", active ? "text-signal" : "text-ink-2")} />
+                  <TypeGlyph
+                    type={candidate}
+                    className={cn("mt-0.5 size-4 shrink-0", active ? "text-signal" : "text-ink-2")}
+                  />
                   <span className="min-w-0">
                     <span className="flex items-center gap-2 text-sm font-medium text-ink-1">
                       {meta.label}
@@ -125,7 +141,11 @@ export function CreateEndpointDialog() {
           <Field
             label="地址"
             error={submitted || path ? errors.path : null}
-            hint={parentDynamic ? `位于动态代理 ${parentDynamic.path} 之下：这个精确路径会由新端点响应，其余子路径仍由动态代理转发` : undefined}
+            hint={
+              parentDynamic
+                ? `位于动态代理 ${parentDynamic.path} 之下：这个精确路径会由新端点响应，其余子路径仍由动态代理转发`
+                : undefined
+            }
           >
             <div
               className={cn(
@@ -178,10 +198,16 @@ export function CreateEndpointDialog() {
                         key={group.id}
                         type="button"
                         aria-pressed={on}
-                        onClick={() => setSelectedGroups(on ? selectedGroups.filter((id) => id !== group.id) : [...selectedGroups, group.id])}
+                        onClick={() =>
+                          setSelectedGroups(
+                            on ? selectedGroups.filter((id) => id !== group.id) : [...selectedGroups, group.id],
+                          )
+                        }
                         className={cn(
                           "inline-flex h-7 items-center gap-1.5 rounded-full px-3 text-xs",
-                          on ? "bg-pass-soft text-pass shadow-[inset_0_0_0_1px_var(--pass)]" : "text-ink-2 shadow-[inset_0_0_0_1px_var(--line-strong)] hover:bg-surface-2",
+                          on
+                            ? "bg-pass-soft text-pass shadow-[inset_0_0_0_1px_var(--pass)]"
+                            : "text-ink-2 shadow-[inset_0_0_0_1px_var(--line-strong)] hover:bg-surface-2",
                         )}
                       >
                         <Lock className="size-3" /> {group.name}

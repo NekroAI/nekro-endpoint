@@ -30,7 +30,7 @@ export function CommandPalette() {
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-[rgb(0_0_0/0.35)] data-[state=open]:animate-fade-in" />
         <DialogPrimitive.Content
-          className="fixed top-[14vh] left-1/2 z-50 w-[min(640px,calc(100vw-24px))] -translate-x-1/2 overflow-hidden rounded-lg glass shadow-float data-[state=open]:animate-fade-in focus:outline-none"
+          className="fixed top-[14vh] left-1/2 z-50 w-[min(640px,calc(100vw-24px))] -translate-x-1/2 overflow-hidden rounded-lg glass shadow-float data-[state=open]:animate-pop-in focus:outline-none"
           aria-describedby={undefined}
         >
           <DialogPrimitive.Title className="sr-only">命令面板</DialogPrimitive.Title>
