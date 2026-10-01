@@ -39,7 +39,7 @@ export function Segmented<T extends string>({
             disabled={option.disabled}
             onClick={() => onChange(option.value)}
             className={cn(
-              "relative inline-flex flex-1 items-center justify-center gap-1.5 rounded-[5px] px-2.5 font-medium transition-colors disabled:opacity-40 [&_svg]:size-3.5",
+              "relative inline-flex flex-1 items-center justify-center gap-1.5 rounded-[5px] px-2.5 font-medium whitespace-nowrap transition-colors disabled:opacity-40 [&_svg]:size-3.5",
               size === "sm" ? "h-6 text-xs" : "h-7 text-sm",
               active ? "text-ink-1" : "text-ink-3 hover:text-ink-1",
             )}

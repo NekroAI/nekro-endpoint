@@ -66,7 +66,7 @@ export const typeGlyph: Record<EndpointType, (props: GlyphProps) => JSX.Element>
 };
 
 export const typeMeta: Record<EndpointType, { label: string; summary: string; example: string }> = {
-  static: { label: "静态", summary: "托管一段文本或配置文件，原样返回", example: "规则列表、JSON 配置、订阅片段" },
+  static: { label: "静态", summary: "托管一段文本或配置文件，原样返回", example: "JSON 或 YAML 配置、文本片段、Markdown" },
   proxy: { label: "代理", summary: "把请求转发到一个固定的目标地址", example: "为某个 API 加一层鉴权或缓存入口" },
   dynamicProxy: {
     label: "动态代理",

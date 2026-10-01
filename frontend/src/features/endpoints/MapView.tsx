@@ -79,15 +79,16 @@ function layout(root: NamespaceNode, username: string) {
 
 const nodeTypes = { origin: OriginNode, dir: DirNode, endpoint: EndpointNode, host: HostNode };
 
-export default function MapView() {
+/** `mini`: an embedded overview without legend and zoom controls. */
+export default function MapView({ mini = false }: { mini?: boolean }) {
   return (
     <ReactFlowProvider>
-      <MapCanvas />
+      <MapCanvas mini={mini} />
     </ReactFlowProvider>
   );
 }
 
-function MapCanvas() {
+function MapCanvas({ mini }: { mini: boolean }) {
   const { namespace, username, select, selectedPath } = useWorkspace();
   const { nodes, edges } = useMemo(() => layout(namespace, username), [namespace, username]);
   const flow = useReactFlow();
@@ -125,7 +126,7 @@ function MapCanvas() {
         nodeOrigin={[0.5, 0.5]}
         fitView
         fitViewOptions={{ padding: 0.18 }}
-        minZoom={0.2}
+        minZoom={mini ? 0.5 : 0.2}
         maxZoom={2.2}
         nodesDraggable={false}
         nodesConnectable={false}
@@ -136,8 +137,8 @@ function MapCanvas() {
         attributionPosition="bottom-left"
         aria-label="命名空间星图"
       />
-      <MapControls />
-      <Legend />
+      {!mini && <MapControls />}
+      {!mini && <Legend />}
     </div>
   );
 }

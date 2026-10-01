@@ -59,6 +59,8 @@
 
   --brand-gradient: linear-gradient(135deg, #8a2be2 0%, #4a90e2 50%, #50e3c2 100%);
 
+  --switch-thumb: #eef1f6;
+
   --monaco-theme: "signal-dark";
 }
 
@@ -111,6 +113,8 @@
   --shadow-float: 0 24px 64px -24px rgb(20 24 31 / 0.25), 0 0 0 1px var(--line-strong);
   --shadow-pop: 0 12px 32px -12px rgb(20 24 31 / 0.22), 0 0 0 1px var(--line-strong);
   --blur: saturate(140%) blur(14px);
+
+  --switch-thumb: #ffffff;
 
   --monaco-theme: "signal-paper";
 }

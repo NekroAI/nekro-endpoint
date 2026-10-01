@@ -1,18 +1,15 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import App from "./App";
-import { WorkspaceLayout } from "./layouts/WorkspaceLayout";
-import HomePage from "./pages/HomePage";
-import { Features } from "./pages/Features";
-import { DashboardPage } from "./pages/DashboardPage";
-import { AuthCallbackPage } from "./pages/AuthCallbackPage";
-import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
-import { InitPage } from "./pages/InitPage";
-import { DocsPage } from "./pages/DocsPage";
 import { AppShell } from "./app/AppShell";
-import { Placeholder } from "./app/Placeholder";
-import { EndpointsPage as SignalEndpointsPage } from "./features/endpoints/EndpointsPage";
+import { EndpointsPage } from "./features/endpoints/EndpointsPage";
 import { AccessPage } from "./features/access/AccessPage";
 import { SettingsPage } from "./features/settings/SettingsPage";
+import { OverviewPage } from "./features/overview/OverviewPage";
+import { AdminPage } from "./features/admin/AdminPage";
+import { SiteLayout } from "./features/site/SiteLayout";
+import { LandingPage } from "./features/site/LandingPage";
+import { DocsPage } from "./features/site/DocsPage";
+import { AuthCallbackPage } from "./features/site/AuthCallbackPage";
+import { InitPage } from "./features/site/InitPage";
 
 /**
  * 应用路由配置
@@ -20,42 +17,38 @@ import { SettingsPage } from "./features/settings/SettingsPage";
  * 这是唯一的路由定义文件，被客户端和服务端入口共享使用。
  * 添加新路由时，只需要在这里修改即可。
  *
- * @example
- * // 添加新页面：
- * 1. 导入页面组件：import AboutPage from "./pages/AboutPage";
- * 2. 添加路由：<Route path="about" element={<AboutPage />} />
+ * 旧路径（/dashboard、/endpoints、/permissions、/admin/users、/features）
+ * 可能被书签或外部链接引用，必须保留为重定向（docs/REDESIGN.md §1.5）。
  */
 export const AppRoutes = () => (
   <Routes>
-    {/* 初始化页面（不需要布局） */}
+    {/* 首次部署：分配管理员 */}
     <Route path="/init" element={<InitPage />} />
 
-    {/* Signal 工作区（docs/REDESIGN.md §4） */}
+    {/* 工作区 */}
     <Route path="/app" element={<AppShell />}>
       <Route index element={<Navigate to="endpoints" replace />} />
-      <Route path="endpoints/*" element={<SignalEndpointsPage />} />
+      <Route path="endpoints/*" element={<EndpointsPage />} />
       <Route path="access" element={<AccessPage />} />
       <Route path="access/:groupId" element={<AccessPage />} />
-      <Route path="overview" element={<Placeholder title="概览" />} />
+      <Route path="overview" element={<OverviewPage />} />
       <Route path="settings" element={<SettingsPage />} />
-      <Route path="admin" element={<Placeholder title="管理" />} />
+      <Route path="admin" element={<AdminPage />} />
     </Route>
 
-    {/* 旧版工作区布局（迁移完成后改为重定向） */}
-    <Route element={<WorkspaceLayout />}>
-      <Route path="/dashboard" element={<DashboardPage />} />
-      <Route path="/endpoints" element={<Navigate to="/app/endpoints" replace />} />
-      <Route path="/permissions" element={<Navigate to="/app/access" replace />} />
-      <Route path="/admin/users" element={<AdminUsersPage />} />
-    </Route>
-
-    {/* 标准网页布局 */}
-    <Route path="/" element={<App />}>
-      <Route index element={<HomePage />} />
+    {/* 公开页面 */}
+    <Route path="/" element={<SiteLayout />}>
+      <Route index element={<LandingPage />} />
       <Route path="docs" element={<DocsPage />} />
-      <Route path="features" element={<Features />} />
       <Route path="auth/callback" element={<AuthCallbackPage />} />
-      {/* 在这里添加新的路由 */}
     </Route>
+
+    {/* 旧路径重定向 */}
+    <Route path="/dashboard" element={<Navigate to="/app" replace />} />
+    <Route path="/endpoints" element={<Navigate to="/app/endpoints" replace />} />
+    <Route path="/permissions" element={<Navigate to="/app/access" replace />} />
+    <Route path="/admin/users" element={<Navigate to="/app/admin" replace />} />
+    <Route path="/features" element={<Navigate to="/" replace />} />
+    <Route path="*" element={<Navigate to="/" replace />} />
   </Routes>
 );
