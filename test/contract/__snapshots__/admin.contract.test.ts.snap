@@ -1,0 +1,519 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`OpenAPI > serves the document at /api/doc 1`] = `
+[
+  "DELETE /api/access-keys/{id}",
+  "DELETE /api/admin/users/{id}",
+  "DELETE /api/endpoints/{id}",
+  "DELETE /api/permission-groups/{id}",
+  "DELETE /api/signal/config",
+  "DELETE /api/signal/platform-config",
+  "GET /api/admin/endpoints/{id}",
+  "GET /api/admin/stats",
+  "GET /api/admin/users",
+  "GET /api/admin/users/{userId}/endpoints",
+  "GET /api/auth/github",
+  "GET /api/auth/github/callback",
+  "GET /api/auth/me",
+  "GET /api/endpoints",
+  "GET /api/endpoints/{id}",
+  "GET /api/features",
+  "GET /api/init/check",
+  "GET /api/init/users",
+  "GET /api/permission-groups",
+  "GET /api/permission-groups/{groupId}/keys",
+  "GET /api/permission-groups/{id}",
+  "GET /api/permission-groups/{id}/endpoints",
+  "GET /api/signal/actions",
+  "GET /api/signal/config",
+  "PATCH /api/access-keys/{id}",
+  "PATCH /api/endpoints/{id}",
+  "PATCH /api/endpoints/{id}/move",
+  "PATCH /api/features/{key}",
+  "PATCH /api/permission-groups/{id}",
+  "POST /api/access-keys/{id}/revoke",
+  "POST /api/admin/endpoints/{id}/force-unpublish",
+  "POST /api/admin/users/{id}/activate",
+  "POST /api/admin/users/{id}/deactivate",
+  "POST /api/auth/logout",
+  "POST /api/auth/regenerate-key",
+  "POST /api/endpoints",
+  "POST /api/endpoints/reorder",
+  "POST /api/endpoints/{id}/publish",
+  "POST /api/endpoints/{id}/unpublish",
+  "POST /api/init/set-admin",
+  "POST /api/permission-groups",
+  "POST /api/permission-groups/{groupId}/keys",
+  "POST /api/signal/config/test",
+  "PUT /api/signal/config",
+  "PUT /api/signal/platform-config",
+]
+`;
+
+exports[`admin (REDESIGN §1.2) > activates and deactivates 1`] = `
+{
+  "body": {
+    "message": "用户 bob 已激活",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`admin (REDESIGN §1.2) > activates and deactivates 2`] = `
+{
+  "body": {
+    "message": "用户 bob 已停用",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`admin (REDESIGN §1.2) > deletes a user 1`] = `
+{
+  "body": {
+    "message": "用户 bob 已删除",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`admin (REDESIGN §1.2) > force-unpublishes 1`] = `
+{
+  "body": {
+    "message": "端点已强制下线",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`admin (REDESIGN §1.2) > lists users 1`] = `
+{
+  "body": {
+    "data": {
+      "page": 1,
+      "pageSize": 20,
+      "total": 3,
+      "users": [
+        {
+          "apiKey": "sec-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "avatarUrl": "https://avatars.example.test/alice",
+          "createdAt": "<date>",
+          "email": "alice@example.test",
+          "githubId": "1000",
+          "id": "user_alice",
+          "isActivated": true,
+          "lastLoginAt": null,
+          "platformApiKey": null,
+          "platformApiKeyCreatedAt": null,
+          "role": "user",
+          "updatedAt": "<date>",
+          "username": "alice",
+        },
+        {
+          "apiKey": "sec-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "avatarUrl": "https://avatars.example.test/bob",
+          "createdAt": "<date>",
+          "email": "bob@example.test",
+          "githubId": "1001",
+          "id": "user_bob",
+          "isActivated": false,
+          "lastLoginAt": null,
+          "platformApiKey": null,
+          "platformApiKeyCreatedAt": null,
+          "role": "user",
+          "updatedAt": "<date>",
+          "username": "bob",
+        },
+        {
+          "apiKey": "sec-cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "avatarUrl": "https://avatars.example.test/carol",
+          "createdAt": "<date>",
+          "email": "carol@example.test",
+          "githubId": "1002",
+          "id": "user_carol",
+          "isActivated": true,
+          "lastLoginAt": null,
+          "platformApiKey": null,
+          "platformApiKeyCreatedAt": null,
+          "role": "admin",
+          "updatedAt": "<date>",
+          "username": "carol",
+        },
+      ],
+    },
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`admin (REDESIGN §1.2) > rejects non-admins 1`] = `
+{
+  "body": {
+    "message": "需要管理员权限",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 403,
+}
+`;
+
+exports[`admin (REDESIGN §1.2) > rejects non-admins 2`] = `
+{
+  "body": {
+    "message": "认证令牌缺失",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 401,
+}
+`;
+
+exports[`admin (REDESIGN §1.2) > reports stats 1`] = `
+{
+  "body": {
+    "data": {
+      "activatedUsers": 2,
+      "publishedEndpoints": 8,
+      "totalAccessKeys": 4,
+      "totalEndpoints": 9,
+      "totalPermissionGroups": 2,
+      "totalUsers": 3,
+    },
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`admin (REDESIGN §1.2) > reviews a user's endpoints and one endpoint 1`] = `
+{
+  "body": {
+    "data": {
+      "tree": [
+        {
+          "accessControl": "public",
+          "children": [],
+          "config": "{"content":"off"}",
+          "createdAt": "<date>",
+          "enabled": false,
+          "id": "ep_disabled",
+          "isPublished": true,
+          "name": "Disabled",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/disabled",
+          "requiredPermissionGroups": null,
+          "sortOrder": 0,
+          "type": "static",
+          "updatedAt": "<date>",
+        },
+        {
+          "accessControl": "public",
+          "children": [],
+          "config": "{"content":"draft"}",
+          "createdAt": "<date>",
+          "enabled": true,
+          "id": "ep_draft",
+          "isPublished": false,
+          "name": "Draft",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/draft",
+          "requiredPermissionGroups": null,
+          "sortOrder": 0,
+          "type": "static",
+          "updatedAt": "<date>",
+        },
+        {
+          "accessControl": "public",
+          "children": [],
+          "config": "{"targetUrl":"https://upstream.test/data.json","headers":{"X-Upstream":"1"},"timeout":5000}",
+          "createdAt": "<date>",
+          "enabled": true,
+          "id": "ep_proxy",
+          "isPublished": true,
+          "name": "Fixed proxy",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/proxy/fixed",
+          "requiredPermissionGroups": null,
+          "sortOrder": 0,
+          "type": "proxy",
+          "updatedAt": "<date>",
+        },
+        {
+          "accessControl": "public",
+          "children": [],
+          "config": "{"baseUrl":"https://raw.upstream.test/","autoAppendSlash":true,"timeout":5000,"allowedPaths":[]}",
+          "createdAt": "<date>",
+          "enabled": true,
+          "id": "ep_dynamic",
+          "isPublished": true,
+          "name": "GitHub raw",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/gh",
+          "requiredPermissionGroups": null,
+          "sortOrder": 0,
+          "type": "dynamicProxy",
+          "updatedAt": "<date>",
+        },
+        {
+          "accessControl": "public",
+          "children": [],
+          "config": "{"content":"hello world","contentType":"text/plain","headers":{"X-Custom":"yes"}}",
+          "createdAt": "<date>",
+          "enabled": true,
+          "id": "ep_static_public",
+          "isPublished": true,
+          "name": "Hello",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/hello",
+          "requiredPermissionGroups": null,
+          "sortOrder": 0,
+          "type": "static",
+          "updatedAt": "<date>",
+        },
+        {
+          "accessControl": "authenticated",
+          "children": [],
+          "config": "{"content":"x"}",
+          "createdAt": "<date>",
+          "enabled": true,
+          "id": "ep_protected_nogroups",
+          "isPublished": true,
+          "name": "No groups",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/broken",
+          "requiredPermissionGroups": "[]",
+          "sortOrder": 0,
+          "type": "static",
+          "updatedAt": "<date>",
+        },
+        {
+          "accessControl": "authenticated",
+          "children": [],
+          "config": "{"content":"classified","contentType":"application/json"}",
+          "createdAt": "<date>",
+          "enabled": true,
+          "id": "ep_static_protected",
+          "isPublished": true,
+          "name": "Secret",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/configs/secret",
+          "requiredPermissionGroups": "["group_alice_vip"]",
+          "sortOrder": 1,
+          "type": "static",
+          "updatedAt": "<date>",
+        },
+        {
+          "accessControl": "public",
+          "children": [],
+          "config": "{"content":"a: 1\\n","contentType":"text/yaml; charset=utf-8"}",
+          "createdAt": "<date>",
+          "enabled": true,
+          "id": "ep_static_yaml",
+          "isPublished": true,
+          "name": "App config",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/configs/app.yaml",
+          "requiredPermissionGroups": null,
+          "sortOrder": 2,
+          "type": "static",
+          "updatedAt": "<date>",
+        },
+      ],
+    },
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`admin (REDESIGN §1.2) > reviews a user's endpoints and one endpoint 2`] = `
+{
+  "body": {
+    "data": {
+      "endpoint": {
+        "accessControl": "authenticated",
+        "config": "{"content":"classified","contentType":"application/json"}",
+        "createdAt": "<date>",
+        "enabled": true,
+        "id": "ep_static_protected",
+        "isPublished": true,
+        "name": "Secret",
+        "ownerUserId": "user_alice",
+        "parentId": null,
+        "path": "/configs/secret",
+        "requiredPermissionGroups": "["group_alice_vip"]",
+        "sortOrder": 1,
+        "type": "static",
+        "updatedAt": "<date>",
+      },
+    },
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`features > lists feature flags 1`] = `
+{
+  "body": [
+    {
+      "description": "从数据库 Schema 到前端组件，全程采用 TypeScript 和 Zod 校验，智能提示无处不在，彻底告别运行时类型错误。",
+      "enabled": true,
+      "id": 1,
+      "key": "e2e-type-safety",
+      "name": "端到端类型安全",
+    },
+    {
+      "description": "集成了 Vite 的热更新（HMR）用于开发，同时支持生产环境下的服务器端渲染（SSR），兼顾开发效率与生产性能。",
+      "enabled": true,
+      "id": 2,
+      "key": "hybrid-rendering",
+      "name": "混合渲染模式",
+    },
+    {
+      "description": "通过 Hono 的轻量级框架和 React 的现代生态，提供无与伦比的开发体验。代码简洁，逻辑清晰。",
+      "enabled": true,
+      "id": 3,
+      "key": "dev-experience",
+      "name": "极致开发体验",
+    },
+    {
+      "description": "基于 Cloudflare 全球网络构建，整合了 Pages, Workers 和 D1 数据库，提供高可用、低延迟的生产级部署方案。",
+      "enabled": true,
+      "id": 4,
+      "key": "production-ready",
+      "name": "生产级就绪",
+    },
+    {
+      "description": "Hono 后端和优化的前端构建确保了应用的快速响应。无论是 API 还是页面加载，都力求极致性能。",
+      "enabled": true,
+      "id": 5,
+      "key": "high-performance",
+      "name": "性能卓越",
+    },
+    {
+      "description": "简化的构建和部署流程，只需一个命令即可将您的全栈应用部署到 Cloudflare 的边缘网络上，轻松便捷。",
+      "enabled": true,
+      "id": 6,
+      "key": "one-click-deploy",
+      "name": "一键部署",
+    },
+  ],
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`init (REDESIGN §1.2) > is closed once an admin exists 1`] = `
+{
+  "body": {
+    "message": "系统已初始化",
+    "needsInit": false,
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`init (REDESIGN §1.2) > is closed once an admin exists 2`] = `
+{
+  "body": {
+    "message": "系统已初始化，无法设置管理员",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 403,
+}
+`;
+
+exports[`init (REDESIGN §1.2) > lists users and assigns the first admin 1`] = `
+{
+  "body": {
+    "message": "系统需要初始化，请分配管理员",
+    "needsInit": true,
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`init (REDESIGN §1.2) > lists users and assigns the first admin 2`] = `
+{
+  "body": {
+    "data": {
+      "total": 3,
+      "users": [
+        {
+          "avatarUrl": "https://avatars.example.test/alice",
+          "createdAt": "<date>",
+          "email": "alice@example.test",
+          "id": "user_alice",
+          "username": "alice",
+        },
+        {
+          "avatarUrl": "https://avatars.example.test/bob",
+          "createdAt": "<date>",
+          "email": "bob@example.test",
+          "id": "user_bob",
+          "username": "bob",
+        },
+        {
+          "avatarUrl": "https://avatars.example.test/carol",
+          "createdAt": "<date>",
+          "email": "carol@example.test",
+          "id": "user_carol",
+          "username": "carol",
+        },
+      ],
+    },
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`init (REDESIGN §1.2) > lists users and assigns the first admin 3`] = `
+{
+  "body": {
+    "message": "用户不存在",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 404,
+}
+`;
+
+exports[`init (REDESIGN §1.2) > lists users and assigns the first admin 4`] = `
+{
+  "body": {
+    "message": "已成功将用户 "bob" 设置为管理员并激活",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;

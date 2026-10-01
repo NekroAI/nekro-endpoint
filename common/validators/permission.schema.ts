@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { AccessControlSchema, EndpointTypeSchema } from "./endpoint.schema";
 
 // 权限组 Schema
 export const PermissionGroupSchema = z.object({
@@ -100,4 +101,23 @@ export const CreateAccessKeyResponseSchema = z.object({
 export const PermissionSuccessResponseSchema = z.object({
   success: z.boolean(),
   message: z.string(),
+});
+
+// 引用某个权限组的端点（GET /permission-groups/{id}/endpoints，新增接口）
+export const PermissionGroupEndpointSchema = z.object({
+  id: z.string(),
+  path: z.string(),
+  name: z.string(),
+  type: EndpointTypeSchema,
+  accessControl: AccessControlSchema,
+  enabled: z.boolean(),
+  isPublished: z.boolean(),
+});
+
+export const PermissionGroupEndpointsResponseSchema = z.object({
+  success: z.boolean(),
+  data: z.object({
+    endpoints: z.array(PermissionGroupEndpointSchema),
+    total: z.number().int(),
+  }),
 });

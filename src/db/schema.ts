@@ -150,3 +150,50 @@ export const accessKeys = sqliteTable(
   },
   (table) => [index("access_key_group_idx").on(table.permissionGroupId)],
 );
+
+// AI 模型配置（Signal Line，docs/REDESIGN.md §5.6）。ownerUserId 为空表示平台默认配置。
+// API Key 使用 AI_CONFIG_SECRET 进行 AES-GCM 加密，界面只显示 keyHint。
+export const aiProviderConfigs = sqliteTable(
+  "ai_provider_configs",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    ownerUserId: text("owner_user_id").references(() => users.id, { onDelete: "cascade" }),
+    provider: text("provider").notNull(), // openai | anthropic | openai-compatible
+    baseUrl: text("base_url"),
+    model: text("model").notNull(),
+    encryptedKey: text("encrypted_key").notNull(),
+    iv: text("iv").notNull(),
+    keyHint: text("key_hint").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (table) => [index("ai_provider_owner_idx").on(table.ownerUserId)],
+);
+
+// Agent / MCP 工具调用审计（输入已脱敏）
+export const agentActions = sqliteTable(
+  "agent_actions",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    source: text("source").notNull(), // signal | mcp
+    tool: text("tool").notNull(),
+    input: text("input").notNull(), // 脱敏后的 JSON，最长 2000 字符
+    ok: integer("ok", { mode: "boolean" }).notNull(),
+    message: text("message"),
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (table) => [index("agent_action_user_idx").on(table.userId, table.createdAt)],
+);

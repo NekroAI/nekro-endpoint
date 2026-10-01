@@ -39,16 +39,18 @@ nekro-endpoint/
 │   │   └── tree.ts              # 树结构工具
 │   └── index.ts                 # 应用入口
 │
-├── frontend/                    # 前端代码 (React + Material-UI)
+├── frontend/                    # 前端代码 (React + Tailwind v4 + Radix，见 docs/REDESIGN.md)
 │   └── src/
-│       ├── hooks/               # React Query hooks
-│       │   ├── useEndpoints.ts  # 端点管理 hooks
-│       │   ├── usePermissionGroups.ts # 权限组 hooks
-│       │   ├── useAccessKeys.ts # 访问密钥 hooks
-│       │   └── useAuth.ts       # 认证 hooks
-│       ├── pages/               # 页面组件
-│       ├── components/          # UI 组件
-│       └── context/             # React Context
+│       ├── app/                 # 工作区外壳、命令面板、AuthGate、Page
+│       ├── design/              # 设计令牌、类型字形、品牌、Monaco 主题、动效预设
+│       ├── ui/                  # Radix 原语
+│       ├── lib/                 # api 请求层、格式化、快捷键
+│       ├── features/            # endpoints / share / access / overview / settings / admin / site
+│       ├── hooks/useAuth.ts     # 认证状态
+│       ├── context/             # 主题偏好
+│       └── utils/               # storage、endpointShare
+│
+├── test/contract/               # /api/* 与 /e/* 契约测试（workerd + D1）
 │
 └── docs/                        # 文档
     ├── PROJECT_STRUCTURE.md     # 项目结构说明（本文档）

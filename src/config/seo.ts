@@ -39,11 +39,11 @@ export interface SEOConfig {
  */
 export const seoConfig: SEOConfig = {
   // 🌟 基础网站信息（必须修改）
-  siteName: "NekroEndpoint",
+  siteName: "Endpoints",
   siteUrl: "https://ep.nekro.ai",
-  title: "NekroEndpoint - 端点编排平台",
+  title: "Endpoints - 在边缘发布与分享你的端点",
   description:
-    "基于 Cloudflare Workers 构建的端点编排平台，支持静态内容返回、代理转发、动态脚本执行。为技术用户提供灵活的端点管理和权限控制能力。",
+    "在 Cloudflare 全球边缘发布静态内容与代理端点，用权限组和通行卡控制访问。开源，可自托管。",
   keywords: [
     "端点编排",
     "Cloudflare",
@@ -56,33 +56,27 @@ export const seoConfig: SEOConfig = {
     "端点平台",
     "API管理",
   ],
-  author: "NekroEndpoint Team",
+  author: "NekroAI",
   language: "zh-CN",
 
   // 🎨 社交媒体和品牌
   ogImage: "/og-image.png",
-  themeColor: "#8A2BE2",
+  themeColor: "#0A0C10",
   favicon: "/favicon.svg", // SVG 格式支持自适应暗色模式
 
   // 📄 页面级配置
   pages: {
     "/": {
-      title: "NekroEndpoint - 端点编排平台 | Cloudflare + Hono + React",
+      title: "Endpoints - 在边缘发布与分享你的端点",
       changefreq: "weekly",
       priority: 1.0,
     },
     "/docs": {
-      title: "使用文档 - NekroEndpoint 平台",
-      description: "了解 NekroEndpoint 平台的核心功能和使用方法，包括端点类型、权限控制、访问方式等详细说明。",
+      title: "使用文档 | Endpoints",
+      description: "端点类型、地址匹配、通行卡访问控制、错误码与管理 API 的完整说明。",
       keywords: ["使用文档", "API 文档", "端点管理教程", "权限控制指南"],
       changefreq: "monthly",
       priority: 0.9,
-    },
-    "/features": {
-      title: "功能演示 - NekroEndpoint 平台",
-      description: "体验 NekroEndpoint 平台的核心功能：端点管理、权限控制、树形结构等现代化端点编排特性。",
-      changefreq: "monthly",
-      priority: 0.8,
     },
   },
 };

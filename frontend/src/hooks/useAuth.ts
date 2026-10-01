@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useMemo } from "react";
 import { safeLocalStorage, isBrowser } from "../utils/storage";
 import type { User, ApiResponse } from "../../../common/types";
-import { UserInfoSchema } from "../../../common/validators/auth.schema";
+import { toast } from "../ui/toaster";
 
 // 认证响应类型
 interface AuthResponse {
@@ -47,9 +47,9 @@ const authApi = {
       throw new Error("Failed to fetch user");
     }
 
-    // 使用 Zod Schema 验证并确保类型正确
-    const data = await response.json();
-    return UserInfoSchema.parse(data) as User;
+    // The response shape is frozen by the contract tests (REDESIGN §1.2);
+    // no runtime schema here keeps zod out of the client bundle.
+    return (await response.json()) as User;
   },
 
   // 登出
@@ -127,11 +127,7 @@ export function useAuth(): {
     },
     onError: (error: Error) => {
       console.error("登录失败:", error);
-      if (isBrowser) {
-        alert(
-          `登录失败: ${error.message}\n\n请检查：\n1. GitHub OAuth 是否已配置\n2. .dev.vars 文件是否存在并包含正确的 GITHUB_CLIENT_ID 和 GITHUB_CLIENT_SECRET`,
-        );
-      }
+      toast.error("无法开始 GitHub 登录", { description: error.message });
     },
   });
 
@@ -155,7 +151,6 @@ export function useAuth(): {
     // 监听 storage 事件，当其他标签页或组件修改 localStorage 时同步状态
     const handleStorageChange = () => {
       const newToken = !!safeLocalStorage.getItem("auth_token");
-      console.log("Auth token changed, updating hasToken:", newToken);
       setHasToken(newToken);
     };
 

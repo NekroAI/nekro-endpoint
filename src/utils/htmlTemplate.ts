@@ -36,6 +36,16 @@ function generateFaviconLink(): string {
 }
 
 /**
+ * Resolves the stored theme preference ("dark" | "light" | "system", key
+ * `themeMode`) and writes it to <html data-theme>. Must stay tiny and
+ * dependency-free: it runs synchronously in <head>.
+ */
+export const THEME_BOOT_SCRIPT =
+  "(function(){try{var m=localStorage.getItem('themeMode');" +
+  "if(m!=='light'&&m!=='dark'){m=m==='system'&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'}" +
+  "document.documentElement.dataset.theme=m}catch(e){document.documentElement.dataset.theme='dark'}})()";
+
+/**
  * 生成完整的HTML页面模板
  * 统一的HTML生成逻辑，避免重复代码
  */
@@ -53,7 +63,7 @@ export function generateHtmlTemplate(options: {
   const url = generatePageUrl(path);
 
   return `<!DOCTYPE html>
-<html lang="${seoConfig.language.replace("_", "-")}">
+<html lang="${seoConfig.language.replace("_", "-")}" data-theme="dark">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -110,6 +120,9 @@ export function generateHtmlTemplate(options: {
       }
     }
     </script>
+
+    <!-- Theme: applied before first paint so SSR output never flashes (docs/REDESIGN.md §3.4) -->
+    <script>${THEME_BOOT_SCRIPT}</script>
 
     <!-- Favicon -->
     ${generateFaviconLink()}

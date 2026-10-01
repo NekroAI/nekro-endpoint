@@ -1,15 +1,22 @@
-import { Route, Routes } from "react-router-dom";
-import App from "./App";
-import { WorkspaceLayout } from "./layouts/WorkspaceLayout";
-import HomePage from "./pages/HomePage";
-import { Features } from "./pages/Features";
-import { DashboardPage } from "./pages/DashboardPage";
-import { AuthCallbackPage } from "./pages/AuthCallbackPage";
-import { EndpointsPage } from "./pages/EndpointsPage";
-import { PermissionGroupsPage } from "./pages/PermissionGroupsPage";
-import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
-import { InitPage } from "./pages/InitPage";
-import { DocsPage } from "./pages/DocsPage";
+import { lazy, Suspense, type ReactNode } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
+import { AppShell } from "./app/AppShell";
+import { PageFallback } from "./app/PageFallback";
+import { SiteLayout } from "./features/site/SiteLayout";
+import { LandingPage } from "./features/site/LandingPage";
+import { DocsPage } from "./features/site/DocsPage";
+import { AuthCallbackPage } from "./features/site/AuthCallbackPage";
+import { InitPage } from "./features/site/InitPage";
+
+// Workspace pages are auth-gated (SSR renders the shell skeleton), so they are
+// split per route; public pages stay eager for complete server rendering.
+const EndpointsPage = lazy(() => import("./features/endpoints/EndpointsPage").then((m) => ({ default: m.EndpointsPage })));
+const AccessPage = lazy(() => import("./features/access/AccessPage").then((m) => ({ default: m.AccessPage })));
+const SettingsPage = lazy(() => import("./features/settings/SettingsPage").then((m) => ({ default: m.SettingsPage })));
+const OverviewPage = lazy(() => import("./features/overview/OverviewPage").then((m) => ({ default: m.OverviewPage })));
+const AdminPage = lazy(() => import("./features/admin/AdminPage").then((m) => ({ default: m.AdminPage })));
+
+const page = (element: ReactNode) => <Suspense fallback={<PageFallback />}>{element}</Suspense>;
 
 /**
  * 应用路由配置
@@ -17,31 +24,38 @@ import { DocsPage } from "./pages/DocsPage";
  * 这是唯一的路由定义文件，被客户端和服务端入口共享使用。
  * 添加新路由时，只需要在这里修改即可。
  *
- * @example
- * // 添加新页面：
- * 1. 导入页面组件：import AboutPage from "./pages/AboutPage";
- * 2. 添加路由：<Route path="about" element={<AboutPage />} />
+ * 旧路径（/dashboard、/endpoints、/permissions、/admin/users、/features）
+ * 可能被书签或外部链接引用，必须保留为重定向（docs/REDESIGN.md §1.5）。
  */
 export const AppRoutes = () => (
   <Routes>
-    {/* 初始化页面（不需要布局） */}
+    {/* 首次部署：分配管理员 */}
     <Route path="/init" element={<InitPage />} />
 
-    {/* 工作区布局（专业工具页面） */}
-    <Route element={<WorkspaceLayout />}>
-      <Route path="/dashboard" element={<DashboardPage />} />
-      <Route path="/endpoints" element={<EndpointsPage />} />
-      <Route path="/permissions" element={<PermissionGroupsPage />} />
-      <Route path="/admin/users" element={<AdminUsersPage />} />
+    {/* 工作区 */}
+    <Route path="/app" element={<AppShell />}>
+      <Route index element={<Navigate to="endpoints" replace />} />
+      <Route path="endpoints/*" element={page(<EndpointsPage />)} />
+      <Route path="access" element={page(<AccessPage />)} />
+      <Route path="access/:groupId" element={page(<AccessPage />)} />
+      <Route path="overview" element={page(<OverviewPage />)} />
+      <Route path="settings" element={page(<SettingsPage />)} />
+      <Route path="admin" element={page(<AdminPage />)} />
     </Route>
 
-    {/* 标准网页布局 */}
-    <Route path="/" element={<App />}>
-      <Route index element={<HomePage />} />
+    {/* 公开页面 */}
+    <Route path="/" element={<SiteLayout />}>
+      <Route index element={<LandingPage />} />
       <Route path="docs" element={<DocsPage />} />
-      <Route path="features" element={<Features />} />
       <Route path="auth/callback" element={<AuthCallbackPage />} />
-      {/* 在这里添加新的路由 */}
     </Route>
+
+    {/* 旧路径重定向 */}
+    <Route path="/dashboard" element={<Navigate to="/app" replace />} />
+    <Route path="/endpoints" element={<Navigate to="/app/endpoints" replace />} />
+    <Route path="/permissions" element={<Navigate to="/app/access" replace />} />
+    <Route path="/admin/users" element={<Navigate to="/app/admin" replace />} />
+    <Route path="/features" element={<Navigate to="/" replace />} />
+    <Route path="*" element={<Navigate to="/" replace />} />
   </Routes>
 );

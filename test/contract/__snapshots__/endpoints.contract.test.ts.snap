@@ -1,0 +1,971 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`create > creates a static draft; data.endpoint keeps config as a JSON string 1`] = `
+{
+  "body": {
+    "data": {
+      "endpoint": {
+        "accessControl": "public",
+        "config": "{"content":"body","contentType":"text/plain","headers":{}}",
+        "createdAt": "<date>",
+        "enabled": true,
+        "id": "<id:1>",
+        "isPublished": false,
+        "name": "Static /new",
+        "ownerUserId": "user_alice",
+        "parentId": null,
+        "path": "/new",
+        "requiredPermissionGroups": null,
+        "sortOrder": 0,
+        "type": "static",
+        "updatedAt": "<date>",
+      },
+    },
+    "message": "端点创建成功",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 201,
+}
+`;
+
+exports[`create > creates proxy, dynamicProxy and authenticated endpoints 1`] = `
+{
+  "body": {
+    "data": {
+      "endpoint": {
+        "accessControl": "public",
+        "config": "{"targetUrl":"https://upstream.test/x","timeout":10000}",
+        "createdAt": "<date>",
+        "enabled": true,
+        "id": "<id:1>",
+        "isPublished": false,
+        "name": "P",
+        "ownerUserId": "user_alice",
+        "parentId": null,
+        "path": "/p",
+        "requiredPermissionGroups": null,
+        "sortOrder": 0,
+        "type": "proxy",
+        "updatedAt": "<date>",
+      },
+    },
+    "message": "端点创建成功",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 201,
+}
+`;
+
+exports[`create > creates proxy, dynamicProxy and authenticated endpoints 2`] = `
+{
+  "body": {
+    "data": {
+      "endpoint": {
+        "accessControl": "public",
+        "config": "{"baseUrl":"","autoAppendSlash":true,"timeout":15000}",
+        "createdAt": "<date>",
+        "enabled": true,
+        "id": "<id:1>",
+        "isPublished": false,
+        "name": "D",
+        "ownerUserId": "user_alice",
+        "parentId": null,
+        "path": "/d",
+        "requiredPermissionGroups": null,
+        "sortOrder": 0,
+        "type": "dynamicProxy",
+        "updatedAt": "<date>",
+      },
+    },
+    "message": "端点创建成功",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 201,
+}
+`;
+
+exports[`create > creates proxy, dynamicProxy and authenticated endpoints 3`] = `
+{
+  "body": {
+    "data": {
+      "endpoint": {
+        "accessControl": "authenticated",
+        "config": "{"content":"body","contentType":"text/plain","headers":{}}",
+        "createdAt": "<date>",
+        "enabled": true,
+        "id": "<id:1>",
+        "isPublished": false,
+        "name": "Static /locked",
+        "ownerUserId": "user_alice",
+        "parentId": null,
+        "path": "/locked",
+        "requiredPermissionGroups": "["group_alice_vip"]",
+        "sortOrder": 0,
+        "type": "static",
+        "updatedAt": "<date>",
+      },
+    },
+    "message": "端点创建成功",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 201,
+}
+`;
+
+exports[`create > refuses children under a dynamicProxy endpoint 1`] = `
+{
+  "body": {
+    "message": "不能在动态代理端点下创建子端点",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 400,
+}
+`;
+
+exports[`create > rejects a duplicate path 1`] = `
+{
+  "body": {
+    "message": "该路径已存在",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 400,
+}
+`;
+
+exports[`create > rejects invalid input with the validation error shape 1`] = `
+{
+  "body": {
+    "error": {
+      "issues": [
+        {
+          "code": "invalid_string",
+          "message": "路径只能包含字母、数字、连字符、下划线、斜杠和点号",
+          "path": [
+            "path",
+          ],
+          "validation": "regex",
+        },
+      ],
+      "name": "ZodError",
+    },
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 400,
+}
+`;
+
+exports[`create > rejects invalid input with the validation error shape 2`] = `
+{
+  "body": {
+    "error": {
+      "issues": [
+        {
+          "code": "invalid_string",
+          "message": "Invalid url",
+          "path": [
+            "config",
+            "targetUrl",
+          ],
+          "validation": "url",
+        },
+      ],
+      "name": "ZodError",
+    },
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 400,
+}
+`;
+
+exports[`delete > cannot delete another user's endpoint 1`] = `
+{
+  "body": {
+    "message": "端点不存在",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 404,
+}
+`;
+
+exports[`delete > deletes an owned endpoint 1`] = `
+{
+  "body": {
+    "message": "端点删除成功",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`listing (REDESIGN §1.2) > filters by type 1`] = `
+{
+  "body": {
+    "data": {
+      "endpoints": [
+        {
+          "accessControl": "public",
+          "config": "{"baseUrl":"https://raw.upstream.test/","autoAppendSlash":true,"timeout":5000,"allowedPaths":[]}",
+          "createdAt": "<date>",
+          "enabled": true,
+          "id": "ep_dynamic",
+          "isPublished": true,
+          "name": "GitHub raw",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/gh",
+          "requiredPermissionGroups": null,
+          "sortOrder": 0,
+          "type": "dynamicProxy",
+          "updatedAt": "<date>",
+        },
+      ],
+      "total": 1,
+    },
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`listing (REDESIGN §1.2) > flat view is the default and hides disabled endpoints 1`] = `
+{
+  "body": {
+    "data": {
+      "endpoints": [
+        {
+          "accessControl": "public",
+          "config": "{"content":"hello world","contentType":"text/plain","headers":{"X-Custom":"yes"}}",
+          "createdAt": "<date>",
+          "enabled": true,
+          "id": "ep_static_public",
+          "isPublished": true,
+          "name": "Hello",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/hello",
+          "requiredPermissionGroups": null,
+          "sortOrder": 0,
+          "type": "static",
+          "updatedAt": "<date>",
+        },
+        {
+          "accessControl": "public",
+          "config": "{"content":"a: 1\\n","contentType":"text/yaml; charset=utf-8"}",
+          "createdAt": "<date>",
+          "enabled": true,
+          "id": "ep_static_yaml",
+          "isPublished": true,
+          "name": "App config",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/configs/app.yaml",
+          "requiredPermissionGroups": null,
+          "sortOrder": 2,
+          "type": "static",
+          "updatedAt": "<date>",
+        },
+        {
+          "accessControl": "authenticated",
+          "config": "{"content":"classified","contentType":"application/json"}",
+          "createdAt": "<date>",
+          "enabled": true,
+          "id": "ep_static_protected",
+          "isPublished": true,
+          "name": "Secret",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/configs/secret",
+          "requiredPermissionGroups": "["group_alice_vip"]",
+          "sortOrder": 1,
+          "type": "static",
+          "updatedAt": "<date>",
+        },
+        {
+          "accessControl": "authenticated",
+          "config": "{"content":"x"}",
+          "createdAt": "<date>",
+          "enabled": true,
+          "id": "ep_protected_nogroups",
+          "isPublished": true,
+          "name": "No groups",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/broken",
+          "requiredPermissionGroups": "[]",
+          "sortOrder": 0,
+          "type": "static",
+          "updatedAt": "<date>",
+        },
+        {
+          "accessControl": "public",
+          "config": "{"content":"draft"}",
+          "createdAt": "<date>",
+          "enabled": true,
+          "id": "ep_draft",
+          "isPublished": false,
+          "name": "Draft",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/draft",
+          "requiredPermissionGroups": null,
+          "sortOrder": 0,
+          "type": "static",
+          "updatedAt": "<date>",
+        },
+        {
+          "accessControl": "public",
+          "config": "{"targetUrl":"https://upstream.test/data.json","headers":{"X-Upstream":"1"},"timeout":5000}",
+          "createdAt": "<date>",
+          "enabled": true,
+          "id": "ep_proxy",
+          "isPublished": true,
+          "name": "Fixed proxy",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/proxy/fixed",
+          "requiredPermissionGroups": null,
+          "sortOrder": 0,
+          "type": "proxy",
+          "updatedAt": "<date>",
+        },
+        {
+          "accessControl": "public",
+          "config": "{"baseUrl":"https://raw.upstream.test/","autoAppendSlash":true,"timeout":5000,"allowedPaths":[]}",
+          "createdAt": "<date>",
+          "enabled": true,
+          "id": "ep_dynamic",
+          "isPublished": true,
+          "name": "GitHub raw",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/gh",
+          "requiredPermissionGroups": null,
+          "sortOrder": 0,
+          "type": "dynamicProxy",
+          "updatedAt": "<date>",
+        },
+      ],
+      "total": 7,
+    },
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`listing (REDESIGN §1.2) > flat view with includeDisabled (used by epctl) 1`] = `
+{
+  "body": {
+    "data": {
+      "endpoints": [
+        {
+          "accessControl": "public",
+          "config": "{"content":"hello world","contentType":"text/plain","headers":{"X-Custom":"yes"}}",
+          "createdAt": "<date>",
+          "enabled": true,
+          "id": "ep_static_public",
+          "isPublished": true,
+          "name": "Hello",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/hello",
+          "requiredPermissionGroups": null,
+          "sortOrder": 0,
+          "type": "static",
+          "updatedAt": "<date>",
+        },
+        {
+          "accessControl": "public",
+          "config": "{"content":"a: 1\\n","contentType":"text/yaml; charset=utf-8"}",
+          "createdAt": "<date>",
+          "enabled": true,
+          "id": "ep_static_yaml",
+          "isPublished": true,
+          "name": "App config",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/configs/app.yaml",
+          "requiredPermissionGroups": null,
+          "sortOrder": 2,
+          "type": "static",
+          "updatedAt": "<date>",
+        },
+        {
+          "accessControl": "authenticated",
+          "config": "{"content":"classified","contentType":"application/json"}",
+          "createdAt": "<date>",
+          "enabled": true,
+          "id": "ep_static_protected",
+          "isPublished": true,
+          "name": "Secret",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/configs/secret",
+          "requiredPermissionGroups": "["group_alice_vip"]",
+          "sortOrder": 1,
+          "type": "static",
+          "updatedAt": "<date>",
+        },
+        {
+          "accessControl": "authenticated",
+          "config": "{"content":"x"}",
+          "createdAt": "<date>",
+          "enabled": true,
+          "id": "ep_protected_nogroups",
+          "isPublished": true,
+          "name": "No groups",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/broken",
+          "requiredPermissionGroups": "[]",
+          "sortOrder": 0,
+          "type": "static",
+          "updatedAt": "<date>",
+        },
+        {
+          "accessControl": "public",
+          "config": "{"content":"draft"}",
+          "createdAt": "<date>",
+          "enabled": true,
+          "id": "ep_draft",
+          "isPublished": false,
+          "name": "Draft",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/draft",
+          "requiredPermissionGroups": null,
+          "sortOrder": 0,
+          "type": "static",
+          "updatedAt": "<date>",
+        },
+        {
+          "accessControl": "public",
+          "config": "{"content":"off"}",
+          "createdAt": "<date>",
+          "enabled": false,
+          "id": "ep_disabled",
+          "isPublished": true,
+          "name": "Disabled",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/disabled",
+          "requiredPermissionGroups": null,
+          "sortOrder": 0,
+          "type": "static",
+          "updatedAt": "<date>",
+        },
+        {
+          "accessControl": "public",
+          "config": "{"targetUrl":"https://upstream.test/data.json","headers":{"X-Upstream":"1"},"timeout":5000}",
+          "createdAt": "<date>",
+          "enabled": true,
+          "id": "ep_proxy",
+          "isPublished": true,
+          "name": "Fixed proxy",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/proxy/fixed",
+          "requiredPermissionGroups": null,
+          "sortOrder": 0,
+          "type": "proxy",
+          "updatedAt": "<date>",
+        },
+        {
+          "accessControl": "public",
+          "config": "{"baseUrl":"https://raw.upstream.test/","autoAppendSlash":true,"timeout":5000,"allowedPaths":[]}",
+          "createdAt": "<date>",
+          "enabled": true,
+          "id": "ep_dynamic",
+          "isPublished": true,
+          "name": "GitHub raw",
+          "ownerUserId": "user_alice",
+          "parentId": null,
+          "path": "/gh",
+          "requiredPermissionGroups": null,
+          "sortOrder": 0,
+          "type": "dynamicProxy",
+          "updatedAt": "<date>",
+        },
+      ],
+      "total": 8,
+    },
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`listing (REDESIGN §1.2) > requires authentication 1`] = `
+{
+  "body": {
+    "message": "认证令牌缺失",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 401,
+}
+`;
+
+exports[`listing (REDESIGN §1.2) > tree view derives directories from path prefixes 1`] = `
+{
+  "body": {
+    "data": {
+      "tree": [
+        {
+          "children": [
+            {
+              "children": [],
+              "endpoint": {
+                "accessControl": "public",
+                "enabled": true,
+                "id": "ep_static_yaml",
+                "isPublished": true,
+                "name": "App config",
+                "path": "/configs/app.yaml",
+                "type": "static",
+              },
+              "id": "ep_static_yaml",
+              "isVirtual": false,
+              "name": "App config",
+              "path": "/configs/app.yaml",
+            },
+            {
+              "children": [],
+              "endpoint": {
+                "accessControl": "authenticated",
+                "enabled": true,
+                "id": "ep_static_protected",
+                "isPublished": true,
+                "name": "Secret",
+                "path": "/configs/secret",
+                "type": "static",
+              },
+              "id": "ep_static_protected",
+              "isVirtual": false,
+              "name": "Secret",
+              "path": "/configs/secret",
+            },
+          ],
+          "id": "/configs",
+          "isVirtual": true,
+          "name": "configs",
+          "path": "/configs",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "endpoint": {
+                "accessControl": "public",
+                "enabled": true,
+                "id": "ep_proxy",
+                "isPublished": true,
+                "name": "Fixed proxy",
+                "path": "/proxy/fixed",
+                "type": "proxy",
+              },
+              "id": "ep_proxy",
+              "isVirtual": false,
+              "name": "Fixed proxy",
+              "path": "/proxy/fixed",
+            },
+          ],
+          "id": "/proxy",
+          "isVirtual": true,
+          "name": "proxy",
+          "path": "/proxy",
+        },
+        {
+          "children": [],
+          "endpoint": {
+            "accessControl": "authenticated",
+            "enabled": true,
+            "id": "ep_protected_nogroups",
+            "isPublished": true,
+            "name": "No groups",
+            "path": "/broken",
+            "type": "static",
+          },
+          "id": "ep_protected_nogroups",
+          "isVirtual": false,
+          "name": "No groups",
+          "path": "/broken",
+        },
+        {
+          "children": [],
+          "endpoint": {
+            "accessControl": "public",
+            "enabled": false,
+            "id": "ep_disabled",
+            "isPublished": true,
+            "name": "Disabled",
+            "path": "/disabled",
+            "type": "static",
+          },
+          "id": "ep_disabled",
+          "isVirtual": false,
+          "name": "Disabled",
+          "path": "/disabled",
+        },
+        {
+          "children": [],
+          "endpoint": {
+            "accessControl": "public",
+            "enabled": true,
+            "id": "ep_draft",
+            "isPublished": false,
+            "name": "Draft",
+            "path": "/draft",
+            "type": "static",
+          },
+          "id": "ep_draft",
+          "isVirtual": false,
+          "name": "Draft",
+          "path": "/draft",
+        },
+        {
+          "children": [],
+          "endpoint": {
+            "accessControl": "public",
+            "enabled": true,
+            "id": "ep_dynamic",
+            "isPublished": true,
+            "name": "GitHub raw",
+            "path": "/gh",
+            "type": "dynamicProxy",
+          },
+          "id": "ep_dynamic",
+          "isVirtual": false,
+          "name": "GitHub raw",
+          "path": "/gh",
+        },
+        {
+          "children": [],
+          "endpoint": {
+            "accessControl": "public",
+            "enabled": true,
+            "id": "ep_static_public",
+            "isPublished": true,
+            "name": "Hello",
+            "path": "/hello",
+            "type": "static",
+          },
+          "id": "ep_static_public",
+          "isVirtual": false,
+          "name": "Hello",
+          "path": "/hello",
+        },
+      ],
+    },
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`publish / unpublish (activation applies to publish only) > publish of unknown endpoint 1`] = `
+{
+  "body": {
+    "message": "端点不存在",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 404,
+}
+`;
+
+exports[`publish / unpublish (activation applies to publish only) > publishes for an activated user 1`] = `
+{
+  "body": {
+    "data": {
+      "endpoint": {
+        "accessControl": "public",
+        "config": "{"content":"draft"}",
+        "createdAt": "<date>",
+        "enabled": true,
+        "id": "ep_draft",
+        "isPublished": true,
+        "name": "Draft",
+        "ownerUserId": "user_alice",
+        "parentId": null,
+        "path": "/draft",
+        "requiredPermissionGroups": null,
+        "sortOrder": 0,
+        "type": "static",
+        "updatedAt": "<date>",
+      },
+    },
+    "message": "端点发布成功",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`publish / unpublish (activation applies to publish only) > refuses publishing for an unactivated user 1`] = `
+{
+  "body": {
+    "message": "用户未激活，请联系管理员",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 403,
+}
+`;
+
+exports[`publish / unpublish (activation applies to publish only) > unactivated users may unpublish 1`] = `
+{
+  "body": {
+    "data": {
+      "endpoint": {
+        "accessControl": "public",
+        "config": "{"content":"bob"}",
+        "createdAt": "<date>",
+        "enabled": true,
+        "id": "ep_bob_public",
+        "isPublished": false,
+        "name": "Bob hello",
+        "ownerUserId": "user_bob",
+        "parentId": null,
+        "path": "/hello",
+        "requiredPermissionGroups": null,
+        "sortOrder": 0,
+        "type": "static",
+        "updatedAt": "<date>",
+      },
+    },
+    "message": "端点已下线",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`publish / unpublish (activation applies to publish only) > unpublishes 1`] = `
+{
+  "body": {
+    "data": {
+      "endpoint": {
+        "accessControl": "public",
+        "config": "{"content":"hello world","contentType":"text/plain","headers":{"X-Custom":"yes"}}",
+        "createdAt": "<date>",
+        "enabled": true,
+        "id": "ep_static_public",
+        "isPublished": false,
+        "name": "Hello",
+        "ownerUserId": "user_alice",
+        "parentId": null,
+        "path": "/hello",
+        "requiredPermissionGroups": null,
+        "sortOrder": 0,
+        "type": "static",
+        "updatedAt": "<date>",
+      },
+    },
+    "message": "端点已下线",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`read > 404 for unknown ids 1`] = `
+{
+  "body": {
+    "message": "端点不存在",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 404,
+}
+`;
+
+exports[`read > detail returns config and requiredPermissionGroups already parsed (unlike list/create/update) 1`] = `
+{
+  "body": {
+    "data": {
+      "accessControl": "authenticated",
+      "config": {
+        "content": "classified",
+        "contentType": "application/json",
+      },
+      "createdAt": "<date>",
+      "enabled": true,
+      "id": "ep_static_protected",
+      "isPublished": true,
+      "name": "Secret",
+      "ownerUserId": "user_alice",
+      "parentId": null,
+      "path": "/configs/secret",
+      "requiredPermissionGroups": [
+        "group_alice_vip",
+      ],
+      "sortOrder": 1,
+      "type": "static",
+      "updatedAt": "<date>",
+    },
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`read > does not reveal other users' endpoints 1`] = `
+{
+  "body": {
+    "message": "端点不存在",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 404,
+}
+`;
+
+exports[`structure > moves an endpoint under a parent 1`] = `
+{
+  "body": {
+    "data": {
+      "endpoint": {
+        "accessControl": "public",
+        "config": "{"content":"draft"}",
+        "createdAt": "<date>",
+        "enabled": true,
+        "id": "ep_draft",
+        "isPublished": false,
+        "name": "Draft",
+        "ownerUserId": "user_alice",
+        "parentId": "ep_static_public",
+        "path": "/draft",
+        "requiredPermissionGroups": null,
+        "sortOrder": 0,
+        "type": "static",
+        "updatedAt": "<date>",
+      },
+    },
+    "message": "端点移动成功",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`structure > refuses moving under a dynamicProxy endpoint 1`] = `
+{
+  "body": {
+    "message": "不能将端点移动到动态代理端点下",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 400,
+}
+`;
+
+exports[`structure > reorders 1`] = `
+{
+  "body": {
+    "message": "排序更新成功",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`update > cannot modify another user's endpoint 1`] = `
+{
+  "body": {
+    "message": "端点不存在",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 404,
+}
+`;
+
+exports[`update > patches config only (epctl push) 1`] = `
+{
+  "body": {
+    "data": {
+      "endpoint": {
+        "accessControl": "public",
+        "config": "{"content":"changed","contentType":"text/plain","headers":{}}",
+        "createdAt": "<date>",
+        "enabled": true,
+        "id": "ep_static_public",
+        "isPublished": true,
+        "name": "Hello",
+        "ownerUserId": "user_alice",
+        "parentId": null,
+        "path": "/hello",
+        "requiredPermissionGroups": null,
+        "sortOrder": 0,
+        "type": "static",
+        "updatedAt": "<date>",
+      },
+    },
+    "message": "端点更新成功",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`update > patches settings 1`] = `
+{
+  "body": {
+    "data": {
+      "endpoint": {
+        "accessControl": "authenticated",
+        "config": "{"content":"draft"}",
+        "createdAt": "<date>",
+        "enabled": false,
+        "id": "ep_draft",
+        "isPublished": false,
+        "name": "Renamed",
+        "ownerUserId": "user_alice",
+        "parentId": null,
+        "path": "/renamed",
+        "requiredPermissionGroups": "["group_alice_vip"]",
+        "sortOrder": 0,
+        "type": "static",
+        "updatedAt": "<date>",
+      },
+    },
+    "message": "端点更新成功",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`update > rejects a path already in use 1`] = `
+{
+  "body": {
+    "message": "该路径已被其他端点使用",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 400,
+}
+`;

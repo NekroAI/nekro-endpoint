@@ -1,6 +1,6 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
-import unocss from "unocss/vite";
+import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "path";
 
 // https://vitejs.dev/config/
@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     root: "frontend",
-    plugins: [react(), unocss()],
+    plugins: [react(), tailwindcss()],
     build: {
       outDir: "../dist/client",
       manifest: true,
@@ -35,6 +35,12 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false,
         },
+        // MCP server (src/routes/mcp.ts), so the URL shown in settings works in dev too.
+        "/mcp": {
+          target: `http://${API_HOST}:${API_PORT}`,
+          changeOrigin: true,
+          secure: false,
+        },
       },
     },
 
@@ -46,16 +52,8 @@ export default defineConfig(({ mode }) => {
     },
 
     ssr: {
-      noExternal: [
-        "react-router-dom",
-        "@mui/material",
-        "@mui/system",
-        "@mui/icons-material",
-        "@emotion/react",
-        "@emotion/styled",
-        "react-i18next",
-        "i18next",
-      ],
+      // Bundle the React UI libraries into the SSR build so they run in workerd.
+      noExternal: ["react-router-dom", "radix-ui", /^@radix-ui\//, "motion", "sonner", "cmdk", "lucide-react"],
     },
   };
 });

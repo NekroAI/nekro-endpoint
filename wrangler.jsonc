@@ -6,7 +6,9 @@
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "binding": "ASSETS",
-    "directory": "./dist/client"
+    "directory": "./dist/client",
+    // Never map "/" to the dev template dist/client/index.html; let the Worker SSR it.
+    "html_handling": "none"
   },
   "d1_databases": [
     {
@@ -26,7 +28,8 @@
       "name": "nekro-endpoint",
       "assets": {
         "binding": "ASSETS",
-        "directory": "./dist/client"
+        "directory": "./dist/client",
+        "html_handling": "none"
       },
       "d1_databases": [
         {

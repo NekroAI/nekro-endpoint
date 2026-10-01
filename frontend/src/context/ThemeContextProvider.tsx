@@ -1,57 +1,75 @@
-import { createContext, useState, useMemo, useContext, ReactNode } from "react";
-import { ThemeProvider as MuiThemeProvider, createTheme, type PaletteMode } from "@mui/material";
-import { lightTheme, darkTheme } from "../theme";
-import { useCallback } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { safeLocalStorage, isBrowser } from "../utils/storage";
+
+/**
+ * Single source of truth for the colour scheme.
+ *
+ * Components read colours from CSS variables selected by <html data-theme>
+ * (design/tokens.css); this provider owns the preference ("dark" | "light" |
+ * "system", stored as `themeMode`) and keeps that attribute — set before
+ * first paint by THEME_BOOT_SCRIPT — in sync. Only libraries that cannot read
+ * CSS variables (Monaco, sonner) consume `themeMode`.
+ */
+export type ThemeMode = "dark" | "light";
+export type ThemePreference = ThemeMode | "system";
 
 type AppThemeContextType = {
-  themeMode: PaletteMode;
+  /** The resolved scheme currently on screen. */
+  themeMode: ThemeMode;
+  preference: ThemePreference;
+  setPreference: (preference: ThemePreference) => void;
   toggleTheme: () => void;
 };
 
 const AppThemeContext = createContext<AppThemeContextType>({
   themeMode: "dark",
+  preference: "dark",
+  setPreference: () => {},
   toggleTheme: () => {},
 });
 
 export const useAppTheme = () => useContext(AppThemeContext);
 
-const isBrowser = typeof window !== "undefined";
+const systemMode = (): ThemeMode =>
+  isBrowser && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+
+function readPreference(): ThemePreference {
+  const stored = safeLocalStorage.getItem("themeMode");
+  return stored === "light" || stored === "system" ? stored : "dark";
+}
 
 export const AppThemeProvider = ({ children }: { children: ReactNode }) => {
-  const [themeMode, setThemeMode] = useState<PaletteMode>(() => {
-    if (!isBrowser) return "dark";
-    try {
-      const storedMode = localStorage.getItem("themeMode");
-      if (storedMode) {
-        return storedMode as PaletteMode;
-      }
-      return "dark"; // Default to dark mode
-    } catch (error) {
-      // If localStorage is not available (e.g., in SSR or private mode), default to dark
-      return "dark";
-    }
-  });
+  const [preference, setPreferenceState] = useState<ThemePreference>(() => (isBrowser ? readPreference() : "dark"));
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() =>
+    isBrowser && document.documentElement.dataset.theme === "light" ? "light" : "dark",
+  );
 
-  const toggleTheme = useCallback(() => {
-    setThemeMode((prevMode: PaletteMode) => {
-      const newMode = prevMode === "light" ? "dark" : "light";
-      if (isBrowser) {
-        try {
-          localStorage.setItem("themeMode", newMode);
-        } catch (error) {
-          // Handle potential errors if localStorage is not available
-          console.error("Failed to save theme mode to localStorage", error);
-        }
-      }
-      return newMode;
-    });
+  useEffect(() => {
+    const apply = () => {
+      const resolved = preference === "system" ? systemMode() : preference;
+      document.documentElement.dataset.theme = resolved;
+      setThemeMode(resolved);
+    };
+    apply();
+    if (preference !== "system") return;
+    const media = window.matchMedia("(prefers-color-scheme: light)");
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
+  }, [preference]);
+
+  const setPreference = useCallback((next: ThemePreference) => {
+    safeLocalStorage.setItem("themeMode", next);
+    setPreferenceState(next);
   }, []);
 
-  const theme = useMemo(() => (themeMode === "light" ? lightTheme : darkTheme), [themeMode]);
+  const toggleTheme = useCallback(() => {
+    setPreference(themeMode === "light" ? "dark" : "light");
+  }, [setPreference, themeMode]);
 
-  return (
-    <AppThemeContext.Provider value={{ themeMode, toggleTheme }}>
-      <MuiThemeProvider theme={theme}>{children}</MuiThemeProvider>
-    </AppThemeContext.Provider>
+  const value = useMemo(
+    () => ({ themeMode, preference, setPreference, toggleTheme }),
+    [themeMode, preference, setPreference, toggleTheme],
   );
+
+  return <AppThemeContext.Provider value={value}>{children}</AppThemeContext.Provider>;
 };

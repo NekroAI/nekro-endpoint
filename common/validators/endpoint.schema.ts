@@ -111,24 +111,37 @@ export const ReorderEndpointsSchema = z.object({
   ),
 });
 
-// 端点树节点
-export const EndpointTreeNodeSchema: any = z.lazy(() =>
-  z.object({
-    id: z.string(),
-    ownerUserId: z.string(),
-    parentId: z.string().nullable(),
+// 递归的 children 无法由 zod-to-openapi 推导（z.lazy 会让 /api/doc 生成失败），
+// 因此 children 以显式 OpenAPI 描述代替。响应不做运行时校验，只影响文档与类型。
+const recursiveChildren = (description: string) =>
+  z.array(z.any()).openapi({ type: "array", items: { type: "object" }, description });
+
+// 管理员视图：按 parentId 嵌套的完整端点行（GET /admin/users/{userId}/endpoints）
+export const EndpointTreeNodeSchema = EndpointSchema.extend({
+  children: recursiveChildren("子端点，结构与本节点相同"),
+}).openapi("EndpointTreeNode");
+
+// 端点管理视图：按路径前缀推导的命名空间树（GET /endpoints?view=tree）
+export const EndpointPathTreeNodeSchema = z
+  .object({
+    id: z.string().openapi({ description: "端点 ID；目录节点为路径本身" }),
     path: z.string(),
     name: z.string(),
-    type: EndpointTypeSchema,
-    accessControl: AccessControlSchema,
-    enabled: z.boolean(),
-    isPublished: z.boolean(),
-    sortOrder: z.number().int(),
-    createdAt: z.string(),
-    updatedAt: z.string(),
-    children: z.array(EndpointTreeNodeSchema).optional(),
-  }),
-);
+    isVirtual: z.boolean().openapi({ description: "true 表示由路径前缀形成的目录，本身不是端点" }),
+    endpoint: z
+      .object({
+        id: z.string(),
+        name: z.string(),
+        path: z.string(),
+        type: EndpointTypeSchema,
+        accessControl: AccessControlSchema,
+        isPublished: z.boolean(),
+        enabled: z.boolean(),
+      })
+      .optional(),
+    children: recursiveChildren("子节点，结构与本节点相同"),
+  })
+  .openapi("EndpointPathTreeNode");
 
 // 端点列表响应
 export const EndpointListResponseSchema = z.object({
@@ -139,11 +152,19 @@ export const EndpointListResponseSchema = z.object({
   }),
 });
 
-// 端点树响应
+// 端点树响应（管理员视图）
 export const EndpointTreeResponseSchema = z.object({
   success: z.boolean(),
   data: z.object({
     tree: z.array(EndpointTreeNodeSchema),
+  }),
+});
+
+// 命名空间树响应（GET /endpoints?view=tree）
+export const EndpointPathTreeResponseSchema = z.object({
+  success: z.boolean(),
+  data: z.object({
+    tree: z.array(EndpointPathTreeNodeSchema),
   }),
 });
 
