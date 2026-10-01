@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
+import { FlaskConical } from "lucide-react";
 import { m as motion } from "motion/react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { BrandMark } from "../design/brand";
 import { GitHubMark } from "../design/github";
@@ -51,7 +53,12 @@ function SignIn() {
           {isLoginLoading ? <Spinner className="text-signal-ink" /> : <GitHubMark />}
           使用 GitHub 继续
         </Button>
-        <p className="mt-4 text-xs text-ink-4">新账号需要管理员激活后才能发布端点。</p>
+        <Button asChild size="lg" variant="ghost" className="mt-2 w-full">
+          <Link to="/demo">
+            <FlaskConical /> 先看看演示
+          </Link>
+        </Button>
+        <p className="mt-4 text-xs text-ink-4">新账号登录后即可创建端点，并可申请发布权限。</p>
       </motion.div>
     </div>
   );

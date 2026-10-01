@@ -16,7 +16,21 @@ const SettingsPage = lazy(() => import("./features/settings/SettingsPage").then(
 const OverviewPage = lazy(() => import("./features/overview/OverviewPage").then((m) => ({ default: m.OverviewPage })));
 const AdminPage = lazy(() => import("./features/admin/AdminPage").then((m) => ({ default: m.AdminPage })));
 
+const DemoRoot = lazy(() => import("./features/demo/DemoRoot").then((m) => ({ default: m.DemoRoot })));
+
 const page = (element: ReactNode) => <Suspense fallback={<PageFallback />}>{element}</Suspense>;
+
+const workspacePages = (
+  <>
+    <Route index element={<Navigate to="endpoints" replace />} />
+    <Route path="endpoints/*" element={page(<EndpointsPage />)} />
+    <Route path="access" element={page(<AccessPage />)} />
+    <Route path="access/:groupId" element={page(<AccessPage />)} />
+    <Route path="overview" element={page(<OverviewPage />)} />
+    <Route path="settings" element={page(<SettingsPage />)} />
+    <Route path="admin" element={page(<AdminPage />)} />
+  </>
+);
 
 /**
  * 应用路由配置
@@ -34,13 +48,19 @@ export const AppRoutes = () => (
 
     {/* 工作区 */}
     <Route path="/app" element={<AppShell />}>
-      <Route index element={<Navigate to="endpoints" replace />} />
-      <Route path="endpoints/*" element={page(<EndpointsPage />)} />
-      <Route path="access" element={page(<AccessPage />)} />
-      <Route path="access/:groupId" element={page(<AccessPage />)} />
-      <Route path="overview" element={page(<OverviewPage />)} />
-      <Route path="settings" element={page(<SettingsPage />)} />
-      <Route path="admin" element={page(<AdminPage />)} />
+      {workspacePages}
+    </Route>
+
+    {/* 浏览器内演示：同一套工作区，数据在本地模拟（features/demo） */}
+    <Route
+      path="/demo"
+      element={
+        <Suspense fallback={<PageFallback />}>
+          <DemoRoot />
+        </Suspense>
+      }
+    >
+      {workspacePages}
     </Route>
 
     {/* 公开页面 */}

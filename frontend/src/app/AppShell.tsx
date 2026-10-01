@@ -1,11 +1,13 @@
+import type { ReactNode } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useAppPath } from "./base";
 import { BookOpen, LogOut, Moon, Sun } from "lucide-react";
 import { AuthGate } from "./AuthGate";
 import { CommandProvider, useRegisterCommands, type CommandItem } from "./commands";
 import { CommandPalette } from "./CommandPalette";
 import { Sidebar, TabBar } from "./Sidebar";
 import { SignalLine, SignalLineInsetProvider } from "./SignalLine";
-import { NAV_ITEMS } from "./nav";
+import { useNavItems } from "./nav";
 import { useAuth } from "../hooks/useAuth";
 import { useAppTheme } from "../context/ThemeContextProvider";
 import { Avatar, UserMenu } from "./UserMenu";
@@ -14,22 +16,25 @@ import { SignalProvider } from "../features/signal/SignalProvider";
 import { Sparkles } from "lucide-react";
 
 /** The /app workspace: rail + content + Signal Line (docs/REDESIGN.md §4.2). */
-export function AppShell() {
+export function AppShell({ banner }: { banner?: ReactNode }) {
   return (
     <AuthGate>
       <CommandProvider>
         <SignalProvider>
           <SignalLineInsetProvider>
             <ShellCommands />
-            <div className="flex h-dvh overflow-hidden bg-field text-ink-1">
-              <Sidebar />
-              <main className="relative flex min-w-0 flex-1 flex-col">
-                <MobileHeader />
-                <SectionTransition>
-                  <Outlet />
-                </SectionTransition>
-                <SignalLine className="bottom-[calc(56px+env(safe-area-inset-bottom))] md:bottom-0" />
-              </main>
+            <div className="flex h-dvh flex-col overflow-hidden bg-field text-ink-1">
+              {banner}
+              <div className="flex min-h-0 flex-1">
+                <Sidebar />
+                <main className="relative flex min-w-0 flex-1 flex-col">
+                  <MobileHeader />
+                  <SectionTransition>
+                    <Outlet />
+                  </SectionTransition>
+                  <SignalLine className="bottom-[calc(56px+env(safe-area-inset-bottom))] md:bottom-0" />
+                </main>
+              </div>
             </div>
             <TabBar />
             <CommandPalette />
@@ -66,12 +71,14 @@ function MobileHeader() {
 }
 
 function ShellCommands() {
+  const appPath = useAppPath();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const navItems = useNavItems(user?.role === "admin");
   const { themeMode, toggleTheme } = useAppTheme();
 
   const items: CommandItem[] = [
-    ...NAV_ITEMS.filter((item) => !item.adminOnly || user?.role === "admin").map((item) => ({
+    ...navItems.map((item) => ({
       id: `nav:${item.to}`,
       group: "跳转",
       label: item.label,
@@ -95,7 +102,7 @@ function ShellCommands() {
       hint: "接入你自己的模型",
       keywords: ["ai", "model", "模型", "signal"],
       icon: Sparkles,
-      run: () => navigate("/app/settings#signal"),
+      run: () => navigate(appPath("/app/settings#signal")),
     },
     { id: "logout", group: "账户", label: "退出登录", icon: LogOut, run: logout },
   ];

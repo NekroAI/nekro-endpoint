@@ -1,4 +1,5 @@
 import { AlertTriangle, Ban, Check, ChevronDown, Eraser, Loader2, Sparkles, X } from "lucide-react";
+import { useAppPath } from "../../app/base";
 import { AnimatePresence, m as motion } from "motion/react";
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -123,6 +124,7 @@ function outputSummary(name: string, output: unknown) {
 }
 
 function ToolLine({ part }: { part: ToolPartView }) {
+  const appPath = useAppPath();
   const navigate = useNavigate();
   const name = toolNameOf(part);
   const meta = metaOf(name);
@@ -152,7 +154,7 @@ function ToolLine({ part }: { part: ToolPartView }) {
         <span className={cn(denied && "line-through")}>{denied ? meta.title : running ? `${meta.title}…` : meta.done}</span>
         {target &&
           (isPath && !denied && meta.risk !== "destructive" ? (
-            <button type="button" className="truncate font-mono text-ink-2 hover:text-signal" onClick={() => navigate(`/app/endpoints${target}`)}>
+            <button type="button" className="truncate font-mono text-ink-2 hover:text-signal" onClick={() => navigate(appPath(`/app/endpoints${target}`))}>
               {target}
             </button>
           ) : (
@@ -160,7 +162,7 @@ function ToolLine({ part }: { part: ToolPartView }) {
           ))}
         {summary && <span className="truncate font-mono text-ink-4">· {summary}</span>}
         {name === "issue_access_key" && !failed && !denied && !running && (
-          <Link to="/app/access" className="shrink-0 text-pass hover:underline">
+          <Link to={appPath("/app/access")} className="shrink-0 text-pass hover:underline">
             查看完整密钥
           </Link>
         )}

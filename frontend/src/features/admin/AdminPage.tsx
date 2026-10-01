@@ -1,4 +1,5 @@
 import { ArrowLeft, Lock, MoreHorizontal, Search, ShieldCheck, Trash2, Undo2, X } from "lucide-react";
+import { useAppPath } from "../../app/base";
 import { AnimatePresence, m as motion } from "motion/react";
 import { useDeferredValue, useMemo, useState } from "react";
 import { useHotkey } from "../../lib/hotkeys";
@@ -25,6 +26,7 @@ import { toast } from "../../ui/toaster";
 import { statusOf, type EndpointView } from "../endpoints/model";
 import { buildNamespace, type NamespaceNode } from "../endpoints/namespace";
 import { StatusDot, StatusPill } from "../endpoints/status";
+import { AdminRequests } from "../activation/AdminRequests";
 import {
   useAdminStats,
   useAdminUserEndpoints,
@@ -36,8 +38,9 @@ import {
 } from "./api";
 
 export function AdminPage() {
+  const appPath = useAppPath();
   const { user } = useAuth();
-  if (user && user.role !== "admin") return <Navigate to="/app/endpoints" replace />;
+  if (user && user.role !== "admin") return <Navigate to={appPath("/app/endpoints")} replace />;
   return <Admin />;
 }
 
@@ -56,6 +59,7 @@ function Admin() {
         description="激活新用户以允许他们发布端点；必要时审查任何用户的端点内容并强制下线。"
       />
       <Stats />
+      <AdminRequests />
 
       <section className="mt-6 rounded-lg bg-surface-0 shadow-[inset_0_0_0_1px_var(--line)]">
         <div className="flex flex-wrap items-center gap-3 border-b border-line px-5 py-3">

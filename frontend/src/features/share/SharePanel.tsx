@@ -1,4 +1,4 @@
-import { CalendarClock, Download, ExternalLink, KeyRound, Link2, Plus, RefreshCw, Rocket, Power } from "lucide-react";
+import { CalendarClock, Download, ExternalLink, KeyRound, Link2, Play, Plus, RefreshCw, Rocket, Power } from "lucide-react";
 import { AnimatePresence, m as motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import type { AccessKey } from "../../../../common/types";
@@ -22,6 +22,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
 import { toast } from "../../ui/toaster";
 import { AccessPass, downloadPass, type PassInfo } from "./AccessPass";
 import { glide } from "../../design/motion";
+import { ActivationGate } from "../activation/ActivationGate";
+import { useDemo } from "../../app/base";
 
 /**
  * One place for everything a recipient needs: URL, pass, QR and call
@@ -30,7 +32,10 @@ import { glide } from "../../design/motion";
 export function SharePanel({ endpoint }: { endpoint: EndpointView }) {
   const { username } = useWorkspace();
   const origin = publicOrigin();
-  const baseUrl = useMemo(() => buildEndpointAccessUrl(origin, username, endpoint.path), [origin, username, endpoint.path]);
+  const baseUrl = useMemo(
+    () => buildEndpointAccessUrl(origin, username, endpoint.path),
+    [origin, username, endpoint.path],
+  );
   const isProtected = endpoint.accessControl === "authenticated";
 
   return (
@@ -41,9 +46,15 @@ export function SharePanel({ endpoint }: { endpoint: EndpointView }) {
           <Link2 className="size-3.5" /> 访问地址
         </div>
         <UrlRow url={baseUrl} />
-        {isProtected && <p className="mt-2 text-xs text-ink-3">受保护端点：单独的地址无法访问，需要配合下面的通行卡。</p>}
+        {isProtected && (
+          <p className="mt-2 text-xs text-ink-3">受保护端点：单独的地址无法访问，需要配合下面的通行卡。</p>
+        )}
       </section>
-      {isProtected ? <ProtectedShare endpoint={endpoint} baseUrl={baseUrl} /> : <PublicShare endpoint={endpoint} url={baseUrl} />}
+      {isProtected ? (
+        <ProtectedShare endpoint={endpoint} baseUrl={baseUrl} />
+      ) : (
+        <PublicShare endpoint={endpoint} url={baseUrl} />
+      )}
     </div>
   );
 }
@@ -53,19 +64,28 @@ function Availability({ endpoint }: { endpoint: EndpointView }) {
   const publish = useSetPublished();
   const update = useUpdateEndpoint();
   if (endpoint.isPublished && endpoint.enabled) return null;
-  const reason = !endpoint.enabled ? "端点已停用，访问会返回 503。" : "端点还是草稿，访问会返回 404。发布后链接和二维码才会生效。";
+  const reason = !endpoint.enabled
+    ? "端点已停用，访问会返回 503。"
+    : "端点还是草稿，访问会返回 404。发布后链接和二维码才会生效。";
   return (
     <div className="flex flex-wrap items-center gap-3 border-b border-line bg-caution-soft px-6 py-3 text-sm text-caution">
       <span className="flex-1">{reason}</span>
       {!endpoint.enabled ? (
-        <Button size="sm" variant="secondary" onClick={() => update.mutate({ id: endpoint.id, enabled: true })} disabled={update.isPending}>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => update.mutate({ id: endpoint.id, enabled: true })}
+          disabled={update.isPending}
+        >
           <Power /> 启用
         </Button>
+      ) : !user?.isActivated ? (
+        <ActivationGate label="申请发布权限" />
       ) : (
         <Button
           size="sm"
           variant="primary"
-          disabled={!user?.isActivated || publish.isPending}
+          disabled={publish.isPending}
           onClick={() =>
             publish.mutate(
               { id: endpoint.id, publish: true },
@@ -73,7 +93,7 @@ function Availability({ endpoint }: { endpoint: EndpointView }) {
             )
           }
         >
-          <Rocket /> {user?.isActivated ? "发布" : "需要管理员激活"}
+          <Rocket /> 发布
         </Button>
       )}
     </div>
@@ -81,17 +101,27 @@ function Availability({ endpoint }: { endpoint: EndpointView }) {
 }
 
 function UrlRow({ url, secret }: { url: string; secret?: boolean }) {
+  const demo = useDemo();
   return (
     <div className="flex min-w-0 items-center gap-1 rounded-sm bg-surface-1 py-1 pr-1 pl-3 shadow-[inset_0_0_0_1px_var(--line-strong)]">
-      <span className={cn("min-w-0 flex-1 truncate font-mono text-sm", secret ? "text-pass" : "text-ink-1")} title={url}>
+      <span
+        className={cn("min-w-0 flex-1 truncate font-mono text-sm", secret ? "text-pass" : "text-ink-1")}
+        title={url}
+      >
         {url}
       </span>
       <CopyButton value={url} label={secret ? "复制带密钥的链接" : "复制链接"} />
-      <Button asChild size="icon-sm" variant="ghost" aria-label="在新标签页打开">
-        <a href={url} target="_blank" rel="noreferrer noopener">
-          <ExternalLink />
-        </a>
-      </Button>
+      {demo ? (
+        <Button size="sm" variant="ghost" onClick={() => demo.simulate(url)}>
+          <Play /> 模拟访问
+        </Button>
+      ) : (
+        <Button asChild size="icon-sm" variant="ghost" aria-label="在新标签页打开">
+          <a href={url} target="_blank" rel="noreferrer noopener">
+            <ExternalLink />
+          </a>
+        </Button>
+      )}
     </div>
   );
 }
@@ -112,7 +142,10 @@ function ProtectedShare({ endpoint, baseUrl }: { endpoint: EndpointView; baseUrl
   const { username } = useWorkspace();
   const { data: groups = [] } = useGroups();
   const { keys, isLoading } = useKeysForGroups(endpoint.groups);
-  const usable = useMemo(() => keys.filter((key) => isShareableAccessKey(key, endpoint.groups)), [keys, endpoint.groups]);
+  const usable = useMemo(
+    () => keys.filter((key) => isShareableAccessKey(key, endpoint.groups)),
+    [keys, endpoint.groups],
+  );
   const unusable = keys.length - usable.length;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [issuing, setIssuing] = useState(false);
@@ -159,7 +192,13 @@ function ProtectedShare({ endpoint, baseUrl }: { endpoint: EndpointView; baseUrl
         </div>
         <AnimatePresence initial={false}>
           {issuing && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={glide} className="overflow-hidden">
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={glide}
+              className="overflow-hidden"
+            >
               <IssueForm
                 groupIds={endpoint.groups}
                 groupName={groupName}
@@ -183,7 +222,13 @@ function ProtectedShare({ endpoint, baseUrl }: { endpoint: EndpointView; baseUrl
         ) : (
           <div role="radiogroup" aria-label="通行卡" className="grid gap-1.5">
             {usable.map((key) => (
-              <KeyOption key={key.id} accessKey={key} groupName={groupName(key.permissionGroupId)} selected={key.id === selectedId} onSelect={() => setSelectedId(key.id)} />
+              <KeyOption
+                key={key.id}
+                accessKey={key}
+                groupName={groupName(key.permissionGroupId)}
+                selected={key.id === selectedId}
+                onSelect={() => setSelectedId(key.id)}
+              />
             ))}
           </div>
         )}
@@ -194,7 +239,9 @@ function ProtectedShare({ endpoint, baseUrl }: { endpoint: EndpointView; baseUrl
           <section className="border-b border-line px-6 py-5">
             <div className="mb-2 text-xs font-medium text-ink-2">带密钥的链接</div>
             <UrlRow url={url} secret />
-            <p className="mt-2 text-xs text-ink-3">任何拿到这个链接的人都能访问。只发给你信任的人；需要收回时，在「访问」中吊销这张通行卡。</p>
+            <p className="mt-2 text-xs text-ink-3">
+              任何拿到这个链接的人都能访问。只发给你信任的人；需要收回时，在「访问」中吊销这张通行卡。
+            </p>
           </section>
           <PassSection info={info} flipped={flipped} setFlipped={setFlipped} />
           <Examples url={url} accessKey={info.keyValue} />
@@ -204,7 +251,17 @@ function ProtectedShare({ endpoint, baseUrl }: { endpoint: EndpointView; baseUrl
   );
 }
 
-function KeyOption({ accessKey, groupName, selected, onSelect }: { accessKey: AccessKey; groupName: string; selected: boolean; onSelect: () => void }) {
+function KeyOption({
+  accessKey,
+  groupName,
+  selected,
+  onSelect,
+}: {
+  accessKey: AccessKey;
+  groupName: string;
+  selected: boolean;
+  onSelect: () => void;
+}) {
   const expiresSoon = accessKey.expiresAt && new Date(accessKey.expiresAt).getTime() - Date.now() < 7 * 86_400_000;
   return (
     <button
@@ -214,16 +271,24 @@ function KeyOption({ accessKey, groupName, selected, onSelect }: { accessKey: Ac
       onClick={onSelect}
       className={cn(
         "flex min-w-0 items-center gap-3 rounded-md px-3 py-2.5 text-left transition-[background-color,box-shadow]",
-        selected ? "bg-pass-soft shadow-[inset_0_0_0_1px_var(--pass)]" : "bg-surface-1 shadow-[inset_0_0_0_1px_var(--line)] hover:bg-surface-2",
+        selected
+          ? "bg-pass-soft shadow-[inset_0_0_0_1px_var(--pass)]"
+          : "bg-surface-1 shadow-[inset_0_0_0_1px_var(--line)] hover:bg-surface-2",
       )}
     >
-      <span className={cn("grid size-4 shrink-0 place-items-center rounded-full shadow-[inset_0_0_0_1.5px_var(--ink-4)]", selected && "shadow-[inset_0_0_0_1.5px_var(--pass)]")}>
+      <span
+        className={cn(
+          "grid size-4 shrink-0 place-items-center rounded-full shadow-[inset_0_0_0_1.5px_var(--ink-4)]",
+          selected && "shadow-[inset_0_0_0_1.5px_var(--pass)]",
+        )}
+      >
         {selected && <span className="size-2 rounded-full bg-pass" />}
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm text-ink-1">{accessKey.description || "未命名通行卡"}</span>
         <span className="block truncate text-xs text-ink-3">
-          {groupName} · <span className="font-mono">•••• {accessKey.keyValue.slice(-4)}</span> · 已使用 {accessKey.usageCount} 次
+          {groupName} · <span className="font-mono">•••• {accessKey.keyValue.slice(-4)}</span> · 已使用{" "}
+          {accessKey.usageCount} 次
         </span>
       </span>
       <span className={cn("shrink-0 text-xs", expiresSoon ? "text-caution" : "text-ink-4")}>
@@ -259,7 +324,8 @@ export function IssueForm({
 
   const submit = async () => {
     try {
-      const expiresAt = expiry === "never" ? undefined : new Date(Date.now() + Number(expiry) * 86_400_000).toISOString();
+      const expiresAt =
+        expiry === "never" ? undefined : new Date(Date.now() + Number(expiry) * 86_400_000).toISOString();
       const key = await issue.mutateAsync({ groupId, description: note.trim() || undefined, expiresAt });
       if (announce) toast.success("通行卡已签发");
       onIssued(key);
@@ -286,13 +352,24 @@ export function IssueForm({
           </Field>
         )}
         <Field label="备注" hint="例如：给谁、用在哪里">
-          <Input value={note} maxLength={200} onChange={(event) => setNote(event.target.value)} placeholder="小王的手机" />
+          <Input
+            value={note}
+            maxLength={200}
+            onChange={(event) => setNote(event.target.value)}
+            placeholder="小王的手机"
+          />
         </Field>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <CalendarClock className="size-4 text-ink-3" />
-          <Segmented label="有效期" size="sm" value={expiry} onChange={setExpiry} options={EXPIRY_PRESETS.map((preset) => ({ ...preset }))} />
+          <Segmented
+            label="有效期"
+            size="sm"
+            value={expiry}
+            onChange={setExpiry}
+            options={EXPIRY_PRESETS.map((preset) => ({ ...preset }))}
+          />
         </div>
         <Button size="sm" variant="pass" onClick={() => void submit()} disabled={issue.isPending}>
           {issue.isPending && <Spinner className="text-current" />} 签发
@@ -302,7 +379,15 @@ export function IssueForm({
   );
 }
 
-function PassSection({ info, flipped, setFlipped }: { info: PassInfo; flipped: boolean; setFlipped: (value: boolean) => void }) {
+function PassSection({
+  info,
+  flipped,
+  setFlipped,
+}: {
+  info: PassInfo;
+  flipped: boolean;
+  setFlipped: (value: boolean) => void;
+}) {
   const [downloading, setDownloading] = useState(false);
   return (
     <section className="border-b border-line px-6 py-6">
@@ -364,7 +449,11 @@ function Examples({ url, accessKey }: { url: string; accessKey?: string }) {
               <pre className="scrollbar-thin overflow-x-auto rounded-md bg-surface-1 p-3 pr-12 font-mono text-xs leading-relaxed text-ink-1 shadow-[inset_0_0_0_1px_var(--line)]">
                 {variant === "header" ? header : query}
               </pre>
-              <CopyButton value={variant === "header" ? header : query} label="复制命令" className="absolute top-2 right-2" />
+              <CopyButton
+                value={variant === "header" ? header : query}
+                label="复制命令"
+                className="absolute top-2 right-2"
+              />
             </div>
           </TabsContent>
         ))}

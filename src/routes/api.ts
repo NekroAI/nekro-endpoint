@@ -9,6 +9,7 @@ import permissionGroups from "./permission-groups";
 import accessKeys from "./access-keys";
 import admin from "./admin";
 import init from "./init";
+import activation from "./activation";
 import { Bindings } from "../types";
 
 type Variables = {
@@ -29,7 +30,8 @@ const api = new OpenAPIHono<{ Bindings: Bindings; Variables: Variables }>()
   .route("/", endpoints)
   .route("/", permissionGroups)
   .route("/", accessKeys)
-  .route("/", admin);
+  .route("/", admin)
+  .route("/", activation);
 
 export type ApiRoutes = typeof api;
 

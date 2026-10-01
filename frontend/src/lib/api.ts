@@ -17,6 +17,29 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * The in-browser demo (/demo) answers API calls locally instead of over the
+ * network. It installs a sandbox before its workspace mounts; the console
+ * itself never sets one.
+ */
+type Sandbox = { fetch: (url: string, init: RequestInit) => Promise<Response>; origin: string };
+let sandbox: Sandbox | null = null;
+
+export function installSandbox(next: Sandbox | null) {
+  sandbox = next;
+}
+
+/** The origin published endpoints are served from (the demo uses a placeholder domain). */
+export function sandboxOrigin() {
+  return sandbox?.origin ?? null;
+}
+
+export const apiFetch: typeof fetch = (input, init) => {
+  if (!sandbox) return fetch(input, init);
+  const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+  return sandbox.fetch(url, init ?? {});
+};
+
 type RequestOptions = { method?: string; body?: unknown; signal?: AbortSignal };
 
 function messageOf(body: unknown, fallback: string) {
@@ -41,7 +64,7 @@ export async function request<T = unknown>(path: string, options: RequestOptions
     body = JSON.stringify(options.body);
   }
 
-  const response = await fetch(`${getApiBase()}/api${path}`, {
+  const response = await apiFetch(`${getApiBase()}/api${path}`, {
     method: options.method ?? "GET",
     headers,
     body,

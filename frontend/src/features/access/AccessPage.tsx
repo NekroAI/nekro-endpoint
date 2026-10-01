@@ -17,6 +17,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import type { AccessKey, PermissionGroup } from "../../../../common/types";
 import { Page, PageHeader } from "../../app/Page";
+import { useAppPath } from "../../app/base";
 import { useRegisterCommands } from "../../app/commands";
 import { TypeGlyph } from "../../design/glyphs";
 import { glide } from "../../design/motion";
@@ -58,6 +59,7 @@ import {
 import { keyStatus, keyStatusLabel, type KeyStatus } from "./keyStatus";
 
 export function AccessPage() {
+  const appPath = useAppPath();
   const { groupId } = useParams();
   const navigate = useNavigate();
   const { data: groups, isLoading } = useGroups();
@@ -66,7 +68,7 @@ export function AccessPage() {
   // Default to the first group on wide screens; phones start at the list.
   useEffect(() => {
     if (!groupId && groups?.length && window.matchMedia("(min-width: 1024px)").matches) {
-      navigate(`/app/access/${groups[0].id}`, { replace: true });
+      navigate(appPath(`/app/access/${groups[0].id}`), { replace: true });
     }
   }, [groupId, groups, navigate]);
 
@@ -80,7 +82,7 @@ export function AccessPage() {
       label: group.name,
       hint: group.description ?? undefined,
       icon: Users,
-      run: () => navigate(`/app/access/${group.id}`),
+      run: () => navigate(appPath(`/app/access/${group.id}`)),
     })),
   ]);
 
@@ -123,6 +125,7 @@ export function AccessPage() {
 }
 
 function GroupCard({ group, selected }: { group: PermissionGroup; selected: boolean }) {
+  const appPath = useAppPath();
   const { data: keys } = useGroupKeys(group.id);
   const { data: endpoints } = useGroupEndpoints(group.id);
   const usable = keys?.filter((key) => {
@@ -131,7 +134,7 @@ function GroupCard({ group, selected }: { group: PermissionGroup; selected: bool
   }).length;
   return (
     <Link
-      to={`/app/access/${group.id}`}
+      to={appPath(`/app/access/${group.id}`)}
       aria-current={selected ? "page" : undefined}
       {...spotlight}
       style={{ ["--spot-tint" as string]: "var(--pass)" }}
@@ -269,6 +272,7 @@ function GroupDetail({ group }: { group: PermissionGroup }) {
 }
 
 function GroupHeader({ group }: { group: PermissionGroup }) {
+  const appPath = useAppPath();
   const update = useUpdateGroup();
   const remove = useDeleteGroup();
   const confirm = useConfirm();
@@ -304,7 +308,7 @@ function GroupHeader({ group }: { group: PermissionGroup }) {
     try {
       await remove.mutateAsync(group.id);
       toast.success("权限组已删除");
-      navigate("/app/access");
+      navigate(appPath("/app/access"));
     } catch (error) {
       toast.error("删除失败", { description: errorMessage(error) });
     }
@@ -334,7 +338,7 @@ function GroupHeader({ group }: { group: PermissionGroup }) {
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="min-w-0">
-        <Link to="/app/access" className="mb-2 inline-block text-xs text-ink-3 hover:text-ink-1 lg:hidden">
+        <Link to={appPath("/app/access")} className="mb-2 inline-block text-xs text-ink-3 hover:text-ink-1 lg:hidden">
           ← 全部权限组
         </Link>
         <h2 className="text-lg font-semibold">{group.name}</h2>
@@ -575,6 +579,7 @@ function KeyTable({ keys, groupName }: { keys: AccessKey[]; groupName: string })
 }
 
 function GroupEndpoints({ group }: { group: PermissionGroup }) {
+  const appPath = useAppPath();
   const { data: endpoints, isLoading } = useGroupEndpoints(group.id);
   return (
     <div className="rounded-lg bg-surface-0 shadow-[inset_0_0_0_1px_var(--line)]">
@@ -582,7 +587,7 @@ function GroupEndpoints({ group }: { group: PermissionGroup }) {
         <h3 className="flex items-center gap-2 text-sm font-medium">
           引用它的端点 <span className="text-xs font-normal text-ink-3">{endpoints?.length ?? 0}</span>
         </h3>
-        <Link to="/app/endpoints" className="text-xs text-ink-3 hover:text-ink-1">
+        <Link to={appPath("/app/endpoints")} className="text-xs text-ink-3 hover:text-ink-1">
           打开端点 →
         </Link>
       </div>
@@ -599,7 +604,7 @@ function GroupEndpoints({ group }: { group: PermissionGroup }) {
           {endpoints.map((endpoint) => (
             <li key={endpoint.id}>
               <Link
-                to={`/app/endpoints${endpoint.path}`}
+                to={appPath(`/app/endpoints${endpoint.path}`)}
                 className="flex items-center gap-3 px-5 py-2.5 hover:bg-surface-1"
               >
                 <TypeGlyph type={endpoint.type} className="size-4 text-ink-2" />
@@ -672,6 +677,7 @@ function KeyReveal({
 }
 
 function CreateGroupDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const appPath = useAppPath();
   const create = useCreateGroup();
   const navigate = useNavigate();
   const [name, setName] = useState("");
@@ -689,7 +695,7 @@ function CreateGroupDialog({ open, onOpenChange }: { open: boolean; onOpenChange
       const group = await create.mutateAsync({ name: name.trim(), description: description.trim() || undefined });
       toast.success("权限组已创建");
       onOpenChange(false);
-      navigate(`/app/access/${group.id}`);
+      navigate(appPath(`/app/access/${group.id}`));
     } catch (error) {
       toast.error("创建失败", { description: errorMessage(error) });
     }

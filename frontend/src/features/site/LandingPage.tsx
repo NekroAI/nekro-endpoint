@@ -1,8 +1,8 @@
 import {
   ArrowRight,
-  BookOpen,
   Database,
   ExternalLink,
+  FlaskConical,
   KeyRound,
   Lock,
   Plug,
@@ -78,14 +78,14 @@ function Hero() {
           <div className="mt-8 flex flex-wrap gap-3">
             <PrimaryCta />
             <Button asChild size="lg" variant="secondary">
+              <Link to="/demo">
+                <FlaskConical /> 在线体验
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="ghost">
               <a href={REPO_URL} target="_blank" rel="noreferrer">
                 <GitHubMark /> 开源仓库
               </a>
-            </Button>
-            <Button asChild size="lg" variant="ghost">
-              <Link to="/docs">
-                <BookOpen /> 文档
-              </Link>
             </Button>
           </div>
           <a
@@ -587,10 +587,17 @@ function ClosingCta() {
         <h2 className="mt-6 text-[clamp(26px,3.4vw,36px)] font-semibold tracking-tight">
           你的第一个端点，一分钟就能上线
         </h2>
-        <p className="mt-3 text-sm text-ink-3">新账号由管理员激活后即可发布；在此之前可以先创建和编辑。</p>
+        <p className="mt-3 text-sm text-ink-3">
+          还没有账号？先在演示环境里完整走一遍；新账号可以直接申请发布权限。
+        </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <PrimaryCta size="md" />
           <Button asChild variant="secondary">
+            <Link to="/demo">
+              <FlaskConical /> 在线体验
+            </Link>
+          </Button>
+          <Button asChild variant="ghost">
             <a href={REPO_URL} target="_blank" rel="noreferrer">
               <GitHubMark /> 自己部署一套
             </a>

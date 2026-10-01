@@ -197,3 +197,29 @@ export const agentActions = sqliteTable(
   },
   (table) => [index("agent_action_user_idx").on(table.userId, table.createdAt)],
 );
+
+// 激活申请：未激活用户向管理员申请发布权限（每个用户一条，重新申请时覆盖）
+export const activationRequests = sqliteTable(
+  "activation_requests",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    userId: text("user_id")
+      .notNull()
+      .unique()
+      .references(() => users.id, { onDelete: "cascade" }),
+    message: text("message"),
+    status: text("status").notNull().default("pending"), // pending | approved | rejected
+    reviewNote: text("review_note"),
+    reviewedBy: text("reviewed_by"),
+    reviewedAt: integer("reviewed_at", { mode: "timestamp" }),
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (table) => [index("activation_request_status_idx").on(table.status)],
+);

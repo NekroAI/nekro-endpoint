@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect, useMemo } from "react";
+import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import { safeLocalStorage, isBrowser } from "../utils/storage";
 import type { User, ApiResponse } from "../../../common/types";
 import { toast } from "../ui/toaster";
@@ -84,8 +84,7 @@ export const fetchWithAuth = async (input: RequestInfo | URL, init?: RequestInit
   return fetch(input, newInit);
 };
 
-// 自定义 Hook
-export function useAuth(): {
+export type AuthState = {
   user: User | undefined;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -95,7 +94,19 @@ export function useAuth(): {
   refetch: () => Promise<any>;
   isLoginLoading: boolean;
   isLogoutLoading: boolean;
-} {
+};
+
+/** The /demo workspace provides a fixed visitor identity instead of a session. */
+export const AuthOverrideContext = createContext<AuthState | null>(null);
+
+// 自定义 Hook
+export function useAuth(): AuthState {
+  const override = useContext(AuthOverrideContext);
+  const session = useSessionAuth(!override);
+  return override ?? session;
+}
+
+function useSessionAuth(active: boolean): AuthState {
   const queryClient = useQueryClient();
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasToken, setHasToken] = useState(() => !!safeLocalStorage.getItem("auth_token"));
@@ -109,7 +120,7 @@ export function useAuth(): {
   } = useQuery<User>({
     queryKey: ["auth", "user"],
     queryFn: authApi.getCurrentUser,
-    enabled: hasToken,
+    enabled: hasToken && active,
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
