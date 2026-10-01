@@ -1,4 +1,5 @@
 import { Check, Globe, Lock, Plus, Trash2 } from "lucide-react";
+import { useAppPath } from "../../app/base";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useGroups } from "../access/api";
@@ -20,6 +21,7 @@ import { useConfirm } from "../../ui/confirm";
 import { CopyButton } from "../../ui/copy-button";
 
 export function SettingsTab({ endpoint }: { endpoint: EndpointView }) {
+  const appPath = useAppPath();
   const update = useUpdateEndpoint();
   const remove = useDeleteEndpoint();
   const confirm = useConfirm();
@@ -137,7 +139,7 @@ export function SettingsTab({ endpoint }: { endpoint: EndpointView }) {
           <div className="grid gap-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-ink-2">允许访问的权限组</span>
-              <Link to="/app/access" className="inline-flex items-center gap-1 text-xs text-ink-3 hover:text-pass">
+              <Link to={appPath("/app/access")} className="inline-flex items-center gap-1 text-xs text-ink-3 hover:text-pass">
                 <Plus className="size-3" /> 管理权限组
               </Link>
             </div>

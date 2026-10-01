@@ -9,6 +9,8 @@ import { statusOf, type EndpointStatus, type EndpointView } from "./model";
 import { buildNamespace, findNode, type NamespaceNode } from "./namespace";
 import { useOptionalSignal } from "../signal/SignalProvider";
 import type { Ghost } from "../signal/tools";
+import { useWorkspaceBase } from "../../app/base";
+import { sandboxOrigin } from "../../lib/api";
 
 export type ViewMode = "map" | "list";
 export type SheetTab = "content" | "settings" | "share";
@@ -16,7 +18,6 @@ export type Filters = { query: string; statuses: EndpointStatus[]; types: Endpoi
 
 const EMPTY_FILTERS: Filters = { query: "", statuses: [], types: [], group: null };
 const VIEW_KEY = "signal.endpoints.view";
-const BASE = "/app/endpoints";
 
 type Workspace = {
   username: string;
@@ -68,6 +69,7 @@ function matches(endpoint: EndpointView, filters: Filters) {
 }
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
+  const BASE = `${useWorkspaceBase()}/endpoints`;
   const { user } = useAuth();
   const { data, isLoading, error } = useEndpointList();
   const location = useLocation();
@@ -109,7 +111,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const selectedPath = useMemo(() => {
     const rest = decodeURIComponent(location.pathname.slice(BASE.length));
     return rest && rest !== "/" ? rest.replace(/\/$/, "") : "";
-  }, [location.pathname]);
+  }, [BASE, location.pathname]);
   const selectedNode = findNode(namespace, selectedPath);
   const selectedEndpoint = selectedNode?.endpoint?.ghost ? undefined : selectedNode?.endpoint;
 
@@ -153,7 +155,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       navigate(`${BASE}${encoded}${search}`);
       return true;
     },
-    [confirm, navigate, selectedPath],
+    [BASE, confirm, navigate, selectedPath],
   );
 
   const setTab = useCallback(
@@ -219,5 +221,5 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
 /** The public origin used in shared URLs. */
 export function publicOrigin() {
-  return typeof window === "undefined" ? "" : window.location.origin;
+  return sandboxOrigin() ?? (typeof window === "undefined" ? "" : window.location.origin);
 }

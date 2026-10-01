@@ -2,7 +2,7 @@ import { Link, NavLink, useMatch } from "react-router-dom";
 import { m as motion } from "motion/react";
 import { BookOpen, Moon, PanelLeftClose, PanelLeftOpen, Search, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
-import { NAV_ITEMS, type NavItem } from "./nav";
+import { useNavItems, type NavItem } from "./nav";
 import { useAdminActivations } from "../features/activation/api";
 import { useAuth } from "../hooks/useAuth";
 import { useAppTheme } from "../context/ThemeContextProvider";
@@ -120,7 +120,7 @@ export function Sidebar() {
     return () => window.removeEventListener("keydown", onKey);
   });
 
-  const items = NAV_ITEMS.filter((item) => !item.adminOnly || user?.role === "admin");
+  const items = useNavItems(user?.role === "admin");
   const { data: activations } = useAdminActivations(user?.role === "admin");
   const pendingActivations = activations?.pending ?? 0;
 
@@ -208,7 +208,7 @@ export function Sidebar() {
 /** Phone navigation: a bottom tab bar replaces the rail. */
 export function TabBar() {
   const { user } = useAuth();
-  const items = NAV_ITEMS.filter((item) => !item.adminOnly || user?.role === "admin");
+  const items = useNavItems(user?.role === "admin");
   return (
     <nav
       aria-label="主导航"

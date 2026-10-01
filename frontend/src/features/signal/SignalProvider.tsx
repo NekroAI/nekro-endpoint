@@ -4,6 +4,7 @@ import { DefaultChatTransport, lastAssistantMessageIsCompleteWithApprovalRespons
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { getApiBase } from "../../../../common/config/api";
 import { safeLocalStorage } from "../../utils/storage";
+import { apiFetch } from "../../lib/api";
 import { useSignalConfig, type AiConfigView } from "./api";
 import { ghostOf, metaOf, type Ghost, type Risk } from "./tools";
 
@@ -70,6 +71,7 @@ export function SignalProvider({ children }: { children: ReactNode }) {
     () =>
       new DefaultChatTransport<UIMessage>({
         api: `${getApiBase()}/api/signal/chat`,
+        fetch: apiFetch,
         headers: (): Record<string, string> => {
           const token = safeLocalStorage.getItem("auth_token");
           return token ? { Authorization: `Bearer ${token}` } : {};

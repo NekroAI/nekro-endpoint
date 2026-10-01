@@ -538,6 +538,11 @@ alwaysApply: true
 - 详见 `docs/OPERATIONS.md`。真实账号、订阅原始导出与私钥存于仓库外，不得提交。
 - production 明确指向 `nekro-endpoint`。已关联 GitHub 的部署优先沿用 Workers Builds，不从本机额外发布未跟踪版本。
 
+## 2026-10 激活申请与在线演示
+
+- 激活申请：`/api/activation-request`（用户）与 `/api/admin/activation-requests`（管理员批准/拒绝），表 `activation_requests`（迁移 0003）。前端在 `features/activation/`。
+- `/demo`：工作区在本地模拟后端（`features/demo/`）上运行，供未登录或未激活的访客体验；工作区内链接写 `/app/...` 并经 `useAppPath()` 映射。修改工作区调用的接口时同步更新演示后端。
+
 ## 4. 用户认证系统
 
 项目现已集成完整的 GitHub OAuth 登录功能，包含：

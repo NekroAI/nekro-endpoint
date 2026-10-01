@@ -1,4 +1,5 @@
 import { ArrowLeft, Lock, MoreHorizontal, Search, ShieldCheck, Trash2, Undo2, X } from "lucide-react";
+import { useAppPath } from "../../app/base";
 import { AnimatePresence, m as motion } from "motion/react";
 import { useDeferredValue, useMemo, useState } from "react";
 import { useHotkey } from "../../lib/hotkeys";
@@ -37,8 +38,9 @@ import {
 } from "./api";
 
 export function AdminPage() {
+  const appPath = useAppPath();
   const { user } = useAuth();
-  if (user && user.role !== "admin") return <Navigate to="/app/endpoints" replace />;
+  if (user && user.role !== "admin") return <Navigate to={appPath("/app/endpoints")} replace />;
   return <Admin />;
 }
 

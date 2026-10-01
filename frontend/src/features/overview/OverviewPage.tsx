@@ -1,4 +1,5 @@
 import { AlertTriangle, ArrowRight, CalendarClock, CircleSlash, KeyRound, Link2Off, Lock, Plus } from "lucide-react";
+import { useAppPath } from "../../app/base";
 import { lazy, Suspense, useMemo, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { m as motion } from "motion/react";
@@ -40,6 +41,7 @@ type Attention = {
 };
 
 function Overview() {
+  const appPath = useAppPath();
   const { user } = useAuth();
   const { endpoints, isLoading } = useWorkspace();
   const { data: groups = [] } = useGroups();
@@ -64,7 +66,7 @@ function Overview() {
           icon: <Lock />,
           title: `${endpoint.path} 没有关联权限组`,
           detail: "受保护但无人可访问，请求会返回 500。",
-          to: `/app/endpoints${endpoint.path}?tab=settings`,
+          to: appPath(`/app/endpoints${endpoint.path}?tab=settings`),
         });
       }
       if (endpoint.type === "dynamicProxy" && !(endpoint.config as DynamicProxyConfig).baseUrl) {
@@ -74,7 +76,7 @@ function Overview() {
           icon: <Link2Off />,
           title: `${endpoint.path} 还没有基础 URL`,
           detail: "动态代理需要先填写基础 URL 才能发布。",
-          to: `/app/endpoints${endpoint.path}`,
+          to: appPath(`/app/endpoints${endpoint.path}`),
         });
       }
       if (endpoint.isPublished && !endpoint.enabled) {
@@ -84,7 +86,7 @@ function Overview() {
           icon: <CircleSlash />,
           title: `${endpoint.path} 已发布但处于停用状态`,
           detail: "访问返回 503。不再需要的话可以取消发布或删除。",
-          to: `/app/endpoints${endpoint.path}?tab=settings`,
+          to: appPath(`/app/endpoints${endpoint.path}?tab=settings`),
         });
       }
     }
@@ -97,7 +99,7 @@ function Overview() {
           icon: <CalendarClock />,
           title: `通行卡「${key.description || "未命名"}」${relativeTime(key.expiresAt)}到期`,
           detail: `${group?.name ?? "权限组"} · 到期后持卡人将无法访问。`,
-          to: `/app/access/${key.permissionGroupId}`,
+          to: appPath(`/app/access/${key.permissionGroupId}`),
         });
       }
     }
@@ -146,7 +148,7 @@ function Overview() {
               <div>
                 <p className="text-sm text-ink-3">还没有端点</p>
                 <Button asChild variant="primary" className="mt-4">
-                  <Link to="/app/endpoints">
+                  <Link to={appPath("/app/endpoints")}>
                     <Plus /> 布下第一个信号点
                   </Link>
                 </Button>
@@ -154,7 +156,7 @@ function Overview() {
             </div>
           )}
           <Link
-            to="/app/endpoints"
+            to={appPath("/app/endpoints")}
             className="absolute right-3 bottom-3 inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs text-ink-2 glass shadow-pop hover:text-ink-1"
           >
             打开端点 <ArrowRight className="size-3" />
@@ -210,7 +212,7 @@ function Overview() {
       <section className="mt-6 rounded-lg bg-surface-0 shadow-[inset_0_0_0_1px_var(--line)]">
         <div className="flex items-center justify-between border-b border-line px-5 py-3">
           <h2 className="text-sm font-medium">最近更新</h2>
-          <Link to="/app/access" className="inline-flex items-center gap-1 text-xs text-ink-3 hover:text-ink-1">
+          <Link to={appPath("/app/access")} className="inline-flex items-center gap-1 text-xs text-ink-3 hover:text-ink-1">
             <KeyRound className="size-3" /> 管理通行卡
           </Link>
         </div>
@@ -218,7 +220,7 @@ function Overview() {
           {recent.map((endpoint) => (
             <li key={endpoint.id}>
               <Link
-                to={`/app/endpoints${endpoint.path}`}
+                to={appPath(`/app/endpoints${endpoint.path}`)}
                 className="flex items-center gap-3 px-5 py-2.5 hover:bg-surface-1"
               >
                 <TypeGlyph type={endpoint.type} className="size-4 text-ink-2" />

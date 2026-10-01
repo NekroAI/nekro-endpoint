@@ -1,4 +1,5 @@
 import { BookOpen, LogOut, Moon, Settings2, Sun } from "lucide-react";
+import { useAppPath, useDemo } from "./base";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useAppTheme } from "../context/ThemeContextProvider";
@@ -28,6 +29,8 @@ export function Avatar({ className, ring }: { className?: string; ring?: "cautio
 }
 
 export function UserMenu({ side = "right", children }: { side?: "right" | "top" | "bottom"; children: React.ReactNode }) {
+  const appPath = useAppPath();
+  const demo = useDemo();
   const { user, logout } = useAuth();
   const { themeMode, toggleTheme } = useAppTheme();
   const navigate = useNavigate();
@@ -49,7 +52,7 @@ export function UserMenu({ side = "right", children }: { side?: "right" | "top" 
           {user.isActivated ? <Tag tone="signal">已激活</Tag> : <Tag tone="caution">待激活 · 暂不能发布</Tag>}
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => navigate("/app/settings")}>
+        <DropdownMenuItem onSelect={() => navigate(appPath("/app/settings"))}>
           <Settings2 /> 设置
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => navigate("/docs")}>
@@ -60,7 +63,7 @@ export function UserMenu({ side = "right", children }: { side?: "right" | "top" 
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem tone="danger" onSelect={logout}>
-          <LogOut /> 退出登录
+          <LogOut /> {demo ? "退出演示" : "退出登录"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

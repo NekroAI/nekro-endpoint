@@ -24,7 +24,8 @@ export function useHotkey(combo: string, handler: (event: KeyboardEvent) => void
       if (needsMod !== mod || needsShift !== event.shiftKey || event.altKey) return;
       if (event.key.toLowerCase() !== key) return;
       if (!needsMod && isTypingTarget(event.target)) return;
-      // Let open dialogs, menus and popovers own Escape.
+      // Let open dialogs, menus and popovers own Escape (Radix marks the key it handled).
+      if (event.defaultPrevented) return;
       if (key === "escape" && document.querySelector('[role="dialog"][data-state="open"], [role="menu"], [role="listbox"]')) return;
       event.preventDefault();
       latest.current(event);

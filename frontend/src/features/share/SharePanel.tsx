@@ -1,4 +1,4 @@
-import { CalendarClock, Download, ExternalLink, KeyRound, Link2, Plus, RefreshCw, Rocket, Power } from "lucide-react";
+import { CalendarClock, Download, ExternalLink, KeyRound, Link2, Play, Plus, RefreshCw, Rocket, Power } from "lucide-react";
 import { AnimatePresence, m as motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import type { AccessKey } from "../../../../common/types";
@@ -23,6 +23,7 @@ import { toast } from "../../ui/toaster";
 import { AccessPass, downloadPass, type PassInfo } from "./AccessPass";
 import { glide } from "../../design/motion";
 import { ActivationGate } from "../activation/ActivationGate";
+import { useDemo } from "../../app/base";
 
 /**
  * One place for everything a recipient needs: URL, pass, QR and call
@@ -100,6 +101,7 @@ function Availability({ endpoint }: { endpoint: EndpointView }) {
 }
 
 function UrlRow({ url, secret }: { url: string; secret?: boolean }) {
+  const demo = useDemo();
   return (
     <div className="flex min-w-0 items-center gap-1 rounded-sm bg-surface-1 py-1 pr-1 pl-3 shadow-[inset_0_0_0_1px_var(--line-strong)]">
       <span
@@ -109,11 +111,17 @@ function UrlRow({ url, secret }: { url: string; secret?: boolean }) {
         {url}
       </span>
       <CopyButton value={url} label={secret ? "复制带密钥的链接" : "复制链接"} />
-      <Button asChild size="icon-sm" variant="ghost" aria-label="在新标签页打开">
-        <a href={url} target="_blank" rel="noreferrer noopener">
-          <ExternalLink />
-        </a>
-      </Button>
+      {demo ? (
+        <Button size="sm" variant="ghost" onClick={() => demo.simulate(url)}>
+          <Play /> 模拟访问
+        </Button>
+      ) : (
+        <Button asChild size="icon-sm" variant="ghost" aria-label="在新标签页打开">
+          <a href={url} target="_blank" rel="noreferrer noopener">
+            <ExternalLink />
+          </a>
+        </Button>
+      )}
     </div>
   );
 }

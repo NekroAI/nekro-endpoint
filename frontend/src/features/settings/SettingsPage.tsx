@@ -15,8 +15,27 @@ import { Segmented } from "../../ui/segmented";
 import { toast } from "../../ui/toaster";
 import { SignalSettings } from "../signal/SignalSettings";
 import { ActivationCard } from "../activation/ActivationCard";
+import { useDemo } from "../../app/base";
 
 export function SettingsPage() {
+  const demo = useDemo();
+  if (demo) {
+    return (
+      <Page className="max-w-4xl">
+        <PageHeader eyebrow="设置" title="账号与偏好" description="演示环境只保留外观设置。" />
+        <div className="grid gap-6">
+          <AppearanceSection />
+          <Section title="部署后还有这些" icon={<Terminal className="size-4 text-ink-3" />}>
+            <ul className="grid gap-2 text-sm text-ink-2">
+              <li>管理密钥（sec-）：让脚本、CI 与命令行工具用同一套 API 管理端点。</li>
+              <li>Signal 智能助手：接入你自己的模型，用自然语言创建、发布和分享端点。</li>
+              <li>MCP 接入：在 Claude、Cursor 等客户端里直接操作你的命名空间。</li>
+            </ul>
+          </Section>
+        </div>
+      </Page>
+    );
+  }
   return (
     <Page className="max-w-4xl">
       <PageHeader

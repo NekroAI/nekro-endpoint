@@ -46,6 +46,7 @@ import type { NamespaceNode } from "./namespace";
 import { SettingsTab } from "./SettingsTab";
 import { StatusDot, StatusPill } from "./status";
 import { publicOrigin, useWorkspace, type SheetTab } from "./workspace";
+import { useDemo } from "../../app/base";
 
 export function FocusSheet() {
   const { selectedNode, selectedPath, select } = useWorkspace();
@@ -188,7 +189,7 @@ function AddressLine({ endpoint }: { endpoint: EndpointView }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(endpoint.path.slice(1));
   const input = useRef<HTMLInputElement>(null);
-  const host = typeof window === "undefined" ? "" : window.location.host;
+  const host = publicOrigin().replace(/^https?:\/\//, "");
 
   useEffect(() => {
     setDraft(endpoint.path.slice(1));
@@ -357,6 +358,7 @@ function MoreMenu({ endpoint }: { endpoint: EndpointView }) {
   const remove = useDeleteEndpoint();
   const confirm = useConfirm();
   const url = buildEndpointAccessUrl(publicOrigin(), username, endpoint.path);
+  const demo = useDemo();
 
   const destroy = async () => {
     const ok = await confirm({
@@ -389,8 +391,8 @@ function MoreMenu({ endpoint }: { endpoint: EndpointView }) {
         <DropdownMenuItem onSelect={() => void copyText(url, "地址已复制")}>
           <Copy /> 复制地址
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => window.open(url, "_blank", "noopener")}>
-          <ExternalLink /> 在新标签页打开
+        <DropdownMenuItem onSelect={() => (demo ? demo.simulate(url) : window.open(url, "_blank", "noopener"))}>
+          <ExternalLink /> {demo ? "模拟访问" : "在新标签页打开"}
         </DropdownMenuItem>
         {endpoint.type !== "dynamicProxy" && (
           <DropdownMenuItem onSelect={() => openCreate(`${endpoint.path}/`)}>

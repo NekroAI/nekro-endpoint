@@ -15,6 +15,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 生产部署优先沿用 Cloudflare Workers Builds 的 Git 集成。production Worker 名称显式为 `nekro-endpoint`，不要根据环境后缀另建 Worker。
 - 2026-10 前端已整体重构为 Signal 设计（`docs/REDESIGN.md`）：Tailwind v4 + Radix（`frontend/src/ui/`）+ motion，MUI/emotion/UnoCSS 已移除。工作区在 `/app/*`，旧路径只做重定向；界面显示名为 Endpoints，仓库与部署名不变。
 - Signal 与 MCP（`docs/REDESIGN.md` §5）：Agent 工具在 `src/agent/tools.ts`，经 `PlatformClient` 以用户的 `sec-` 密钥在进程内调用冻结的 `/api/*`，因此 `src/routes/api.ts` 绝不能引入 `src/agent/*`。工具输出必须经过 `redact()`；只读以外的工具一律需要用户确认。对话接口 `/api/signal/chat` 无状态，MCP 在 `/mcp`（自研无状态实现，不要换回会引入 ajv 的官方 SDK）。模型 API Key 用 Worker secret `AI_CONFIG_SECRET` 加密，未设置时 Signal 关闭。
+- 激活申请（`src/routes/activation.ts`，表 `activation_requests`）：未激活用户在概览、设置和发布按钮处提交申请，管理员在管理页批准（同时激活）或附备注拒绝；已激活用户的待处理申请视为已批准。仍只有发布受激活限制。
+- `/demo` 是浏览器内演示：同一套工作区页面运行在 `features/demo/backend.ts` 的本地模拟后端上（`lib/api.ts` 的 `installSandbox` 接管 `apiFetch`，`AuthOverrideContext` 提供访客身份，`WorkspaceBaseContext` 把 `/app` 路径映射到 `/demo`）。工作区内跳转一律写 `/app/...` 并经 `useAppPath()` 映射，不要硬编码 `/demo`。演示 Signal 是脚本（`features/demo/signal.ts`），不调用模型；数据只存在访客浏览器。新增接口时若工作区会调用，同步在演示后端补上对应响应。
 - 代理端点转发请求头前会剔除值为平台凭据（`sec-`、`ep-`、会话令牌）的 `Authorization`（`src/routes/execution.ts` 的 `forwardableHeaders`），其他值照常转发；不要回退。
 - 静态资源设置了 `html_handling: "none"`，`/` 由 Worker SSR，而非 `dist/client/index.html` 开发模板。
 - `pnpm test:ci` 运行平台单元测试和 API 契约测试（`pnpm test:contract`：在 workerd + 真实 D1 中冻结 `/api/*`、`/e/*` 的外部行为，规范见 `docs/REDESIGN.md` §1）；修改接口导致快照变化即视为破坏外部兼容，除非有意为之并经评审；可选`pnpm test:cli`检查通用CLI，使用Python标准库；`pnpm typecheck` 使用根配置覆盖前后端。此仓库没有 `frontend/tsconfig.json`。
