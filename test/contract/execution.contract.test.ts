@@ -1,6 +1,16 @@
 import { env, fetchMock } from "cloudflare:test";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { ALICE_EXPIRED_KEY, ALICE_KEY, ALICE_REVOKED_KEY, BOB_KEY, call, contract, ORIGIN, seed } from "./helpers";
+import {
+  alice,
+  ALICE_EXPIRED_KEY,
+  ALICE_KEY,
+  ALICE_REVOKED_KEY,
+  BOB_KEY,
+  call,
+  contract,
+  ORIGIN,
+  seed,
+} from "./helpers";
 import { SELF } from "cloudflare:test";
 
 beforeAll(() => {
@@ -154,5 +164,60 @@ describe("dynamicProxy endpoints", () => {
 
   it("does not match a sibling that merely shares the prefix", async () => {
     await contract(call("/e/alice/ghost"));
+  });
+});
+
+describe("platform credentials never reach an upstream (changed in the redesign)", () => {
+  const forwardedAuthorization = async (
+    path: string,
+    upstreamPath: string,
+    authorization: string,
+    origin = "https://upstream.test",
+  ) => {
+    echo(origin, upstreamPath);
+    const response = await SELF.fetch(`${ORIGIN}${path}`, { headers: { Authorization: authorization } });
+    return ((await response.json()) as { forwarded: { authorization: string | null } }).forwarded.authorization;
+  };
+
+  it.each([
+    ["a management key", `Bearer ${alice.apiKey}`],
+    ["an endpoint access key", `Bearer ${ALICE_KEY}`],
+    ["a browser session", `Bearer ${alice.session}`],
+    ["an expired browser session", "Bearer session-alice-expired"],
+  ])("strips %s on fixed proxies", async (_label, authorization) => {
+    expect(await forwardedAuthorization("/e/alice/proxy/fixed", "/data.json", authorization)).toBeNull();
+  });
+
+  it("strips a management key on dynamic proxies", async () => {
+    expect(
+      await forwardedAuthorization(
+        "/e/alice/gh/a.txt",
+        "/a.txt",
+        `Bearer ${alice.apiKey}`,
+        "https://raw.upstream.test",
+      ),
+    ).toBeNull();
+  });
+
+  it.each([
+    ["an unrelated bearer token", "Bearer client-token"],
+    ["basic auth", "Basic dXNlcjpwYXNz"],
+  ])("still forwards %s", async (_label, authorization) => {
+    expect(await forwardedAuthorization("/e/alice/proxy/fixed", "/data.json", authorization)).toBe(authorization);
+  });
+
+  it("keeps an Authorization header configured by the endpoint owner", async () => {
+    await env.DB.prepare("UPDATE endpoints SET config = ? WHERE id = ?")
+      .bind(
+        JSON.stringify({
+          targetUrl: "https://upstream.test/data.json",
+          headers: { authorization: "Bearer upstream-secret" },
+        }),
+        "ep_proxy",
+      )
+      .run();
+    expect(await forwardedAuthorization("/e/alice/proxy/fixed", "/data.json", `Bearer ${alice.apiKey}`)).toBe(
+      "Bearer upstream-secret",
+    );
   });
 });

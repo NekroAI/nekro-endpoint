@@ -101,7 +101,7 @@ export function DocsPage() {
             <List
               items={[
                 <>
-                  总会移除 <Inline>Host</Inline> 和 <Inline>X-Access-Key</Inline>；其余请求头（包括 <Inline>Authorization</Inline>）原样转发，可配置追加或移除。
+                  总会移除 <Inline>Host</Inline>、<Inline>X-Access-Key</Inline>，以及携带本平台凭据（管理密钥、通行卡、登录会话）的 <Inline>Authorization</Inline>；其他请求头（包括访问者自己的上游令牌）原样转发，可配置追加或移除。
                 </>,
                 <>访问时携带的查询参数<strong>不会</strong>转发。</>,
                 <>超时可设 1–30 秒；超时返回 504，上游不可达返回 502。</>,
@@ -220,7 +220,7 @@ export function DocsPage() {
               <>管理密钥等同于你的账号权限，只用于 <Inline>/api/*</Inline>，绝不要放进分享链接或订阅地址。</>,
               "通行卡只对端点访问有效，可以随时吊销；为不同的人签发不同的卡，便于单独收回。",
               "带密钥的链接被转发出去，任何拿到它的人都能访问——需要收回时吊销对应的通行卡。",
-              <>代理会把客户端的 <Inline>Authorization</Inline> 头转发给上游；不要用管理密钥去访问代理端点。</>,
+              <>代理不会把本平台的凭据转发给上游；访问者自己的其他 <Inline>Authorization</Inline> 值会照常转发。</>,
             ]}
           />
         </Section>

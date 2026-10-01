@@ -74,8 +74,11 @@ const getConfigRoute = createRoute({
 
 app.openapi(getConfigRoute, async (c) => {
   const user = c.get("user");
-  const { user: own, platform } = await loadConfigs(c.get("db"), user.id);
-  const available = Boolean(c.env.AI_CONFIG_SECRET);
+  // Before migration 0002 is applied the table does not exist yet: report
+  // Signal as unavailable instead of failing, so code and migration can ship in any order.
+  const configs = await loadConfigs(c.get("db"), user.id).catch(() => null);
+  const { user: own, platform } = configs ?? { user: null, platform: null };
+  const available = Boolean(c.env.AI_CONFIG_SECRET) && configs !== null;
   return c.json(
     {
       success: true,

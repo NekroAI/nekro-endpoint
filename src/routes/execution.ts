@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { eq, and } from "drizzle-orm";
-import { users, endpoints as endpointsTable, accessKeys, permissionGroups } from "../db/schema";
+import { users, endpoints as endpointsTable, accessKeys, permissionGroups, userSessions } from "../db/schema";
 import type { Bindings } from "../types";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import * as drizzleSchema from "../db/schema";
@@ -11,6 +11,28 @@ type Variables = {
 };
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+
+const PLATFORM_KEY = /^(sec-[a-f0-9]{64}|ep-[a-f0-9]{32})$/;
+
+/**
+ * The visitor's headers minus anything that is a credential of this platform.
+ * Management keys, endpoint access keys and browser session tokens must never
+ * reach an upstream server; any other Authorization value is forwarded, so
+ * clients can still authenticate to the upstream through a proxy endpoint.
+ */
+async function forwardableHeaders(raw: Headers, db: DrizzleD1Database<typeof drizzleSchema>) {
+  const headers: Record<string, string> = Object.fromEntries(raw);
+  delete headers["host"];
+  delete headers["x-access-key"];
+  const bearer = /^bearer\s+(\S+)\s*$/i.exec(headers["authorization"] ?? "")?.[1];
+  if (bearer) {
+    const isPlatformCredential =
+      PLATFORM_KEY.test(bearer) ||
+      Boolean(await db.query.userSessions.findFirst({ where: eq(userSessions.sessionToken, bearer), columns: { id: true } }));
+    if (isPlatformCredential) delete headers["authorization"];
+  }
+  return headers;
+}
 
 /**
  * 端点执行层
@@ -184,8 +206,9 @@ app.all("/e/:username/*", async (c) => {
       const finalUrl = targetUrl;
 
       // 准备请求头
+      // Configured headers (including an owner-set Authorization) override the visitor's.
       const proxyHeaders: Record<string, string> = {
-        ...Object.fromEntries(c.req.raw.headers),
+        ...(await forwardableHeaders(c.req.raw.headers, db)),
         ...headers,
       };
 
@@ -194,7 +217,7 @@ app.all("/e/:username/*", async (c) => {
         delete proxyHeaders[header.toLowerCase()];
       });
 
-      // 删除某些不应该转发的头
+      // 删除某些不应该转发的头（配置头也不能覆盖这两项）
       delete proxyHeaders["host"];
       delete proxyHeaders["x-access-key"];
 
@@ -278,8 +301,9 @@ app.all("/e/:username/*", async (c) => {
       });
 
       // 准备请求头
+      // Configured headers (including an owner-set Authorization) override the visitor's.
       const proxyHeaders: Record<string, string> = {
-        ...Object.fromEntries(c.req.raw.headers),
+        ...(await forwardableHeaders(c.req.raw.headers, db)),
         ...headers,
       };
 
@@ -288,7 +312,7 @@ app.all("/e/:username/*", async (c) => {
         delete proxyHeaders[header.toLowerCase()];
       });
 
-      // 删除某些不应该转发的头
+      // 删除某些不应该转发的头（配置头也不能覆盖这两项）
       delete proxyHeaders["host"];
       delete proxyHeaders["x-access-key"];
 

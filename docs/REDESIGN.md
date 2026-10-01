@@ -73,7 +73,7 @@ GET    /api/doc（OpenAPI）               GET  /doc（Swagger UI）
 - 错误体继续是 `{ error: "…" }`，不是 `{ success }` 信封。状态码不变：404 / 403 / 401 / 503 / 500。
 - 访问密钥校验成功后，照旧更新 `lastUsedAt` 和 `usageCount`。
 - 代理转发规则：
-  - 两种代理都会删除 `Host` 和 `X-Access-Key` 请求头，其余请求头（包括 `Authorization`）原样转发，配置里的 `headers` 覆盖同名请求头。
+  - 两种代理都会删除 `Host` 和 `X-Access-Key` 请求头，以及值为本平台凭据（`sec-` 管理密钥、`ep-` 通行卡、会话令牌）的 `Authorization`；其余请求头原样转发，配置里的 `headers` 覆盖同名请求头（所有者配置的上游 `Authorization` 不受影响）。**这是重构中唯一一处有意改变的外部行为**，由契约测试锁定。
   - 固定代理（proxy）**不转发**查询串。
   - 动态代理（dynamicProxy）把子路径拼到 `baseUrl` 后，转发除 `access_key` 以外的查询参数。
   - 静态端点和固定代理只做精确匹配，`/hello/` 与 `/hello` 是不同路径。
@@ -597,9 +597,10 @@ P0 → P1 → P2 必须按顺序。实际执行时 P7 提前到 P4 之后完成�
 | `compatibility_date` 升级 | 可能影响执行层 | 单独 PR，契约测试加预览环境验证（见 5.9） |
 | Durable Objects 成本 | 每个活跃用户对应一个 DO | 用户规模小，可以忽略；空闲时 DO 会休眠 |
 | 密钥明文存储 | `sec-` 和 `ep-` 都是明文，列表接口也返回明文 | 本方案不改；哈希化会破坏契约，需要另立方案并设计过渡期 |
-| 代理转发 `Authorization` | 两种代理都会把客户端的 `Authorization` 头转发给上游 | 已冻结为当前行为。若要改为不转发，需另立方案并评估外部调用方 |
+| 代理转发 `Authorization` | 曾经会把平台凭据原样转发给上游 | ✅ 已改为剔除平台凭据，其他值照常转发；外部调用方只有在把平台凭据发给代理端点时才会受影响 |
 | 执行层全表扫描密钥 | `/e/*` 每次请求都读取全部有效密钥 | 不属于本方案范围，可以另立性能方案（行为不变的前提下改成按组查询） |
 | 两套样式共存 | 已解决：P4 之后即移除 MUI / emotion / UnoCSS | 首屏 JS 164 KB（gzip），工作区页面按路由拆分 |
+| 迁移 0002 与代码的上线顺序 | Workers Builds 是否自动执行迁移取决于控制台中的构建命令 | 代码已能在缺表时降级（Signal 显示不可用，其余功能与 MCP 正常），由 `rollout.contract.test.ts` 验证；任意顺序上线都安全 |
 | 首页未 SSR（已有问题） | `dist/client/index.html` 开发模板被静态资源层直接返回给 `/` | 已设置 `assets.html_handling: "none"`，`/` 由 Worker SSR |
 | Workers AI 的工具调用质量 | 比主流商业模型弱 | 只作为兜底，界面标注「基础模式」 |
 
