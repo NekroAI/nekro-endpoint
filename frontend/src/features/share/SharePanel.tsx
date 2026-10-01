@@ -244,10 +244,13 @@ export function IssueForm({
   groupIds,
   groupName,
   onIssued,
+  announce = true,
 }: {
   groupIds: string[];
   groupName: (id: string) => string;
   onIssued: (key: AccessKey) => void;
+  /** Toast on success; off when the caller shows its own reveal. */
+  announce?: boolean;
 }) {
   const issue = useIssueKey();
   const [groupId, setGroupId] = useState(groupIds[0]);
@@ -258,7 +261,7 @@ export function IssueForm({
     try {
       const expiresAt = expiry === "never" ? undefined : new Date(Date.now() + Number(expiry) * 86_400_000).toISOString();
       const key = await issue.mutateAsync({ groupId, description: note.trim() || undefined, expiresAt });
-      toast.success("通行卡已签发");
+      if (announce) toast.success("通行卡已签发");
       onIssued(key);
     } catch (error) {
       toast.error("签发失败", { description: errorMessage(error) });

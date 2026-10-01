@@ -5,13 +5,14 @@ import HomePage from "./pages/HomePage";
 import { Features } from "./pages/Features";
 import { DashboardPage } from "./pages/DashboardPage";
 import { AuthCallbackPage } from "./pages/AuthCallbackPage";
-import { PermissionGroupsPage } from "./pages/PermissionGroupsPage";
 import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
 import { InitPage } from "./pages/InitPage";
 import { DocsPage } from "./pages/DocsPage";
 import { AppShell } from "./app/AppShell";
 import { Placeholder } from "./app/Placeholder";
 import { EndpointsPage as SignalEndpointsPage } from "./features/endpoints/EndpointsPage";
+import { AccessPage } from "./features/access/AccessPage";
+import { SettingsPage } from "./features/settings/SettingsPage";
 
 /**
  * 应用路由配置
@@ -33,9 +34,10 @@ export const AppRoutes = () => (
     <Route path="/app" element={<AppShell />}>
       <Route index element={<Navigate to="endpoints" replace />} />
       <Route path="endpoints/*" element={<SignalEndpointsPage />} />
-      <Route path="access" element={<Placeholder title="访问" />} />
+      <Route path="access" element={<AccessPage />} />
+      <Route path="access/:groupId" element={<AccessPage />} />
       <Route path="overview" element={<Placeholder title="概览" />} />
-      <Route path="settings" element={<Placeholder title="设置" />} />
+      <Route path="settings" element={<SettingsPage />} />
       <Route path="admin" element={<Placeholder title="管理" />} />
     </Route>
 
@@ -43,7 +45,7 @@ export const AppRoutes = () => (
     <Route element={<WorkspaceLayout />}>
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/endpoints" element={<Navigate to="/app/endpoints" replace />} />
-      <Route path="/permissions" element={<PermissionGroupsPage />} />
+      <Route path="/permissions" element={<Navigate to="/app/access" replace />} />
       <Route path="/admin/users" element={<AdminUsersPage />} />
     </Route>
 

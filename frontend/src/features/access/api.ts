@@ -1,5 +1,5 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { AccessKey, PermissionGroup } from "../../../../common/types";
+import type { AccessKey, EndpointType, PermissionGroup } from "../../../../common/types";
 import { request, requestData } from "../../lib/api";
 
 export const accessKeys = {
@@ -70,10 +70,20 @@ export function useUpdateGroup() {
 }
 
 export function useDeleteGroup() {
+  const client = useQueryClient();
   const invalidate = useInvalidateAccess();
   return useMutation({
-    mutationFn: async (id: string) => request(`/permission-groups/${encodeURIComponent(id)}`, { method: "DELETE" }),
-    onSuccess: invalidate,
+    mutationFn: async (id: string) => {
+      await request(`/permission-groups/${encodeURIComponent(id)}`, { method: "DELETE" });
+      return id;
+    },
+    onSuccess: (id) => {
+      // Drop the deleted group's queries instead of refetching them into 404s.
+      client.removeQueries({ queryKey: accessKeys.keys(id) });
+      client.removeQueries({ queryKey: [...accessKeys.all, "group-endpoints", id] });
+      client.setQueryData<PermissionGroup[]>(accessKeys.groups(), (groups) => groups?.filter((group) => group.id !== id));
+      invalidate();
+    },
   });
 }
 
@@ -104,5 +114,26 @@ export function useDeleteKey() {
   return useMutation({
     mutationFn: async (id: string) => request(`/access-keys/${encodeURIComponent(id)}`, { method: "DELETE" }),
     onSuccess: invalidate,
+  });
+}
+
+export type GroupEndpoint = {
+  id: string;
+  path: string;
+  name: string;
+  type: EndpointType;
+  accessControl: "public" | "authenticated";
+  enabled: boolean;
+  isPublished: boolean;
+};
+
+export function useGroupEndpoints(groupId: string | undefined) {
+  return useQuery({
+    queryKey: [...accessKeys.all, "group-endpoints", groupId ?? ""],
+    queryFn: async () =>
+      (await requestData<{ endpoints: GroupEndpoint[] }>(`/permission-groups/${encodeURIComponent(groupId!)}/endpoints`))
+        .endpoints,
+    enabled: Boolean(groupId),
+    staleTime: 15_000,
   });
 }

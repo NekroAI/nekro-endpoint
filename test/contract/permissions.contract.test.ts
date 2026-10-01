@@ -39,6 +39,20 @@ describe("permission groups (REDESIGN §1.2)", () => {
   });
 });
 
+describe("GET /permission-groups/{id}/endpoints (added in the redesign)", () => {
+  it("lists the owner's endpoints that reference the group", async () => {
+    const res = await contract(api(`/permission-groups/${ALICE_GROUP}/endpoints`, auth.aliceKey));
+    expect(data<{ endpoints: { id: string }[] }>(res).endpoints.map((endpoint) => endpoint.id)).toEqual([
+      "ep_static_protected",
+    ]);
+  });
+
+  it("isolates groups between users and requires authentication", async () => {
+    expect((await contract(api(`/permission-groups/${BOB_GROUP}/endpoints`, auth.aliceKey))).status).toBe(404);
+    expect((await api(`/permission-groups/${ALICE_GROUP}/endpoints`)).status).toBe(401);
+  });
+});
+
 describe("access keys", () => {
   it("lists keys including the plaintext ep- keyValue (relied on by sharing)", async () => {
     const res = await contract(api(`/permission-groups/${ALICE_GROUP}/keys`, auth.aliceKey));

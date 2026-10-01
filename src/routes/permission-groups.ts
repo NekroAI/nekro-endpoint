@@ -12,7 +12,9 @@ import {
   PermissionGroupListResponseSchema,
   PermissionGroupDetailResponseSchema,
   PermissionSuccessResponseSchema,
+  PermissionGroupEndpointsResponseSchema,
 } from "../../common/validators/permission.schema";
+import { EndpointTypeSchema, AccessControlSchema } from "../../common/validators/endpoint.schema";
 
 type Variables = {
   db: DrizzleD1Database<typeof drizzleSchema>;
@@ -174,6 +176,74 @@ app.openapi(getPermissionGroupRoute, async (c): Promise<any> => {
       endpointsCount,
     },
   });
+});
+
+// 列出引用该权限组的端点（新增接口，docs/REDESIGN.md §1.7）
+const listGroupEndpointsRoute = createRoute({
+  method: "get",
+  path: "/permission-groups/{id}/endpoints",
+  tags: ["Permission Groups"],
+  security: [{ Bearer: [] }],
+  request: {
+    params: z.object({
+      id: z.string(),
+    }),
+  },
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: PermissionGroupEndpointsResponseSchema,
+        },
+      },
+      description: "成功返回引用该权限组的端点",
+    },
+    404: {
+      content: {
+        "application/json": {
+          schema: z.object({ success: z.boolean(), message: z.string() }),
+        },
+      },
+      description: "权限组不存在",
+    },
+  },
+});
+
+app.openapi(listGroupEndpointsRoute, async (c) => {
+  const db = c.get("db");
+  const user = c.get("user");
+  const { id } = c.req.valid("param");
+
+  const group = await db.query.permissionGroups.findFirst({
+    where: and(eq(permissionGroups.id, id), eq(permissionGroups.ownerUserId, user.id)),
+  });
+  if (!group) {
+    return c.json({ success: false, message: "权限组不存在" }, 404);
+  }
+
+  const owned = await db.select().from(endpointsTable).where(eq(endpointsTable.ownerUserId, user.id));
+  const referencing = owned
+    .filter((endpoint) => {
+      if (!endpoint.requiredPermissionGroups) return false;
+      try {
+        const groups: unknown = JSON.parse(endpoint.requiredPermissionGroups);
+        return Array.isArray(groups) && groups.includes(id);
+      } catch {
+        return false;
+      }
+    })
+    .sort((a, b) => a.path.localeCompare(b.path))
+    .map((endpoint) => ({
+      id: endpoint.id,
+      path: endpoint.path,
+      name: endpoint.name,
+      type: EndpointTypeSchema.parse(endpoint.type),
+      accessControl: AccessControlSchema.parse(endpoint.accessControl),
+      enabled: endpoint.enabled,
+      isPublished: endpoint.isPublished,
+    }));
+
+  return c.json({ success: true, data: { endpoints: referencing, total: referencing.length } }, 200);
 });
 
 // 更新权限组

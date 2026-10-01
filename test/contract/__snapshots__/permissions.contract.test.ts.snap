@@ -1,5 +1,40 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`GET /permission-groups/{id}/endpoints (added in the redesign) > isolates groups between users and requires authentication 1`] = `
+{
+  "body": {
+    "message": "权限组不存在",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 404,
+}
+`;
+
+exports[`GET /permission-groups/{id}/endpoints (added in the redesign) > lists the owner's endpoints that reference the group 1`] = `
+{
+  "body": {
+    "data": {
+      "endpoints": [
+        {
+          "accessControl": "authenticated",
+          "enabled": true,
+          "id": "ep_static_protected",
+          "isPublished": true,
+          "name": "Secret",
+          "path": "/configs/secret",
+          "type": "static",
+        },
+      ],
+      "total": 1,
+    },
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
 exports[`access keys > cannot list or create keys in another user's group 1`] = `
 {
   "body": {
