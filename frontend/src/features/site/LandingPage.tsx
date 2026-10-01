@@ -1,4 +1,15 @@
-import { ArrowRight, BookOpen, KeyRound, Lock, RotateCcw, ShieldCheck } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  Database,
+  ExternalLink,
+  KeyRound,
+  Lock,
+  Plug,
+  RotateCcw,
+  Scale,
+  ShieldCheck,
+} from "lucide-react";
 import { m as motion, useInView } from "motion/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
@@ -10,6 +21,8 @@ import { glide, ignite } from "../../design/motion";
 import { cn } from "../../lib/cn";
 import { spotlight } from "../../lib/spotlight";
 import { Button } from "../../ui/button";
+import { CopyButton } from "../../ui/copy-button";
+import { LICENSE, REPO_NAME, REPO_URL, repoFile } from "../../design/site";
 
 function useHost() {
   const [host, setHost] = useState("ep.nekro.ai");
@@ -24,6 +37,7 @@ export function LandingPage() {
       <Demo />
       <Capabilities />
       <AccessModel />
+      <OpenSource />
       <ClosingCta />
     </>
   );
@@ -63,13 +77,30 @@ function Hero() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <PrimaryCta />
+            <Button asChild size="lg" variant="secondary">
+              <a href={REPO_URL} target="_blank" rel="noreferrer">
+                <GitHubMark /> 开源仓库
+              </a>
+            </Button>
             <Button asChild size="lg" variant="ghost">
               <Link to="/docs">
-                <BookOpen /> 阅读文档
+                <BookOpen /> 文档
               </Link>
             </Button>
           </div>
-          <p className="mt-8 font-mono text-xs text-ink-4">Cloudflare Workers · D1 · 开源，可自托管</p>
+          <a
+            href={REPO_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="group mt-8 inline-flex items-center gap-2.5 text-xs text-ink-3 hover:text-ink-1"
+          >
+            <span className="inline-flex h-5 items-center rounded-full bg-signal-soft px-2 font-mono text-2xs font-medium text-signal">
+              {LICENSE}
+            </span>
+            开源，可部署在你自己的 Cloudflare 账号
+            <span className="hidden font-mono text-ink-4 group-hover:text-ink-2 sm:inline">{REPO_NAME}</span>
+            <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
+          </a>
         </motion.div>
         <SignalField />
       </div>
@@ -460,6 +491,94 @@ function AccessModel() {
   );
 }
 
+const SELF_HOST = `git clone ${REPO_URL}.git
+cd nekro-endpoint && pnpm install
+pnpm dev`;
+
+function OpenSource() {
+  const points = [
+    { icon: <Scale />, title: `${LICENSE} 许可`, body: "代码完全公开，可以自由使用、修改和分发。" },
+    {
+      icon: <Database />,
+      title: "你的账号，你的数据",
+      body: "运行在你自己的 Workers 与 D1 上，不经过任何第三方服务。",
+    },
+    { icon: <ShieldCheck />, title: "接口有契约保护", body: "上百个契约测试冻结 API 行为，升级不会悄悄破坏你的集成。" },
+    { icon: <Plug />, title: "可编程", body: "REST API、命令行工具 epctl 和 MCP 服务，接入你自己的自动化。" },
+  ];
+  return (
+    <section className="border-t border-line">
+      <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-24 md:px-8 lg:grid-cols-[1fr_1.05fr]">
+        <div>
+          <SectionHeading eyebrow="开源 · 自托管" title="整个平台都是开源的">
+            Endpoints 不是一项托管服务，而是一套你可以完整拥有的软件：把它部署到自己的 Cloudflare
+            账号，几分钟就能拥有私有的端点平台。
+          </SectionHeading>
+          <ul className="-mt-2 grid gap-5 sm:grid-cols-2">
+            {points.map((point) => (
+              <li key={point.title} className="flex gap-3">
+                <span className="mt-0.5 shrink-0 text-signal [&_svg]:size-4">{point.icon}</span>
+                <span>
+                  <span className="block text-sm font-medium text-ink-1">{point.title}</span>
+                  <span className="mt-1 block text-xs leading-relaxed text-ink-3">{point.body}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-10% 0px" }}
+          transition={glide}
+          {...spotlight}
+          className="spotlight overflow-hidden rounded-lg bg-surface-0 shadow-[inset_0_0_0_1px_var(--line-strong)]"
+        >
+          <a
+            href={REPO_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="group flex items-center gap-3 border-b border-line px-5 py-4 hover:bg-surface-1"
+          >
+            <span className="grid size-9 place-items-center rounded-md bg-surface-2 text-ink-1 [&_svg]:size-5">
+              <GitHubMark />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate font-mono text-sm text-ink-1">{REPO_NAME}</span>
+              <span className="block text-xs text-ink-3">GitHub · {LICENSE} License</span>
+            </span>
+            <ExternalLink className="size-4 text-ink-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-ink-1" />
+          </a>
+          <div className="relative">
+            <pre className="scrollbar-thin overflow-x-auto p-5 pr-12 font-mono text-xs leading-loose">
+              {SELF_HOST.split("\n").map((line) => (
+                <span key={line} className="block">
+                  <span className="text-ink-4 select-none">$ </span>
+                  <span className="text-ink-1">{line}</span>
+                </span>
+              ))}
+            </pre>
+            <CopyButton value={SELF_HOST} label="复制命令" className="absolute top-3 right-3" />
+          </div>
+          <div className="flex flex-wrap gap-2 border-t border-line px-5 py-4">
+            <Button asChild size="sm" variant="primary">
+              <a href={REPO_URL} target="_blank" rel="noreferrer">
+                <GitHubMark /> 在 GitHub 上查看
+              </a>
+            </Button>
+            <Button asChild size="sm" variant="ghost">
+              <a href={repoFile("docs/DEPLOYMENT.md")} target="_blank" rel="noreferrer">
+                部署指南 <ArrowRight />
+              </a>
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
 function ClosingCta() {
   return (
     <section className="border-t border-line">
@@ -469,10 +588,12 @@ function ClosingCta() {
           你的第一个端点，一分钟就能上线
         </h2>
         <p className="mt-3 text-sm text-ink-3">新账号由管理员激活后即可发布；在此之前可以先创建和编辑。</p>
-        <div className="mt-8 flex justify-center gap-3">
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
           <PrimaryCta size="md" />
-          <Button asChild variant="ghost">
-            <Link to="/docs">文档</Link>
+          <Button asChild variant="secondary">
+            <a href={REPO_URL} target="_blank" rel="noreferrer">
+              <GitHubMark /> 自己部署一套
+            </a>
           </Button>
         </div>
       </div>
