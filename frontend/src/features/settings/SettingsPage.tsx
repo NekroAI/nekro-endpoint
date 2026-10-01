@@ -14,11 +14,16 @@ import { CopyButton } from "../../ui/copy-button";
 import { Segmented } from "../../ui/segmented";
 import { toast } from "../../ui/toaster";
 import { SignalSettings } from "../signal/SignalSettings";
+import { ActivationCard } from "../activation/ActivationCard";
 
 export function SettingsPage() {
   return (
     <Page className="max-w-4xl">
-      <PageHeader eyebrow="设置" title="账号与偏好" description="管理你的账号、自动化凭据、Signal 智能助手与界面外观。" />
+      <PageHeader
+        eyebrow="设置"
+        title="账号与偏好"
+        description="管理你的账号、自动化凭据、Signal 智能助手与界面外观。"
+      />
       <div className="grid gap-6">
         <AccountSection />
         <ManagementKeySection />
@@ -30,7 +35,17 @@ export function SettingsPage() {
   );
 }
 
-function Section({ title, description, children, icon }: { title: string; description?: ReactNode; children: ReactNode; icon?: ReactNode }) {
+function Section({
+  title,
+  description,
+  children,
+  icon,
+}: {
+  title: string;
+  description?: ReactNode;
+  children: ReactNode;
+  icon?: ReactNode;
+}) {
   return (
     <section className="rounded-lg bg-surface-0 shadow-[inset_0_0_0_1px_var(--line)]">
       <header className="border-b border-line px-6 py-4">
@@ -62,11 +77,7 @@ function AccountSection() {
           <div className="mt-1 text-xs text-ink-4">加入于 {absoluteTime(user.createdAt)}</div>
         </div>
       </div>
-      {!user.isActivated && (
-        <p className="mt-4 rounded-sm bg-caution-soft px-3 py-2.5 text-sm text-caution">
-          账号还未激活：你可以创建和编辑端点、管理权限组，但发布需要管理员激活。
-        </p>
-      )}
+      <ActivationCard className="mt-5" />
     </Section>
   );
 }
@@ -107,12 +118,15 @@ function ManagementKeySection() {
       icon={<ShieldAlert className="size-4 text-caution" />}
       description={
         <>
-          与登录会话权限相同，用于 <code className="font-mono">Authorization: Bearer sec-…</code> 调用管理 API。它不是端点通行卡，切勿放进分享链接。
+          与登录会话权限相同，用于 <code className="font-mono">Authorization: Bearer sec-…</code> 调用管理
+          API。它不是端点通行卡，切勿放进分享链接。
         </>
       }
     >
       <div className="flex min-w-0 items-center gap-1 rounded-sm bg-surface-1 py-1 pr-1 pl-3 shadow-[inset_0_0_0_1px_var(--line-strong)]">
-        <code className="min-w-0 flex-1 truncate font-mono text-sm text-ink-1">{shown ? key : `${key.slice(0, 8)}${"•".repeat(24)}${key.slice(-6)}`}</code>
+        <code className="min-w-0 flex-1 truncate font-mono text-sm text-ink-1">
+          {shown ? key : `${key.slice(0, 8)}${"•".repeat(24)}${key.slice(-6)}`}
+        </code>
         <Button size="icon-sm" variant="ghost" aria-label={shown ? "隐藏" : "显示"} onClick={() => setShown(!shown)}>
           {shown ? <EyeOff /> : <Eye />}
         </Button>

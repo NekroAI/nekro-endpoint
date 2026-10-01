@@ -3,6 +3,7 @@ import { m as motion } from "motion/react";
 import { BookOpen, Moon, PanelLeftClose, PanelLeftOpen, Search, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import { NAV_ITEMS, type NavItem } from "./nav";
+import { useAdminActivations } from "../features/activation/api";
 import { useAuth } from "../hooks/useAuth";
 import { useAppTheme } from "../context/ThemeContextProvider";
 import { useCommands } from "./commands";
@@ -49,7 +50,7 @@ function RailButton({
  * className must be a string here: Radix Slot (Tooltip asChild) cannot merge
  * NavLink's function form and would stringify it.
  */
-function RailLink({ item, expanded }: { item: NavItem; expanded: boolean }) {
+function RailLink({ item, expanded, badge }: { item: NavItem; expanded: boolean; badge?: number }) {
   const { to, label, icon: Icon, hint } = item;
   const isActive = Boolean(useMatch({ path: to, end: false }));
   return (
@@ -69,12 +70,19 @@ function RailLink({ item, expanded }: { item: NavItem; expanded: boolean }) {
             className="absolute top-2 bottom-2 -left-2.5 w-0.5 rounded-full bg-signal shadow-signal"
           />
         )}
-        <Icon
-          className={cn(
-            "size-[18px] shrink-0 transition-[scale] duration-200 group-hover:scale-110",
-            isActive && "text-signal",
-          )}
-        />
+        <span className="relative">
+          <Icon
+            className={cn(
+              "size-[18px] shrink-0 transition-[scale] duration-200 group-hover:scale-110",
+              isActive && "text-signal",
+            )}
+          />
+          {badge ? (
+            <span className="absolute -top-1.5 -right-2 grid h-3.5 min-w-3.5 place-items-center rounded-full bg-caution px-1 font-mono text-[9px] leading-none font-semibold text-[#1a1203]">
+              {badge}
+            </span>
+          ) : null}
+        </span>
         {expanded && <span className="truncate">{label}</span>}
       </NavLink>
     </Tooltip>
@@ -113,6 +121,8 @@ export function Sidebar() {
   });
 
   const items = NAV_ITEMS.filter((item) => !item.adminOnly || user?.role === "admin");
+  const { data: activations } = useAdminActivations(user?.role === "admin");
+  const pendingActivations = activations?.pending ?? 0;
 
   return (
     <motion.aside
@@ -130,7 +140,12 @@ export function Sidebar() {
 
       <nav className="grid gap-0.5" aria-label="主导航">
         {items.map((item) => (
-          <RailLink key={item.to} item={item} expanded={expanded} />
+          <RailLink
+            key={item.to}
+            item={item}
+            expanded={expanded}
+            badge={item.adminOnly ? pendingActivations : undefined}
+          />
         ))}
       </nav>
 

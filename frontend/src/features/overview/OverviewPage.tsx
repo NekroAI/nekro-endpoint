@@ -1,14 +1,4 @@
-import {
-  AlertTriangle,
-  ArrowRight,
-  CalendarClock,
-  CircleSlash,
-  KeyRound,
-  Link2Off,
-  Lock,
-  Plus,
-  ShieldAlert,
-} from "lucide-react";
+import { AlertTriangle, ArrowRight, CalendarClock, CircleSlash, KeyRound, Link2Off, Lock, Plus } from "lucide-react";
 import { lazy, Suspense, useMemo, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { m as motion } from "motion/react";
@@ -28,6 +18,7 @@ import { keyStatus } from "../access/keyStatus";
 import { statusOf, type EndpointStatus } from "../endpoints/model";
 import { StatusDot } from "../endpoints/status";
 import { WorkspaceProvider, useWorkspace } from "../endpoints/workspace";
+import { ActivationCard } from "../activation/ActivationCard";
 
 const MapView = lazy(() => import("../endpoints/MapView"));
 
@@ -65,16 +56,6 @@ function Overview() {
 
   const attention = useMemo<Attention[]>(() => {
     const items: Attention[] = [];
-    if (user && !user.isActivated) {
-      items.push({
-        id: "activation",
-        tone: "caution",
-        icon: <ShieldAlert />,
-        title: "账号尚未激活",
-        detail: "可以继续创建和编辑，发布需要管理员激活。",
-        to: "/app/settings",
-      });
-    }
     for (const endpoint of endpoints) {
       if (endpoint.accessControl === "authenticated" && endpoint.groups.length === 0) {
         items.push({
@@ -149,6 +130,8 @@ function Overview() {
           {attention.length ? `有 ${attention.length} 件事需要你看一下。` : "一切正常，没有需要处理的事项。"}
         </p>
       </motion.header>
+
+      <ActivationCard className="mb-6" />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <section className="relative h-[420px] overflow-hidden rounded-lg bg-surface-0 shadow-[inset_0_0_0_1px_var(--line)]">

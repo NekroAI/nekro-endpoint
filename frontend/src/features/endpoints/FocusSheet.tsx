@@ -38,6 +38,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
 import { toast } from "../../ui/toaster";
 import { Tooltip } from "../../ui/tooltip";
 import { SharePanel } from "../share/SharePanel";
+import { ActivationGate } from "../activation/ActivationGate";
 import { useDeleteEndpoint, useEndpointDetail, useSetPublished, useUpdateEndpoint } from "./api";
 import { ContentTab } from "./editors/ContentTab";
 import { normalizePath, statusOf, validatePath, type EndpointView } from "./model";
@@ -129,11 +130,16 @@ function SheetHeader({ endpoint }: { endpoint: EndpointView }) {
         <div
           className={cn(
             "relative grid size-10 shrink-0 place-items-center rounded-md shadow-[inset_0_0_0_1px_var(--line-strong)]",
-            endpoint.type === "proxy" || endpoint.type === "dynamicProxy" ? "bg-route-soft text-route" : "bg-surface-2 text-ink-1",
+            endpoint.type === "proxy" || endpoint.type === "dynamicProxy"
+              ? "bg-route-soft text-route"
+              : "bg-surface-2 text-ink-1",
           )}
         >
           <TypeGlyph type={endpoint.type} className="size-[18px]" />
-          <StatusDot status={status} className="absolute -right-0.5 -bottom-0.5 size-2.5 shadow-[0_0_0_2px_var(--surface-solid)]" />
+          <StatusDot
+            status={status}
+            className="absolute -right-0.5 -bottom-0.5 size-2.5 shadow-[0_0_0_2px_var(--surface-solid)]"
+          />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-2">
@@ -193,7 +199,10 @@ function AddressLine({ endpoint }: { endpoint: EndpointView }) {
   }, [editing]);
 
   const normalized = normalizePath(draft);
-  const error = normalized === endpoint.path ? null : validatePath(normalized, (path) => endpoints.some((other) => other.path === path && other.id !== endpoint.id));
+  const error =
+    normalized === endpoint.path
+      ? null
+      : validatePath(normalized, (path) => endpoints.some((other) => other.path === path && other.id !== endpoint.id));
 
   const commit = async () => {
     if (normalized === endpoint.path) return setEditing(false);
@@ -203,7 +212,8 @@ function AddressLine({ endpoint }: { endpoint: EndpointView }) {
         title: "修改已发布端点的地址？",
         description: (
           <>
-            旧地址 <code className="font-mono text-ink-1">{endpoint.path}</code> 会立即失效，已经分发出去的链接和二维码将无法访问。
+            旧地址 <code className="font-mono text-ink-1">{endpoint.path}</code>{" "}
+            会立即失效，已经分发出去的链接和二维码将无法访问。
           </>
         ),
         confirmLabel: "修改地址",
@@ -257,7 +267,14 @@ function AddressLine({ endpoint }: { endpoint: EndpointView }) {
               onBlur={() => !error && normalized === endpoint.path && setEditing(false)}
               className="h-8 min-w-0 flex-1 bg-transparent pr-2 text-ink-1 outline-none"
             />
-            <Button size="sm" variant="primary" className="mr-1 h-6" disabled={Boolean(error) || update.isPending} onMouseDown={(event) => event.preventDefault()} onClick={() => void commit()}>
+            <Button
+              size="sm"
+              variant="primary"
+              className="mr-1 h-6"
+              disabled={Boolean(error) || update.isPending}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => void commit()}
+            >
               保存
             </Button>
           </div>
@@ -275,7 +292,9 @@ function AddressLine({ endpoint }: { endpoint: EndpointView }) {
           {segments.map((segment, index) => (
             <span key={index} className="flex min-w-0 items-center">
               <span className="text-ink-4">/</span>
-              <span className={cn("truncate", index === segments.length - 1 ? "text-ink-1" : "text-ink-2")}>{segment}</span>
+              <span className={cn("truncate", index === segments.length - 1 ? "text-ink-1" : "text-ink-2")}>
+                {segment}
+              </span>
             </span>
           ))}
           <Pencil className="ml-1.5 size-3 shrink-0 text-ink-4 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" />
@@ -292,7 +311,12 @@ function PublishControl({ endpoint, onIgnite }: { endpoint: EndpointView; onIgni
 
   if (!endpoint.enabled) {
     return (
-      <Button size="sm" variant="secondary" disabled={update.isPending} onClick={() => update.mutate({ id: endpoint.id, enabled: true }, { onSuccess: () => toast.success("已启用") })}>
+      <Button
+        size="sm"
+        variant="secondary"
+        disabled={update.isPending}
+        onClick={() => update.mutate({ id: endpoint.id, enabled: true }, { onSuccess: () => toast.success("已启用") })}
+      >
         <Power /> <span className="sr-only sm:not-sr-only">启用</span>
       </Button>
     );
@@ -319,14 +343,11 @@ function PublishControl({ endpoint, onIgnite }: { endpoint: EndpointView; onIgni
       </Button>
     );
   }
+  if (!user?.isActivated) return <ActivationGate />;
   return (
-    <Tooltip content={user?.isActivated ? null : "账号需要管理员激活后才能发布"}>
-      <span>
-        <Button size="sm" variant="primary" disabled={!user?.isActivated || publish.isPending} onClick={() => run(true)}>
-          <Rocket /> <span className="sr-only sm:not-sr-only">发布</span>
-        </Button>
-      </span>
-    </Tooltip>
+    <Button size="sm" variant="primary" disabled={publish.isPending} onClick={() => run(true)}>
+      <Rocket /> <span className="sr-only sm:not-sr-only">发布</span>
+    </Button>
   );
 }
 
@@ -340,7 +361,9 @@ function MoreMenu({ endpoint }: { endpoint: EndpointView }) {
   const destroy = async () => {
     const ok = await confirm({
       title: "删除端点",
-      description: endpoint.isPublished ? "这个端点正在线上提供服务。删除后所有已分发的链接立即失效，且无法恢复。" : "删除后无法恢复。",
+      description: endpoint.isPublished
+        ? "这个端点正在线上提供服务。删除后所有已分发的链接立即失效，且无法恢复。"
+        : "删除后无法恢复。",
       confirmLabel: "永久删除",
       tone: "danger",
       typeToConfirm: endpoint.path,
@@ -375,7 +398,14 @@ function MoreMenu({ endpoint }: { endpoint: EndpointView }) {
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => update.mutate({ id: endpoint.id, enabled: !endpoint.enabled }, { onSuccess: () => toast.success(endpoint.enabled ? "已停用" : "已启用") })}>
+        <DropdownMenuItem
+          onSelect={() =>
+            update.mutate(
+              { id: endpoint.id, enabled: !endpoint.enabled },
+              { onSuccess: () => toast.success(endpoint.enabled ? "已停用" : "已启用") },
+            )
+          }
+        >
           <Power /> {endpoint.enabled ? "停用" : "启用"}
         </DropdownMenuItem>
         <DropdownMenuItem tone="danger" onSelect={() => void destroy()}>
@@ -411,15 +441,27 @@ function DirectoryPanel({ node }: { node: NamespaceNode }) {
         <p className="px-2 pb-3 text-xs text-ink-3">
           目录由路径自动形成，本身不是端点。下面是 {node.path}/ 下的 {node.count} 个端点。
         </p>
-        <motion.ul initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.03 } } }} className="grid gap-1">
+        <motion.ul
+          initial="hidden"
+          animate="show"
+          variants={{ show: { transition: { staggerChildren: 0.03 } } }}
+          className="grid gap-1"
+        >
           {children.map((child) => (
-            <motion.li key={child.path} variants={{ hidden: { opacity: 0, y: 4 }, show: { opacity: 1, y: 0, transition: glide } }}>
+            <motion.li
+              key={child.path}
+              variants={{ hidden: { opacity: 0, y: 4 }, show: { opacity: 1, y: 0, transition: glide } }}
+            >
               <button
                 type="button"
                 onClick={() => void select(child.path)}
                 className="flex w-full items-center gap-3 rounded-sm px-3 py-2.5 text-left hover:bg-surface-2"
               >
-                {child.endpoint ? <TypeGlyph type={child.endpoint.type} className="size-4 text-ink-2" /> : <DirectoryGlyph className="size-4 text-ink-4" />}
+                {child.endpoint ? (
+                  <TypeGlyph type={child.endpoint.type} className="size-4 text-ink-2" />
+                ) : (
+                  <DirectoryGlyph className="size-4 text-ink-4" />
+                )}
                 <span className="font-mono text-sm text-ink-1">{child.segment}</span>
                 <span className="truncate text-xs text-ink-3">{child.endpoint?.name ?? `${child.count} 个端点`}</span>
                 <span className="ml-auto flex items-center gap-2">
