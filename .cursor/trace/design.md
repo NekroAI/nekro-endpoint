@@ -104,7 +104,7 @@ Edgent 是一个**开源的边缘端点托管平台**，供手动验证的用户
 1. 创建权限组（如 "VIP客户"）
 2. 生成访问密钥（格式：`ep-<随机字符串>`，支持备注、到期时间）
 3. 端点关联权限组
-4. 客户端携带密钥访问：`Authorization: Bearer ep-xxx` 或 `?token=ep-xxx`
+4. 客户端携带密钥访问：`X-Access-Key: ep-xxx` 请求头或 `?access_key=ep-xxx`
 
 ### 3.6 其他功能
 

@@ -13,7 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `/api/auth/me` 复用鉴权中间件；不要恢复输出 OAuth/session/API 密钥的调试日志。发布激活中间件必须注册在发布处理器之前。
 - `scripts/epctl.py` 是使用Python标准库的通用管理客户端，状态和凭据在仓库外；规范见 `docs/OPERATIONS.md`。
 - 生产部署优先沿用 Cloudflare Workers Builds 的 Git 集成。production Worker 名称显式为 `nekro-endpoint`，不要根据环境后缀另建 Worker。
-- `pnpm test:ci` 只运行平台Vitest；可选`pnpm test:cli`检查通用CLI，使用Python标准库；`pnpm typecheck` 使用根配置覆盖前后端。此仓库没有 `frontend/tsconfig.json`。
+- `pnpm test:ci` 运行平台单元测试和 API 契约测试（`pnpm test:contract`：在 workerd + 真实 D1 中冻结 `/api/*`、`/e/*` 的外部行为，规范见 `docs/REDESIGN.md` §1）；修改接口导致快照变化即视为破坏外部兼容，除非有意为之并经评审；可选`pnpm test:cli`检查通用CLI，使用Python标准库；`pnpm typecheck` 使用根配置覆盖前后端。此仓库没有 `frontend/tsconfig.json`。
 
 **NekroEndpoint** 是一个基于 Cloudflare Workers 构建的**端点编排平台**，允许用户在全球边缘节点上创建和管理 API 端点。
 
@@ -533,11 +533,12 @@ export default defineConfig({
    - 格式：`ep-<32位随机字符串>`
    - 支持备注（`description`）
    - 支持到期时间（`expires_at`）
-   - **仅在创建时返回明文**，后续无法再查看
+   - 明文存储于 `access_keys.key_value`；创建响应和密钥列表接口都会返回明文 `keyValue`（分享功能依赖它，属于兼容契约）
 3. **端点关联权限组**：在端点的 `required_permission_groups` 字段中指定
 4. **客户端访问**：携带密钥访问端点
-   - HTTP Header: `Authorization: Bearer ep-xxx`
-   - 或 Query 参数: `?token=ep-xxx`
+   - HTTP Header: `X-Access-Key: ep-xxx`
+   - 或 Query 参数: `?access_key=ep-xxx`
+   - 不支持 `Authorization: Bearer ep-xxx` 或 `?token=`（契约测试已锁定）
 
 #### API 设计（参考 design.md）
 

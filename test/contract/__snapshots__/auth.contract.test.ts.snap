@@ -1,0 +1,211 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`GitHub OAuth > builds the authorize URL with the /auth/callback redirect 1`] = `
+{
+  "body": {
+    "data": {
+      "authUrl": "https://github.com/login/oauth/authorize?client_id=test-client-id&redirect_uri=https%3A%2F%2Fep.test%2Fauth%2Fcallback&scope=user%3Aemail&state=<id:1>",
+      "state": "<id:1>",
+    },
+    "message": "GitHub OAuth URL 生成成功",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`GitHub OAuth > creates a new user with a sec- key and a usable session 1`] = `
+{
+  "body": {
+    "data": {
+      "sessionToken": "<id:2>",
+      "user": {
+        "apiKey": "<sec-key>",
+        "avatarUrl": "https://a/dave",
+        "createdAt": "<date>",
+        "email": "dave@example.test",
+        "id": "<id:1>",
+        "isActivated": false,
+        "role": "user",
+        "username": "dave",
+      },
+    },
+    "message": "登录成功",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`GitHub OAuth > reports a failed token exchange 1`] = `
+{
+  "body": {
+    "message": "获取 GitHub 访问令牌失败",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 400,
+}
+`;
+
+exports[`GitHub OAuth > updates an existing user matched by GitHub id and keeps the key 1`] = `
+{
+  "body": {
+    "data": {
+      "sessionToken": "<id:1>",
+      "user": {
+        "apiKey": "sec-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "avatarUrl": null,
+        "createdAt": "<date>",
+        "email": null,
+        "id": "user_alice",
+        "isActivated": true,
+        "role": "user",
+        "username": "alice-renamed",
+      },
+    },
+    "message": "登录成功",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`management credentials (REDESIGN §1.1) > accepts a browser session token 1`] = `
+{
+  "body": {
+    "apiKey": "sec-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "avatarUrl": "https://avatars.example.test/alice",
+    "createdAt": "<date>",
+    "email": "alice@example.test",
+    "id": "user_alice",
+    "isActivated": true,
+    "role": "user",
+    "username": "alice",
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`management credentials (REDESIGN §1.1) > accepts a sec- management key on /auth/me (raw user object, no envelope) 1`] = `
+{
+  "body": {
+    "apiKey": "sec-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "avatarUrl": "https://avatars.example.test/alice",
+    "createdAt": "<date>",
+    "email": "alice@example.test",
+    "id": "user_alice",
+    "isActivated": true,
+    "role": "user",
+    "username": "alice",
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`management credentials (REDESIGN §1.1) > logout ends the session 1`] = `
+{
+  "body": {
+    "message": "登出成功",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`management credentials (REDESIGN §1.1) > regenerate-key returns a new sec- key and invalidates the old one immediately 1`] = `
+{
+  "body": {
+    "data": {
+      "apiKey": "<sec-key>",
+    },
+    "message": "API Key 重新生成成功",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`management credentials (REDESIGN §1.1) > rejects Basic scheme with 401 1`] = `
+{
+  "body": {
+    "message": "认证令牌缺失",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 401,
+}
+`;
+
+exports[`management credentials (REDESIGN §1.1) > rejects endpoint access key with 401 1`] = `
+{
+  "body": {
+    "message": "认证令牌无效或已过期",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 401,
+}
+`;
+
+exports[`management credentials (REDESIGN §1.1) > rejects expired session with 401 1`] = `
+{
+  "body": {
+    "message": "认证令牌无效或已过期",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 401,
+}
+`;
+
+exports[`management credentials (REDESIGN §1.1) > rejects malformed sec- key with 401 1`] = `
+{
+  "body": {
+    "message": "认证令牌无效或已过期",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 401,
+}
+`;
+
+exports[`management credentials (REDESIGN §1.1) > rejects missing header with 401 1`] = `
+{
+  "body": {
+    "message": "认证令牌缺失",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 401,
+}
+`;
+
+exports[`management credentials (REDESIGN §1.1) > rejects unknown sec- key with 401 1`] = `
+{
+  "body": {
+    "message": "认证令牌无效或已过期",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 401,
+}
+`;
+
+exports[`management credentials (REDESIGN §1.1) > rejects unknown session with 401 1`] = `
+{
+  "body": {
+    "message": "认证令牌无效或已过期",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 401,
+}
+`;

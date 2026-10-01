@@ -1,0 +1,185 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`dynamicProxy endpoints > does not match a sibling that merely shares the prefix 1`] = `
+{
+  "body": {
+    "error": "Endpoint not found",
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 404,
+}
+`;
+
+exports[`dynamicProxy endpoints > maps the sub-path onto baseUrl and forwards the query without access_key 1`] = `
+{
+  "forwarded": {
+    "authorization": "Bearer client-token",
+    "host": null,
+    "x-access-key": null,
+    "x-client": "c",
+    "x-upstream": null,
+  },
+  "method": "GET",
+  "path": "/owner/repo/main/file.txt?x=1",
+}
+`;
+
+exports[`protected endpoints: X-Access-Key header or access_key query > accepts the X-Access-Key header and counts usage 1`] = `
+{
+  "body": "classified",
+  "contentType": "application/json; charset=utf-8",
+  "status": 200,
+}
+`;
+
+exports[`protected endpoints: X-Access-Key header or access_key query > accepts the access_key query parameter 1`] = `
+{
+  "body": "classified",
+  "contentType": "application/json; charset=utf-8",
+  "status": 200,
+}
+`;
+
+exports[`protected endpoints: X-Access-Key header or access_key query > rejects expired key 1`] = `
+{
+  "body": {
+    "error": "Invalid or expired access key",
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 403,
+}
+`;
+
+exports[`protected endpoints: X-Access-Key header or access_key query > rejects key from another group 1`] = `
+{
+  "body": {
+    "error": "Invalid or expired access key",
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 403,
+}
+`;
+
+exports[`protected endpoints: X-Access-Key header or access_key query > rejects revoked key 1`] = `
+{
+  "body": {
+    "error": "Invalid or expired access key",
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 403,
+}
+`;
+
+exports[`protected endpoints: X-Access-Key header or access_key query > rejects unknown key 1`] = `
+{
+  "body": {
+    "error": "Invalid or expired access key",
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 403,
+}
+`;
+
+exports[`protected endpoints: X-Access-Key header or access_key query > reports a protected endpoint without groups as a server error 1`] = `
+{
+  "body": {
+    "error": "No permission groups configured",
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 500,
+}
+`;
+
+exports[`protected endpoints: X-Access-Key header or access_key query > requires a key 1`] = `
+{
+  "body": {
+    "error": "Access key required",
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 401,
+}
+`;
+
+exports[`proxy endpoints > forwards to the fixed target without the query string 1`] = `
+{
+  "forwarded": {
+    "authorization": "Bearer client-token",
+    "host": null,
+    "x-access-key": null,
+    "x-client": "c",
+    "x-upstream": "1",
+  },
+  "method": "GET",
+  "path": "/data.json",
+}
+`;
+
+exports[`resolution errors use { error } bodies > disabled endpoint 1`] = `
+{
+  "body": {
+    "error": "Endpoint disabled",
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 503,
+}
+`;
+
+exports[`resolution errors use { error } bodies > draft endpoint 1`] = `
+{
+  "body": {
+    "error": "Endpoint not found",
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 404,
+}
+`;
+
+exports[`resolution errors use { error } bodies > static endpoints are not prefix-matched 1`] = `
+{
+  "body": {
+    "error": "Endpoint not found",
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 404,
+}
+`;
+
+exports[`resolution errors use { error } bodies > trailing slash is a different path 1`] = `
+{
+  "body": {
+    "error": "Endpoint not found",
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 404,
+}
+`;
+
+exports[`resolution errors use { error } bodies > unactivated owner 1`] = `
+{
+  "body": {
+    "error": "User not activated",
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 403,
+}
+`;
+
+exports[`resolution errors use { error } bodies > unknown path 1`] = `
+{
+  "body": {
+    "error": "Endpoint not found",
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 404,
+}
+`;
+
+exports[`resolution errors use { error } bodies > unknown user 1`] = `
+{
+  "body": {
+    "error": "User not found",
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 404,
+}
+`;

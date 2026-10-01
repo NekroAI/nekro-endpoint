@@ -1,0 +1,316 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`access keys > cannot list or create keys in another user's group 1`] = `
+{
+  "body": {
+    "message": "权限组不存在",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 404,
+}
+`;
+
+exports[`access keys > cannot list or create keys in another user's group 2`] = `
+{
+  "body": {
+    "message": "权限组不存在",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 404,
+}
+`;
+
+exports[`access keys > creates a key and returns it once with 201 1`] = `
+{
+  "body": {
+    "data": {
+      "key": {
+        "createdAt": "<date>",
+        "description": "for dave",
+        "expiresAt": "<date>",
+        "id": "<id:1>",
+        "isActive": true,
+        "keyValue": "<ep-key>",
+        "lastUsedAt": null,
+        "permissionGroupId": "group_alice_vip",
+        "usageCount": 0,
+      },
+    },
+    "message": "密钥创建成功，请立即保存，此密钥仅显示一次",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 201,
+}
+`;
+
+exports[`access keys > creates a key without optional fields 1`] = `
+{
+  "body": {
+    "data": {
+      "key": {
+        "createdAt": "<date>",
+        "description": null,
+        "expiresAt": null,
+        "id": "<id:1>",
+        "isActive": true,
+        "keyValue": "<ep-key>",
+        "lastUsedAt": null,
+        "permissionGroupId": "group_alice_vip",
+        "usageCount": 0,
+      },
+    },
+    "message": "密钥创建成功，请立即保存，此密钥仅显示一次",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 201,
+}
+`;
+
+exports[`access keys > deletes a key 1`] = `
+{
+  "body": {
+    "message": "访问密钥删除成功",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`access keys > isolates keys between users 1`] = `
+{
+  "body": {
+    "message": "无权操作此密钥",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 403,
+}
+`;
+
+exports[`access keys > isolates keys between users 2`] = `
+{
+  "body": {
+    "message": "无权操作此密钥",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 403,
+}
+`;
+
+exports[`access keys > lists keys including the plaintext ep- keyValue (relied on by sharing) 1`] = `
+{
+  "body": {
+    "data": {
+      "keys": [
+        {
+          "createdAt": "<date>",
+          "description": "key_alice note",
+          "expiresAt": null,
+          "id": "key_alice",
+          "isActive": true,
+          "keyValue": "ep-11111111111111111111111111111111",
+          "lastUsedAt": null,
+          "permissionGroupId": "group_alice_vip",
+          "usageCount": 0,
+        },
+        {
+          "createdAt": "<date>",
+          "description": "key_alice_expired note",
+          "expiresAt": "<date>",
+          "id": "key_alice_expired",
+          "isActive": true,
+          "keyValue": "ep-22222222222222222222222222222222",
+          "lastUsedAt": null,
+          "permissionGroupId": "group_alice_vip",
+          "usageCount": 0,
+        },
+        {
+          "createdAt": "<date>",
+          "description": "key_alice_revoked note",
+          "expiresAt": null,
+          "id": "key_alice_revoked",
+          "isActive": false,
+          "keyValue": "ep-33333333333333333333333333333333",
+          "lastUsedAt": null,
+          "permissionGroupId": "group_alice_vip",
+          "usageCount": 0,
+        },
+      ],
+      "total": 3,
+    },
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`access keys > requires authentication 1`] = `
+{
+  "body": {
+    "message": "认证令牌缺失",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 401,
+}
+`;
+
+exports[`access keys > revokes a key 1`] = `
+{
+  "body": {
+    "message": "访问密钥已撤销",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`permission groups (REDESIGN §1.2) > creates a group 1`] = `
+{
+  "body": {
+    "data": {
+      "group": {
+        "createdAt": "<date>",
+        "description": "7 days",
+        "id": "<id:1>",
+        "name": "Trial",
+        "ownerUserId": "user_alice",
+        "updatedAt": "<date>",
+      },
+    },
+    "message": "权限组创建成功",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 201,
+}
+`;
+
+exports[`permission groups (REDESIGN §1.2) > deletes a group 1`] = `
+{
+  "body": {
+    "message": "该权限组正在被端点使用，无法删除",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 400,
+}
+`;
+
+exports[`permission groups (REDESIGN §1.2) > isolates groups between users 1`] = `
+{
+  "body": {
+    "message": "权限组不存在",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 404,
+}
+`;
+
+exports[`permission groups (REDESIGN §1.2) > isolates groups between users 2`] = `
+{
+  "body": {
+    "message": "权限组不存在",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 404,
+}
+`;
+
+exports[`permission groups (REDESIGN §1.2) > isolates groups between users 3`] = `
+{
+  "body": {
+    "message": "权限组不存在",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 404,
+}
+`;
+
+exports[`permission groups (REDESIGN §1.2) > lists own groups 1`] = `
+{
+  "body": {
+    "data": {
+      "groups": [
+        {
+          "createdAt": "<date>",
+          "description": "VIP group",
+          "id": "group_alice_vip",
+          "name": "VIP",
+          "ownerUserId": "user_alice",
+          "updatedAt": "<date>",
+        },
+      ],
+      "total": 1,
+    },
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`permission groups (REDESIGN §1.2) > reads one group 1`] = `
+{
+  "body": {
+    "data": {
+      "endpointsCount": 1,
+      "group": {
+        "createdAt": "<date>",
+        "description": "VIP group",
+        "id": "group_alice_vip",
+        "name": "VIP",
+        "ownerUserId": "user_alice",
+        "updatedAt": "<date>",
+      },
+      "keysCount": 3,
+    },
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;
+
+exports[`permission groups (REDESIGN §1.2) > requires authentication 1`] = `
+{
+  "body": {
+    "message": "认证令牌缺失",
+    "success": false,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 401,
+}
+`;
+
+exports[`permission groups (REDESIGN §1.2) > updates a group 1`] = `
+{
+  "body": {
+    "data": {
+      "group": {
+        "createdAt": "<date>",
+        "description": "VIP group",
+        "id": "group_alice_vip",
+        "name": "VVIP",
+        "ownerUserId": "user_alice",
+        "updatedAt": "<date>",
+      },
+    },
+    "message": "权限组更新成功",
+    "success": true,
+  },
+  "contentType": "application/json; charset=UTF-8",
+  "status": 200,
+}
+`;

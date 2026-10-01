@@ -24,6 +24,6 @@
     "types": ["@cloudflare/workers-types", "vite/client"],
     "allowImportingTsExtensions": true
   },
-  "include": ["src/**/*.ts", "src/ambient.d.ts", "frontend/src", "worker-configuration.d.ts"],
+  "include": ["src/**/*.ts", "src/ambient.d.ts", "frontend/src", "test", "worker-configuration.d.ts"],
   "exclude": ["node_modules", "dist"]
 }
